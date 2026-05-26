@@ -115,11 +115,13 @@ types/                  # Tipos TypeScript compartidos
 - [x] Layout raíz con metadata en español
 
 ### En curso — Fase 1 (sem 1–3)
-- [ ] Configurar proyecto en Supabase (URL + anon key en `.env.local`)
-- [ ] Instalar y configurar cliente Supabase (`@supabase/ssr`)
+- [x] Configurar proyecto en Supabase (URL + keys en `.env.local`)
+- [x] Instalar y configurar clientes Supabase (`@supabase/ssr`) — `lib/supabase/client.ts` y `lib/supabase/server.ts`
+- [x] Auth: login / signup / logout con email+password y Google OAuth
+- [x] Middleware de rutas protegidas (`middleware.ts`)
+- [x] Callback OAuth (`app/auth/callback/route.ts`)
+- [x] Dashboard placeholder protegido (`app/(app)/dashboard/page.tsx`)
 - [ ] Schema de DB: `organizations`, `users`, `projects`
-- [ ] Auth: login / signup / logout con Supabase Auth
-- [ ] Middleware de rutas protegidas
 - [ ] Deploy inicial en Vercel
 
 ### Pendiente — Fase 2 (sem 4–8)
@@ -142,8 +144,8 @@ types/                  # Tipos TypeScript compartidos
 ```bash
 # .env.local (nunca commitear)
 NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
-SUPABASE_SERVICE_ROLE_KEY=
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
+SUPABASE_SECRET_KEY=
 ```
 
 ---

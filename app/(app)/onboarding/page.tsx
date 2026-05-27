@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
+import { createOrganization } from "./actions";
 
 function nameToSlug(name: string): string {
   return name
@@ -14,13 +13,11 @@ function nameToSlug(name: string): string {
 }
 
 export default function OnboardingPage() {
-  const router = useRouter();
   const [name, setName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   const slug = nameToSlug(name);
-  const supabase = createClient();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -28,49 +25,12 @@ export default function OnboardingPage() {
     setLoading(true);
     setError(null);
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      router.push("/login");
-      return;
-    }
-
-    // Crear organización
-    const { data: org, error: orgError } = await supabase
-      .from("organizations")
-      .insert({ name: name.trim(), slug })
-      .select()
-      .single();
-
-    if (orgError) {
-      setError(
-        orgError.code === "23505"
-          ? "Ya existe una organización con ese nombre. Probá con uno diferente."
-          : orgError.message
-      );
+    const result = await createOrganization(name.trim(), slug);
+    if (result?.error) {
+      setError(result.error);
       setLoading(false);
-      return;
     }
-
-    // Agregar al usuario como owner
-    const { error: memberError } = await supabase
-      .from("organization_members")
-      .insert({
-        organization_id: org.id,
-        profile_id: user.id,
-        role: "owner",
-      });
-
-    if (memberError) {
-      setError(memberError.message);
-      setLoading(false);
-      return;
-    }
-
-    router.push("/dashboard");
-    router.refresh();
+    // Si no hay error, el server action hace redirect("/dashboard")
   }
 
   return (

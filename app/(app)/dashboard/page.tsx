@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import type { Organization, OrganizationMember, MemberRole } from "@/types/database";
@@ -68,11 +69,12 @@ export default async function DashboardPage() {
 
         {/* Modos */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-xl">
-          <ModeCard
-            title="Modo Squad"
-            description="Canvas de burbujas con Matriz de Impacto vs Esfuerzo."
-            disabled
-          />
+          <Link href="/squad">
+            <ModeCard
+              title="Modo Squad"
+              description="Canvas de burbujas con Matriz de Impacto vs Esfuerzo."
+            />
+          </Link>
           <ModeCard
             title="Modo Programa"
             description="Timeline Q1–Q4 con planificación de capacidad por equipo."
@@ -98,7 +100,7 @@ function ModeCard({
       className={`bg-white rounded-xl border border-gray-100 p-6 flex flex-col gap-2 ${
         disabled
           ? "opacity-50 cursor-not-allowed"
-          : "hover:border-brand-orange cursor-pointer transition"
+          : "hover:border-brand-orange hover:shadow-sm cursor-pointer transition"
       }`}
     >
       <h2 className="font-semibold text-brand-black text-sm">{title}</h2>

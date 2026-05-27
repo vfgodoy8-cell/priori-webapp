@@ -1,0 +1,118 @@
+"use server";
+
+import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+import type { Project } from "@/types/database";
+
+type State = { error: string | null };
+
+async function getAuthContext() {
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const admin = createAdminClient();
+  const { data: membership } = await admin
+    .from("organization_members")
+    .select("organization_id, role")
+    .eq("profile_id", user.id)
+    .single();
+
+  if (!membership) redirect("/onboarding");
+
+  return { user, admin, orgId: membership.organization_id as string };
+}
+
+export async function createProject(
+  _prevState: State,
+  formData: FormData
+): Promise<State> {
+  const { user, admin, orgId } = await getAuthContext();
+  void user;
+
+  const payload = {
+    organization_id: orgId,
+    name: (formData.get("name") as string).trim(),
+    description: (formData.get("description") as string)?.trim() || null,
+    impact_value: parseFloat(formData.get("impact_value") as string) || 0,
+    impact_metric: (formData.get("impact_metric") as string) || "revenue",
+    effort_sprints: parseInt(formData.get("effort_sprints") as string) || 1,
+    stakeholder: (formData.get("stakeholder") as string)?.trim() || null,
+    production_date: (formData.get("production_date") as string) || null,
+    dependencies: (formData.get("dependencies") as string)?.trim() || null,
+  };
+
+  if (!payload.name) return { error: "El nombre es requerido." };
+
+  const { error } = await admin.from("projects").insert(payload);
+  if (error) return { error: error.message };
+
+  revalidatePath("/squad");
+  return { error: null };
+}
+
+export async function updateProject(
+  _prevState: State,
+  formData: FormData
+): Promise<State> {
+  const { admin, orgId } = await getAuthContext();
+
+  const id = formData.get("id") as string;
+  if (!id) return { error: "ID requerido." };
+
+  const payload: Partial<Project> = {
+    name: (formData.get("name") as string).trim(),
+    description: (formData.get("description") as string)?.trim() || null,
+    impact_value: parseFloat(formData.get("impact_value") as string) || 0,
+    impact_metric: (formData.get("impact_metric") as "revenue" | "customers") || "revenue",
+    effort_sprints: parseInt(formData.get("effort_sprints") as string) || 1,
+    stakeholder: (formData.get("stakeholder") as string)?.trim() || null,
+    production_date: (formData.get("production_date") as string) || null,
+    dependencies: (formData.get("dependencies") as string)?.trim() || null,
+  };
+
+  const { error } = await admin
+    .from("projects")
+    .update(payload)
+    .eq("id", id)
+    .eq("organization_id", orgId);
+
+  if (error) return { error: error.message };
+
+  revalidatePath("/squad");
+  return { error: null };
+}
+
+export async function discardProject(id: string): Promise<void> {
+  const { admin, orgId } = await getAuthContext();
+  await admin
+    .from("projects")
+    .update({ status: "discarded" })
+    .eq("id", id)
+    .eq("organization_id", orgId);
+  revalidatePath("/squad");
+}
+
+export async function restoreProject(id: string): Promise<void> {
+  const { admin, orgId } = await getAuthContext();
+  await admin
+    .from("projects")
+    .update({ status: "active" })
+    .eq("id", id)
+    .eq("organization_id", orgId);
+  revalidatePath("/squad");
+}
+
+export async function deleteProject(id: string): Promise<void> {
+  const { admin, orgId } = await getAuthContext();
+  await admin
+    .from("projects")
+    .delete()
+    .eq("id", id)
+    .eq("organization_id", orgId);
+  revalidatePath("/squad");
+}

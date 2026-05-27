@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { LogoutButton } from "@/components/ui/LogoutButton";
 import type { Organization, OrganizationMember, MemberRole } from "@/types/database";
 
 export default async function DashboardPage() {
@@ -168,15 +169,3 @@ function ModeCard({
   );
 }
 
-function LogoutButton() {
-  return (
-    <form action="/auth/logout" method="post">
-      <button
-        type="submit"
-        className="text-sm text-brand-gray hover:text-brand-black transition"
-      >
-        Salir
-      </button>
-    </form>
-  );
-}

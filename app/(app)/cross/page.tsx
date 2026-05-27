@@ -3,6 +3,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { CrossView } from "./CrossView";
+import { LogoutButton } from "@/components/ui/LogoutButton";
 import type { OrganizationMember, Organization, Team, Initiative } from "@/types/database";
 
 export default async function CrossPage() {
@@ -119,15 +120,3 @@ export default async function CrossPage() {
   );
 }
 
-function LogoutButton() {
-  return (
-    <form action="/auth/logout" method="post">
-      <button
-        type="submit"
-        className="text-sm text-brand-gray hover:text-brand-black transition"
-      >
-        Salir
-      </button>
-    </form>
-  );
-}

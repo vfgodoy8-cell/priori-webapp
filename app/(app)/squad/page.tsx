@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { SquadView } from "./SquadView";
 import { computeQuadrant } from "@/lib/quadrant";
+import { LogoutButton } from "@/components/ui/LogoutButton";
 import type { OrganizationMember, Organization, Project } from "@/types/database";
 
 export default async function SquadPage() {
@@ -111,15 +112,3 @@ export default async function SquadPage() {
   );
 }
 
-function LogoutButton() {
-  return (
-    <form action="/auth/logout" method="post">
-      <button
-        type="submit"
-        className="text-sm text-brand-gray hover:text-brand-black transition"
-      >
-        Salir
-      </button>
-    </form>
-  );
-}

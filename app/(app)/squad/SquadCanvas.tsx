@@ -8,6 +8,8 @@ import {
   squadLimit,
   posIn,
   posOut,
+  posInBand,
+  dateToQuarter,
   deadlineStatus,
   DL_COLOR,
   CAP_COLOR,
@@ -16,7 +18,7 @@ import {
 } from "@/lib/squad-logic";
 import { BubbleCard } from "./BubbleCard";
 import { ImpactModal } from "./ImpactModal";
-import { updateSquadStatus, swapSquadStatus, updateProjectPosition, restoreProject } from "./actions";
+import { updateSquadStatus, swapSquadStatus, updateProjectPosition, updateProjectDate, restoreProject } from "./actions";
 
 type Pos = { x: number; y: number };
 type SquadStatus = "backlog" | "curso";
@@ -24,6 +26,11 @@ type SquadStatus = "backlog" | "curso";
 const QUADRANT_EMOJI: Record<Quadrant, string> = {
   p1: "🚀", p2: "🏗", p3: "💡", p0: "🚫",
 };
+
+const Q_BAND_COLORS = ["#1E6FC5", "#1D9E75", "#E8621A", "#6B6B6B"];
+const Q_BAND_LABELS = ["Q1 Ene–Mar", "Q2 Abr–Jun", "Q3 Jul–Sep", "Q4 Oct–Dic"];
+const YEAR = new Date().getFullYear();
+const QUARTER_DATES = [`${YEAR}-01-01`, `${YEAR}-04-01`, `${YEAR}-07-01`, `${YEAR}-10-01`];
 
 function formatDate(d: string): string {
   return new Date(d + "T00:00:00").toLocaleDateString("es-AR", {
@@ -45,7 +52,8 @@ function computePositions(
   overrides: Map<string, SquadStatus>,
   W: number,
   H: number,
-  zoneR: number
+  zoneR: number,
+  quarterOverlay = false
 ): Map<string, Pos> {
   const map = new Map<string, Pos>();
   const inCurso = projects.filter(p => (overrides.get(p.id) ?? p.squad_status) === "curso");
@@ -55,15 +63,26 @@ function computePositions(
     const r = bubbleRadius(p.effort_sprints);
     map.set(p.id, posIn(i, inCurso.length, r, W, H, zoneR));
   });
-  inBacklog.forEach((p, i) => {
-    const r = bubbleRadius(p.effort_sprints);
-    // Use saved canvas position if available; fall back to algorithm
-    if (p.canvas_x != null && p.canvas_y != null) {
-      map.set(p.id, { x: p.canvas_x, y: p.canvas_y });
-    } else {
-      map.set(p.id, posOut(i, inBacklog.length, r, W, H, zoneR));
-    }
-  });
+
+  if (quarterOverlay) {
+    const byQ: Project[][] = [[], [], [], []];
+    inBacklog.forEach(p => byQ[dateToQuarter(p.production_date)].push(p));
+    byQ.forEach((qProjects, bandIndex) => {
+      qProjects.forEach((p, i) => {
+        const r = bubbleRadius(p.effort_sprints);
+        map.set(p.id, posInBand(i, qProjects.length, r, W, H, bandIndex));
+      });
+    });
+  } else {
+    inBacklog.forEach((p, i) => {
+      const r = bubbleRadius(p.effort_sprints);
+      if (p.canvas_x != null && p.canvas_y != null) {
+        map.set(p.id, { x: p.canvas_x, y: p.canvas_y });
+      } else {
+        map.set(p.id, posOut(i, inBacklog.length, r, W, H, zoneR));
+      }
+    });
+  }
   return map;
 }
 
@@ -73,9 +92,10 @@ type Props = {
   p0Projects: Project[];     // computed quadrant = p0 but active
   config: SquadConfig;
   onEdit: (p: Project) => void;
+  quarterOverlay?: boolean;
 };
 
-export function SquadCanvas({ projects, discarded, p0Projects, config, onEdit }: Props) {
+export function SquadCanvas({ projects, discarded, p0Projects, config, onEdit, quarterOverlay = false }: Props) {
   const CANVAS_H = 650;
   const canvasRef = useRef<HTMLDivElement>(null);
   const posRef = useRef<Map<string, Pos>>(new Map());
@@ -84,8 +104,10 @@ export function SquadCanvas({ projects, discarded, p0Projects, config, onEdit }:
   const [W, setW] = useState(800);
   const [statusOverrides, setStatusOverrides] = useState<Map<string, SquadStatus>>(new Map());
   const [positions, setPositions] = useState<Map<string, Pos>>(new Map());
+  const [isDragging, setIsDragging] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
   const [isOverLimit, setIsOverLimit] = useState(false);
+  const quarterOverlayRef = useRef(quarterOverlay);
   const [infoMsg, setInfoMsg] = useState("Arrastrá burbujas al círculo para sumarlas al sprint. Doble click para editar.");
   const [impactTarget, setImpactTarget] = useState<Project | null>(null);
   const [tooltip, setTooltip] = useState<{
@@ -127,15 +149,16 @@ export function SquadCanvas({ projects, discarded, p0Projects, config, onEdit }:
   // Dynamic zone: base 100 (200px ⌀), +40 per en-curso project, max 250 (500px ⌀)
   const dynamicZoneR = Math.min(250, Math.max(100, 100 + cursoCount * 40));
 
-  // Keep ref in sync so stale useCallback closures always read the latest value
+  // Keep refs in sync so stale useCallback closures always read the latest value
   useEffect(() => { zoneRRef.current = dynamicZoneR; }, [dynamicZoneR]);
+  useEffect(() => { quarterOverlayRef.current = quarterOverlay; }, [quarterOverlay]);
 
-  // Recompute positions when projects, status, dimensions, or zone radius change
+  // Recompute positions when projects, status, dimensions, zone radius, or overlay mode change
   useEffect(() => {
-    const newPositions = computePositions(projects, statusOverrides, W, CANVAS_H, dynamicZoneR);
+    const newPositions = computePositions(projects, statusOverrides, W, CANVAS_H, dynamicZoneR, quarterOverlay);
     setPositions(newPositions);
     posRef.current = newPositions;
-  }, [projects, statusOverrides, W, dynamicZoneR]);
+  }, [projects, statusOverrides, W, dynamicZoneR, quarterOverlay]);
 
   // Zone check uses ref so it's always current inside memoized callbacks
   function inZone(clientX: number, clientY: number): boolean {
@@ -148,7 +171,8 @@ export function SquadCanvas({ projects, discarded, p0Projects, config, onEdit }:
 
   function startDrag(id: string, e: React.MouseEvent) {
     e.preventDefault();
-    setTooltip(null); // dismiss tooltip immediately on drag start
+    setTooltip(null);
+    setIsDragging(true);
     const pos = posRef.current.get(id);
     if (!pos) return;
     dragRef.current = {
@@ -209,6 +233,7 @@ export function SquadCanvas({ projects, discarded, p0Projects, config, onEdit }:
     const { id, startPosX, startPosY } = dragRef.current;
     const curPos = posRef.current.get(id);
     dragRef.current = null;
+    setIsDragging(false);
     setIsDragOver(false);
     setIsOverLimit(false);
 
@@ -251,8 +276,16 @@ export function SquadCanvas({ projects, discarded, p0Projects, config, onEdit }:
       if (curPos) updateProjectPosition(id, Math.round(curPos.x), Math.round(curPos.y));
       setInfoMsg(`⬆️ <strong>${project.name}</strong> movido al backlog.`);
     } else if (!inside && !wasCurso && curPos) {
-      // Backlog-to-backlog repositioning — persist position
-      updateProjectPosition(id, Math.round(curPos.x), Math.round(curPos.y));
+      if (quarterOverlayRef.current) {
+        // In overlay mode: detect which band the bubble was dropped in → update production_date
+        const cr = canvasRef.current?.getBoundingClientRect();
+        if (cr) {
+          const q = Math.min(3, Math.max(0, Math.floor(((e.clientX - cr.left) / cr.width) * 4)));
+          updateProjectDate(id, QUARTER_DATES[q]);
+        }
+      } else {
+        updateProjectPosition(id, Math.round(curPos.x), Math.round(curPos.y));
+      }
     }
   }, [projects, statusOverrides, cursoCount, sqLim]);
 
@@ -322,6 +355,7 @@ export function SquadCanvas({ projects, discarded, p0Projects, config, onEdit }:
 
       {/* Canvas */}
       <div
+        id="priori-export-target"
         ref={canvasRef}
         className="relative bg-white border border-gray-200 rounded-xl overflow-hidden"
         style={{ height: CANVAS_H }}
@@ -335,6 +369,41 @@ export function SquadCanvas({ projects, discarded, p0Projects, config, onEdit }:
             backgroundPosition: "14px 14px",
           }}
         />
+
+        {/* Quarter overlay bands */}
+        {quarterOverlay && (
+          <>
+            {[0, 1, 2, 3].map((q) => (
+              <div
+                key={q}
+                className="absolute inset-y-0 pointer-events-none"
+                style={{
+                  left: `${q * 25}%`,
+                  width: "25%",
+                  background: `${Q_BAND_COLORS[q]}26`,
+                  borderRight: q < 3 ? "1px dashed rgba(0,0,0,0.2)" : undefined,
+                  transition: "opacity 0.5s ease",
+                }}
+              >
+                <div
+                  style={{
+                    position: "absolute",
+                    top: 8,
+                    left: "50%",
+                    transform: "translateX(-50%)",
+                    fontSize: 11,
+                    fontWeight: 700,
+                    color: Q_BAND_COLORS[q],
+                    opacity: 0.6,
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {Q_BAND_LABELS[q]}
+                </div>
+              </div>
+            ))}
+          </>
+        )}
 
         {/* Central zone — en curso (dynamic size, animated) */}
         <div
@@ -404,21 +473,49 @@ export function SquadCanvas({ projects, discarded, p0Projects, config, onEdit }:
           if (!pos) return null;
           const dlStatus = deadlineStatus(project.production_date);
           const urgencyColor = dlStatus ? DL_COLOR[dlStatus] : DL_COLOR.ok;
+          const isBacklog = (statusOverrides.get(project.id) ?? project.squad_status) === "backlog";
+          const noDate = !project.production_date;
+          const bubbleOpacity = quarterOverlay && isBacklog && noDate ? 0.5 : 1;
+          const bubbleTransition = quarterOverlay && !isDragging
+            ? "left 0.5s ease, top 0.5s ease, opacity 0.3s"
+            : undefined;
 
           return (
-            <BubbleCard
-              key={project.id}
-              project={project}
-              onEdit={onEdit}
-              urgencyColor={urgencyColor}
-              isSlice={!!project.parent_id}
-              hasSlices={parentIds.has(project.id)}
-              aggregate={aggregatesMap.get(project.id)}
-              style={{ left: pos.x, top: pos.y }}
-              onMouseDown={(e) => startDrag(project.id, e)}
-              onMouseEnter={(e) => handleBubbleMouseEnter(project.id, e)}
-              onMouseLeave={handleBubbleMouseLeave}
-            />
+            <span key={project.id}>
+              <BubbleCard
+                project={project}
+                onEdit={onEdit}
+                urgencyColor={urgencyColor}
+                isSlice={!!project.parent_id}
+                hasSlices={parentIds.has(project.id)}
+                aggregate={aggregatesMap.get(project.id)}
+                style={{ left: pos.x, top: pos.y, opacity: bubbleOpacity, transition: bubbleTransition }}
+                onMouseDown={(e) => startDrag(project.id, e)}
+                onMouseEnter={(e) => handleBubbleMouseEnter(project.id, e)}
+                onMouseLeave={handleBubbleMouseLeave}
+              />
+              {/* Sin fecha badge in overlay mode */}
+              {quarterOverlay && isBacklog && noDate && (
+                <div
+                  className="absolute pointer-events-none select-none"
+                  style={{
+                    left: pos.x,
+                    top: pos.y - 16,
+                    fontSize: 9,
+                    fontWeight: 700,
+                    color: "#999",
+                    background: "rgba(255,255,255,0.9)",
+                    border: "1px solid #ddd",
+                    borderRadius: 3,
+                    padding: "1px 4px",
+                    whiteSpace: "nowrap",
+                    transition: bubbleTransition,
+                  }}
+                >
+                  Sin fecha
+                </div>
+              )}
+            </span>
           );
         })}
 

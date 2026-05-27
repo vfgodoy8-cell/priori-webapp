@@ -20,6 +20,7 @@ type Props = {
 
 export function SquadView({ projects, discarded, p0Projects, allActive, orgId }: Props) {
   const [view, setView] = useState<View>("canvas");
+  const [quarterOverlay, setQuarterOverlay] = useState(false);
   const [config, setConfig] = useState<SquadConfig>(DEFAULT_CONFIG);
   const [forceEdit, setForceEdit] = useState<Project | null>(null);
   const [openRequest, setOpenRequest] = useState(0);
@@ -51,27 +52,42 @@ export function SquadView({ projects, discarded, p0Projects, allActive, orgId }:
             {allActive.length !== 1 ? "s" : ""}
           </p>
         </div>
-        <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
-          <button
-            onClick={() => setView("canvas")}
-            className={`px-3 py-1.5 text-sm rounded-md transition ${
-              view === "canvas"
-                ? "bg-white text-brand-black font-medium shadow-sm"
-                : "text-brand-gray hover:text-brand-black"
-            }`}
-          >
-            Canvas
-          </button>
-          <button
-            onClick={() => setView("list")}
-            className={`px-3 py-1.5 text-sm rounded-md transition ${
-              view === "list"
-                ? "bg-white text-brand-black font-medium shadow-sm"
-                : "text-brand-gray hover:text-brand-black"
-            }`}
-          >
-            Lista
-          </button>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+            <button
+              onClick={() => setView("canvas")}
+              className={`px-3 py-1.5 text-sm rounded-md transition ${
+                view === "canvas"
+                  ? "bg-white text-brand-black font-medium shadow-sm"
+                  : "text-brand-gray hover:text-brand-black"
+              }`}
+            >
+              Canvas
+            </button>
+            <button
+              onClick={() => setView("list")}
+              className={`px-3 py-1.5 text-sm rounded-md transition ${
+                view === "list"
+                  ? "bg-white text-brand-black font-medium shadow-sm"
+                  : "text-brand-gray hover:text-brand-black"
+              }`}
+            >
+              Lista
+            </button>
+          </div>
+          {view === "canvas" && (
+            <label className="flex items-center gap-2 cursor-pointer select-none">
+              <span className="text-xs font-semibold text-brand-gray">Vista Q</span>
+              <div
+                className={`relative w-9 h-5 rounded-full transition-colors duration-200 ${quarterOverlay ? "bg-brand-orange" : "bg-gray-300"}`}
+                onClick={() => setQuarterOverlay((q) => !q)}
+              >
+                <div
+                  className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ${quarterOverlay ? "translate-x-4" : "translate-x-0.5"}`}
+                />
+              </div>
+            </label>
+          )}
         </div>
       </div>
 
@@ -82,6 +98,7 @@ export function SquadView({ projects, discarded, p0Projects, allActive, orgId }:
           p0Projects={p0Projects}
           config={config}
           onEdit={(p) => setForceEdit(p)}
+          quarterOverlay={quarterOverlay}
         />
       ) : (
         <ProjectList

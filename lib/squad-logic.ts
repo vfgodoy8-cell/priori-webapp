@@ -53,6 +53,38 @@ export function posOut(
   };
 }
 
+// Quarter index (0=Q1…3=Q4) from a production date
+export function dateToQuarter(date: string | null): number {
+  if (!date) return 3;
+  const m = new Date(date + "T00:00:00").getMonth();
+  if (m < 3) return 0;
+  if (m < 6) return 1;
+  if (m < 9) return 2;
+  return 3;
+}
+
+// Position within a quarter band (used for overlay mode)
+export function posInBand(
+  index: number,
+  _total: number,
+  r: number,
+  W: number,
+  H: number,
+  bandIndex: number
+): { x: number; y: number } {
+  const bandW = W / 4;
+  const bandLeft = bandIndex * bandW;
+  const pad = r + 12;
+  const innerW = bandW - 2 * pad;
+  const cols = Math.max(1, Math.floor((innerW + 10) / (r * 2 + 10)));
+  const row = Math.floor(index / cols);
+  const col = index % cols;
+  return {
+    x: Math.max(4, Math.min(W - r * 2 - 4, bandLeft + pad + col * (r * 2 + 10))),
+    y: Math.max(4, Math.min(H - r * 2 - 4, 48 + pad + row * (r * 2 + 14))),
+  };
+}
+
 export function deadlineStatus(date: string | null): DlLevel | null {
   if (!date) return null;
   const diff = Math.round((new Date(date).getTime() - Date.now()) / 86400000);

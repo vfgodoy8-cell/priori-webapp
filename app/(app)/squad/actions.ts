@@ -196,6 +196,19 @@ export async function createSlice(
   return { error: null, success: true };
 }
 
+export async function updateProjectDate(
+  id: string,
+  date: string | null
+): Promise<void> {
+  const { admin, orgId } = await getAuthContext();
+  await admin
+    .from("projects")
+    .update({ production_date: date })
+    .eq("id", id)
+    .eq("organization_id", orgId);
+  revalidatePath("/squad");
+}
+
 export async function swapSquadStatus(
   incomingId: string,
   outgoingId: string

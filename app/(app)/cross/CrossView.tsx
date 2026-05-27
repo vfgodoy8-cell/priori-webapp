@@ -65,12 +65,15 @@ export function CrossView({ orgId, initialTeams, initialInitiatives }: Props) {
   const [teams, setTeams] = useState<Team[]>(initialTeams);
   const [initiatives, setInitiatives] = useState<Initiative[]>(initialInitiatives);
   const [dragId, setDragId] = useState<string | null>(null);
+  const [dragOverQ, setDragOverQ] = useState<number | null>(null);
+  const [warnMsg, setWarnMsg] = useState<string | null>(null);
   const [panelOpen, setPanelOpen] = useState(false);
   const [panelTab, setPanelTab] = useState<PanelTab>("form");
   const [editIni, setEditIni] = useState<Initiative | undefined>();
   const [newTeamName, setNewTeamName] = useState("");
   const [showShare, setShowShare] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
+  const gridRef = useRef<HTMLDivElement>(null);
 
   const iniAction = editIni ? updateInitiative : createInitiative;
   const [iniState, iniFormAction] = useFormState(iniAction, { error: null });
@@ -95,6 +98,37 @@ export function CrossView({ orgId, initialTeams, initialInitiatives }: Props) {
       setPrevSp(0);
     }
   }, [iniState]);
+
+  function getQFromEvent(e: React.DragEvent<HTMLDivElement>): number {
+    if (!gridRef.current) return 0;
+    const rect = gridRef.current.getBoundingClientRect();
+    return Math.min(3, Math.max(0, Math.floor(((e.clientX - rect.left) / rect.width) * 4)));
+  }
+
+  function handleGridDragOver(e: React.DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    setDragOverQ(getQFromEvent(e));
+  }
+
+  function handleGridDrop(e: React.DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    if (!dragId) return;
+    const q = getQFromEvent(e);
+    const ini = initiatives.find((i) => i.id === dragId);
+    if (!ini) { setDragId(null); setDragOverQ(null); return; }
+
+    let targetQ = q;
+    if (q + ini.duration_quarters > 4) {
+      targetQ = 4 - ini.duration_quarters;
+      setWarnMsg(`"${ini.name}" no cabe desde Q${q + 1} — movida a Q${targetQ + 1}.`);
+    } else {
+      setWarnMsg(null);
+    }
+
+    handleDrop(targetQ, ini);
+    setDragId(null);
+    setDragOverQ(null);
+  }
 
   function handleDrop(q: number, ini: Initiative) {
     const overCapTeams = ini.team_ids?.filter((tid) => {
@@ -177,112 +211,100 @@ export function CrossView({ orgId, initialTeams, initialInitiatives }: Props) {
           ))}
         </div>
 
-        {/* Q grid */}
-        <div className="grid grid-cols-4 min-h-[240px]">
-          {[0, 1, 2, 3].map((q) => {
-            const placed = initiatives.filter((i) => i.q_start === q && i.status === "active");
-            return (
-              <div
-                key={q}
-                className={`${q < 3 ? "border-r border-gray-200" : ""} p-2.5 flex flex-col gap-2 min-h-[240px] transition-colors`}
-                onDragOver={(e) => e.preventDefault()}
-                onDragEnter={(e) => (e.currentTarget.style.background = "rgba(232,98,26,.05)")}
-                onDragLeave={(e) => (e.currentTarget.style.background = "")}
-                onDrop={(e) => {
-                  e.currentTarget.style.background = "";
-                  if (!dragId) return;
-                  const ini = initiatives.find((i) => i.id === dragId);
-                  if (ini) handleDrop(q, ini);
-                  setDragId(null);
-                }}
-              >
-                {placed.length === 0 && (
-                  <p className="text-xs text-gray-300 text-center py-8 select-none">
-                    Arrastrá aquí
-                  </p>
-                )}
-                {placed.map((ini) => {
-                  const qd = QUADRANT_META[computeQuadrant(ini.impact_value, ini.effort_sprints)];
-                  const tNames = (ini.team_ids ?? [])
-                    .map((tid) => teams.find((t) => t.id === tid)?.name.split(" ")[0] ?? "?")
-                    .slice(0, 3);
-                  const isStart = ini.q_start === q;
-                  if (!isStart) return null;
-                  return (
-                    <div
-                      key={ini.id}
-                      draggable
-                      onDragStart={() => setDragId(ini.id)}
-                      className="rounded-lg p-2.5 border-[1.5px] cursor-grab select-none hover:shadow-md transition-shadow"
-                      style={{ background: qd.bg, borderColor: `${qd.color}55` }}
-                    >
-                      <div className="flex items-start justify-between gap-1">
-                        <div className="text-xs font-bold text-brand-black leading-snug pr-6">
-                          {qd.priority} {ini.name}
-                        </div>
-                        <div className="flex gap-0.5 absolute right-2 top-2 opacity-0 group-hover:opacity-100">
-                        </div>
-                      </div>
-                      <div className="text-[10px] text-brand-gray mt-1">
-                        {ini.stakeholder} · {ini.effort_sprints}sp
-                      </div>
-                      {tNames.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mt-1.5">
-                          {tNames.map((n) => (
-                            <span key={n} className="text-[9px] px-1.5 py-0.5 rounded bg-black/[.07] text-brand-gray font-semibold">
-                              {n}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                      {ini.duration_quarters > 1 && (
-                        <div className="text-[9px] font-bold mt-1.5" style={{ color: qd.color }}>
-                          ⟷ {ini.duration_quarters} Quarters
-                        </div>
-                      )}
-                      <div className="flex gap-1 mt-2">
-                        <button
-                          onClick={() => openEdit(ini)}
-                          className="text-[10px] text-gray-400 hover:text-brand-orange px-1"
-                          title="Editar"
-                        >
-                          ✏️
-                        </button>
-                        <button
-                          onClick={() => handleUnplace(ini)}
-                          className="text-[10px] text-gray-400 hover:text-brand-orange px-1"
-                          title="Quitar del Quarter"
-                        >
-                          ✕
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
+        {/* Q grid — single CSS-grid container; cards span columns */}
+        <div
+          ref={gridRef}
+          className="relative min-h-[240px]"
+          style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gridAutoFlow: "row", alignContent: "start" }}
+          onDragOver={handleGridDragOver}
+          onDragLeave={(e) => { if (!gridRef.current?.contains(e.relatedTarget as Node)) setDragOverQ(null); }}
+          onDrop={handleGridDrop}
+        >
+          {/* Column dividers + drag-hover highlight */}
+          {[0, 1, 2, 3].map((q) => (
+            <div
+              key={q}
+              className="absolute inset-y-0 pointer-events-none transition-colors duration-150"
+              style={{
+                left: `${q * 25}%`,
+                width: "25%",
+                background: dragOverQ === q ? "rgba(232,98,26,0.06)" : "transparent",
+                borderRight: q < 3 ? "1px solid #E5E7EB" : undefined,
+              }}
+            />
+          ))}
 
-                {/* Ghost cards for multi-quarter spans */}
-                {initiatives
-                  .filter(
-                    (i) =>
-                      i.status === "active" &&
-                      i.q_start !== null &&
-                      i.q_start < q &&
-                      i.q_start + i.duration_quarters - 1 >= q
-                  )
-                  .map((ini) => (
-                    <div
-                      key={ini.id + "-ghost"}
-                      className="rounded-lg p-2.5 border border-dashed border-gray-200 opacity-30 pointer-events-none select-none"
-                    >
-                      <div className="text-[10px] font-bold text-brand-black">↳ {ini.name}</div>
-                      <div className="text-[9px] text-brand-gray">continua desde Q{(ini.q_start ?? 0) + 1}</div>
+          {initiatives.filter((i) => i.q_start !== null && i.status === "active").length === 0 && (
+            <div className="col-span-4 flex items-center justify-center py-10 select-none">
+              <p className="text-xs text-gray-300">Arrastrá iniciativas al timeline</p>
+            </div>
+          )}
+
+          {[...initiatives]
+            .filter((i) => i.q_start !== null && i.status === "active")
+            .sort((a, b) => {
+              if (a.q_start! !== b.q_start!) return a.q_start! - b.q_start!;
+              return b.duration_quarters - a.duration_quarters;
+            })
+            .map((ini) => {
+              const qd = QUADRANT_META[computeQuadrant(ini.impact_value, ini.effort_sprints)];
+              const tNames = (ini.team_ids ?? [])
+                .map((tid) => teams.find((t) => t.id === tid)?.name.split(" ")[0] ?? "?")
+                .slice(0, 3);
+              const span = Math.min(ini.duration_quarters, 4 - ini.q_start!);
+              return (
+                <div
+                  key={ini.id}
+                  draggable
+                  onDragStart={() => setDragId(ini.id)}
+                  className="rounded-lg p-2.5 border-[1.5px] cursor-grab select-none hover:shadow-md transition-shadow m-1.5"
+                  style={{
+                    gridColumn: `${ini.q_start! + 1} / span ${span}`,
+                    background: qd.bg,
+                    borderColor: `${qd.color}55`,
+                    borderRight: ini.duration_quarters > 1 ? `2px dashed ${qd.color}99` : undefined,
+                  }}
+                >
+                  <div className="flex items-start justify-between gap-1">
+                    <div className="text-xs font-bold text-brand-black leading-snug">
+                      {qd.priority} {ini.name}
                     </div>
-                  ))}
-              </div>
-            );
-          })}
+                    {ini.duration_quarters > 1 && (
+                      <span className="text-[10px] font-bold flex-shrink-0 ml-1" style={{ color: qd.color }}>
+                        ↔ {ini.duration_quarters}Q
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-[10px] text-brand-gray mt-1">
+                    {ini.stakeholder} · {ini.effort_sprints}sp
+                  </div>
+                  {tNames.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-1.5">
+                      {tNames.map((n) => (
+                        <span key={n} className="text-[9px] px-1.5 py-0.5 rounded bg-black/[.07] text-brand-gray font-semibold">
+                          {n}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  <div className="flex gap-1 mt-2">
+                    <button onClick={() => openEdit(ini)} className="text-[10px] text-gray-400 hover:text-brand-orange px-1" title="Editar">✏️</button>
+                    <button onClick={() => handleUnplace(ini)} className="text-[10px] text-gray-400 hover:text-brand-orange px-1" title="Quitar del Quarter">✕</button>
+                  </div>
+                </div>
+              );
+            })}
         </div>
       </div>
+
+      {/* Warning bar */}
+      {warnMsg && (
+        <div className="flex items-center gap-2 px-4 py-2.5 bg-orange-50 border border-orange-200 rounded-lg text-xs text-brand-orange">
+          <span className="flex-shrink-0">⚠</span>
+          <span>{warnMsg}</span>
+          <button onClick={() => setWarnMsg(null)} className="ml-auto text-gray-400 hover:text-brand-orange">×</button>
+        </div>
+      )}
 
       {/* Capacity table */}
       {teams.length > 0 && (

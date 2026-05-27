@@ -239,3 +239,13 @@ export type Project = Database["public"]["Tables"]["projects"]["Row"];
 export type MemberRole = Database["public"]["Enums"]["member_role"];
 export type Team = Database["public"]["Tables"]["teams"]["Row"];
 export type Initiative = Database["public"]["Tables"]["initiatives"]["Row"];
+
+export type SharedView = {
+  id: string;
+  organization_id: string;
+  created_by: string;
+  mode: "squad" | "cross";
+  token: string;
+  expires_at: string | null;
+  created_at: string;
+};

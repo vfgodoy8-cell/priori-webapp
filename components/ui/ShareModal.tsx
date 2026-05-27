@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import { createSharedView } from "@/app/(app)/share/actions";
 
 type Props = {
   mode: "squad" | "cross";
@@ -11,21 +12,40 @@ type Props = {
 export function ShareModal({ mode, targetRef, onClose }: Props) {
   const [pdfProgress, setPdfProgress] = useState(false);
   const [toast, setToast] = useState("");
+  const [publicToken, setPublicToken] = useState<string | null>(null);
+  const [generatingLink, setGeneratingLink] = useState(false);
+  const [expireIn7Days, setExpireIn7Days] = useState(false);
 
   const modeLabel = mode === "squad" ? "Modo Squad" : "Modo Cross";
-  const shareUrl = typeof window !== "undefined" ? window.location.href : "";
-  const message = `Priori™ — Priorización visual (${modeLabel}): ${shareUrl}`;
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
+  const publicUrl = publicToken ? `${origin}/share/${publicToken}` : null;
+  const message = `Priori™ — Priorización visual (${modeLabel}): ${publicUrl ?? origin}`;
 
   function showToast(msg: string) {
     setToast(msg);
     setTimeout(() => setToast(""), 2600);
   }
 
-  function copyLink() {
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(shareUrl).then(() => showToast("✅ Enlace copiado al portapapeles"));
+  async function generateLink() {
+    setGeneratingLink(true);
+    const result = await createSharedView(mode, expireIn7Days);
+    if ("error" in result) {
+      showToast(`Error: ${result.error}`);
     } else {
-      const inp = document.querySelector<HTMLInputElement>("#share-url-inp");
+      const url = `${origin}/share/${result.token}`;
+      setPublicToken(result.token);
+      navigator.clipboard?.writeText(url).catch(() => {});
+      showToast("✅ Link generado y copiado al portapapeles");
+    }
+    setGeneratingLink(false);
+  }
+
+  function copyPublicLink() {
+    if (!publicUrl) return;
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(publicUrl).then(() => showToast("✅ Enlace copiado al portapapeles"));
+    } else {
+      const inp = document.querySelector<HTMLInputElement>("#share-public-inp");
       inp?.select();
       document.execCommand("copy");
       showToast("✅ Enlace copiado al portapapeles");
@@ -33,8 +53,9 @@ export function ShareModal({ mode, targetRef, onClose }: Props) {
   }
 
   function shareTeams() {
+    const url = publicUrl ?? origin;
     window.open(
-      `https://teams.microsoft.com/share?href=${encodeURIComponent(shareUrl)}&msgText=${encodeURIComponent(message)}`,
+      `https://teams.microsoft.com/share?href=${encodeURIComponent(url)}&msgText=${encodeURIComponent(message)}`,
       "_blank"
     );
     showToast("Abriendo Microsoft Teams…");
@@ -78,7 +99,6 @@ export function ShareModal({ mode, targetRef, onClose }: Props) {
       const usableW = pageW - margin * 2;
       const usableH = pageH - margin * 2 - 16;
 
-      // Header bar
       pdf.setFillColor(232, 98, 26);
       pdf.rect(0, 0, pageW, 8, "F");
       pdf.setTextColor(255, 255, 255);
@@ -87,7 +107,6 @@ export function ShareModal({ mode, targetRef, onClose }: Props) {
       const today = new Date().toLocaleDateString("es-AR", { day: "2-digit", month: "short", year: "numeric" });
       pdf.text(today, pageW - margin, 5.5, { align: "right" });
 
-      // Image
       const imgRatio = canvas.width / canvas.height;
       let imgW = usableW;
       let imgH = imgW / imgRatio;
@@ -119,48 +138,83 @@ export function ShareModal({ mode, targetRef, onClose }: Props) {
           </div>
 
           <div className="p-5 flex flex-col gap-4">
-            {/* URL */}
+            {/* Public link section */}
             <div>
-              <div className="text-[11px] font-bold text-brand-gray uppercase tracking-wider mb-2">Enlace directo</div>
-              <div className="flex gap-2">
-                <input
-                  id="share-url-inp"
-                  readOnly
-                  value={shareUrl}
-                  className="flex-1 text-[11px] px-3 py-2 rounded-lg border border-gray-200 bg-gray-50 text-brand-gray min-w-0"
-                />
-                <button
-                  onClick={copyLink}
-                  className="px-4 py-2 text-xs font-bold rounded-lg bg-brand-orange hover:bg-orange-600 text-white transition"
-                >
-                  Copiar
-                </button>
-              </div>
+              <div className="text-[11px] font-bold text-brand-gray uppercase tracking-wider mb-2">Link público de solo lectura</div>
+
+              {publicUrl ? (
+                <div className="flex gap-2">
+                  <input
+                    id="share-public-inp"
+                    readOnly
+                    value={publicUrl}
+                    className="flex-1 text-[11px] px-3 py-2 rounded-lg border border-gray-200 bg-gray-50 text-brand-gray min-w-0"
+                  />
+                  <button
+                    onClick={copyPublicLink}
+                    className="px-4 py-2 text-xs font-bold rounded-lg bg-brand-orange hover:bg-orange-600 text-white transition"
+                  >
+                    Copiar
+                  </button>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-2">
+                  <label className="flex items-center gap-2 cursor-pointer select-none text-xs text-brand-gray">
+                    <input
+                      type="checkbox"
+                      checked={expireIn7Days}
+                      onChange={(e) => setExpireIn7Days(e.target.checked)}
+                      className="accent-brand-orange"
+                    />
+                    Expira en 7 días
+                  </label>
+                  <button
+                    onClick={generateLink}
+                    disabled={generatingLink}
+                    className="w-full py-2.5 text-sm font-bold rounded-lg bg-brand-orange hover:bg-orange-600 disabled:opacity-60 text-white transition flex items-center justify-center gap-2"
+                  >
+                    {generatingLink ? "Generando…" : "🔗 Generar link público"}
+                  </button>
+                </div>
+              )}
+
+              {publicToken && expireIn7Days && (
+                <p className="text-[10px] text-brand-gray mt-1.5">
+                  Expira en 7 días · cualquier persona con el link puede verlo sin iniciar sesión
+                </p>
+              )}
+              {publicToken && !expireIn7Days && (
+                <p className="text-[10px] text-brand-gray mt-1.5">
+                  Sin vencimiento · cualquier persona con el link puede verlo sin iniciar sesión
+                </p>
+              )}
             </div>
 
-            {/* Channels */}
-            <div>
-              <div className="text-[11px] font-bold text-brand-gray uppercase tracking-wider mb-2">Compartir vía</div>
-              <div className="grid grid-cols-2 gap-2">
-                {[
-                  { icon: "🟦", name: "Microsoft Teams", desc: "Compartir en Teams", action: shareTeams },
-                  { icon: "🟢", name: "WhatsApp", desc: "Compartir por WhatsApp", action: shareWhatsApp },
-                  { icon: "📧", name: "Email", desc: "Enviar por correo", action: shareMail },
-                ].map((ch) => (
-                  <button
-                    key={ch.name}
-                    onClick={ch.action}
-                    className="flex items-center gap-3 px-3 py-3 rounded-xl border border-gray-100 hover:border-brand-orange hover:bg-orange-50 transition text-left"
-                  >
-                    <span className="text-xl">{ch.icon}</span>
-                    <div>
-                      <div className="text-xs font-bold text-brand-black">{ch.name}</div>
-                      <div className="text-[10px] text-brand-gray">{ch.desc}</div>
-                    </div>
-                  </button>
-                ))}
+            {/* Channels — available once link is generated */}
+            {publicUrl && (
+              <div>
+                <div className="text-[11px] font-bold text-brand-gray uppercase tracking-wider mb-2">Compartir vía</div>
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { icon: "🟦", name: "Microsoft Teams", desc: "Compartir en Teams", action: shareTeams },
+                    { icon: "🟢", name: "WhatsApp", desc: "Compartir por WhatsApp", action: shareWhatsApp },
+                    { icon: "📧", name: "Email", desc: "Enviar por correo", action: shareMail },
+                  ].map((ch) => (
+                    <button
+                      key={ch.name}
+                      onClick={ch.action}
+                      className="flex items-center gap-3 px-3 py-3 rounded-xl border border-gray-100 hover:border-brand-orange hover:bg-orange-50 transition text-left"
+                    >
+                      <span className="text-xl">{ch.icon}</span>
+                      <div>
+                        <div className="text-xs font-bold text-brand-black">{ch.name}</div>
+                        <div className="text-[10px] text-brand-gray">{ch.desc}</div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             <hr className="border-gray-100" />
 

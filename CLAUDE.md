@@ -110,34 +110,54 @@ types/                  # Tipos TypeScript compartidos
 
 ## Estado actual del desarrollo
 
-### Completado
+### Completado (Fase 1–2)
 - [x] Scaffold Next.js 14 + TypeScript + Tailwind + ESLint
-- [x] Repo git inicializado con `.gitignore` y `.gitattributes`
-- [x] Paleta de marca configurada en `tailwind.config.ts`
-- [x] Layout raíz con metadata en español
-
-### En curso — Fase 1 (sem 1–3)
-- [x] Configurar proyecto en Supabase (URL + keys en `.env.local`)
-- [x] Instalar y configurar clientes Supabase (`@supabase/ssr`) — `lib/supabase/client.ts` y `lib/supabase/server.ts`
 - [x] Auth: login / signup / logout con email+password y Google OAuth
-- [x] Middleware de rutas protegidas (`middleware.ts`)
-- [x] Callback OAuth (`app/auth/callback/route.ts`)
-- [x] Dashboard placeholder protegido (`app/(app)/dashboard/page.tsx`)
-- [ ] Schema de DB: `organizations`, `users`, `projects`
-- [ ] Deploy inicial en Vercel
+- [x] Middleware de rutas protegidas; callback OAuth
+- [x] Multi-tenant: organizaciones, onboarding, membresías
+- [x] Header con navegación Squad ↔ Cross
+- [x] **Modo Squad** — canvas completo:
+  - Zona circular dinámica "En Curso" con drag & drop
+  - Burbujas con Ring Status (progreso de sprints), tooltip hover
+  - Slicing: padre/slices con conexión visual (línea punteada + ⑂)
+  - Progreso agregado en burbuja padre (suma de slices)
+  - Overlay de Quarters (Vista Q): bandas Q1–Q4 con reposicionamiento
+  - Toggle Canvas / Lista
+  - Panel del Analista: crear/editar/archivar proyectos, config de squad
+  - Semáforo de capacidad (verde/amarillo/naranja/rojo)
+- [x] **Modo Cross** — timeline Q1–Q4:
+  - CSS grid con tarjetas multi-quarter (grid-column span)
+  - Drag & drop al timeline, detección de quarter por clientX
+  - Tabla de capacidad por equipo y quarter
+  - Equipos configurables (personas, proy/persona, % disponibilidad Q)
+- [x] **Vista pública /share/[token]**: solo lectura, sin login
+  - Tabla `shared_views` con token único y expiración opcional
+  - Modal "Compartir" genera link público y lo copia al portapapeles
+  - Canales: Teams, WhatsApp, Email usan el link público
+- [x] Exportar PDF (html2canvas + jsPDF, captura `#priori-export-target`)
+- [x] Migraciones SQL en `supabase/migrations/`
 
-### Pendiente — Fase 2 (sem 4–8)
-- [ ] Modo Squad: canvas con burbujas y drag & drop
-- [ ] Modo Cross: timeline Q1–Q4
-- [ ] Persistencia de proyectos en Supabase
-- [ ] Compartir por URL (state serializado)
-- [ ] Exportar PDF
+### Pendiente inmediato
+- [ ] Deploy en Vercel (pendiente `vercel login` + `vercel link`)
+- [ ] Drill-down Squad ↔ Cross (vincular proyectos Squad con iniciativas Cross)
+- [ ] PDF server-side de mayor calidad (alternativa a html2canvas)
 
-### Pendiente — Fase 3 (sem 9–12)
-- [ ] Organizaciones multi-tenant
+### Fase 3 — Colaboración y roles
 - [ ] Roles: Analista / Stakeholder / Líder
+- [ ] Comentarios por proyecto/iniciativa
+- [ ] Historial de cambios
 - [ ] Invitaciones por email
-- [ ] Pulido y onboarding
+- [ ] Onboarding guiado
+
+### Fase 4 — Priori™ AI
+- [ ] Sugerencias de priorización asistidas por IA
+- [ ] Detección de conflictos de capacidad predictiva
+
+### Fase 5 — Integraciones
+- [ ] Azure DevOps
+- [ ] Jira
+- [ ] GitHub Issues / Projects
+- [ ] Linear
 
 ---
 

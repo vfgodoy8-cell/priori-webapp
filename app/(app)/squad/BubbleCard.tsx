@@ -71,9 +71,10 @@ type Props = {
   isSlice?: boolean;
   hasSlices?: boolean;
   aggregate?: Aggregate;
+  readOnly?: boolean;
 };
 
-export function BubbleCard({ project, onEdit, style, onMouseDown, onMouseEnter, onMouseLeave, urgencyColor: urgencyColorProp, isSlice, hasSlices, aggregate }: Props) {
+export function BubbleCard({ project, onEdit, style, onMouseDown, onMouseEnter, onMouseLeave, urgencyColor: urgencyColorProp, isSlice, hasSlices, aggregate, readOnly }: Props) {
   const quadrant = useMemo(
     () => computeQuadrant(project.impact_value, project.effort_sprints),
     [project.impact_value, project.effort_sprints]
@@ -127,11 +128,11 @@ export function BubbleCard({ project, onEdit, style, onMouseDown, onMouseEnter, 
   return (
     <div
       className="absolute"
-      style={{ ...style, userSelect: "none", cursor: "grab" }}
-      onMouseDown={onMouseDown}
+      style={{ ...style, userSelect: "none", cursor: readOnly ? "default" : "grab" }}
+      onMouseDown={readOnly ? undefined : onMouseDown}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
-      onDoubleClick={() => onEdit(project)}
+      onDoubleClick={readOnly ? undefined : () => onEdit(project)}
     >
       <svg
         width={size}

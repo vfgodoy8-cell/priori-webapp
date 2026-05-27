@@ -76,7 +76,7 @@ export default async function DashboardPage() {
             />
           </Link>
           <ModeCard
-            title="Modo Programa"
+            title="Modo Cross"
             description="Timeline Q1–Q4 con planificación de capacidad por equipo."
             disabled
           />

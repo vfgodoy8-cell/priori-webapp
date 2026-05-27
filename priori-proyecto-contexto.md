@@ -32,7 +32,7 @@ Priori™ es una herramienta web de priorización visual de proyectos para equip
 - Edición de proyectos con contorno naranja en burbuja activa
 - Franja de proyectos descartados con opción de restaurar
 
-**Modo Programa**
+**Modo Cross**
 - Timeline Q1–Q4 (Ene-Mar / Abr-Jun / Jul-Sep / Oct-Dic)
 - Iniciativas drag & drop desde backlog a Quarters
 - Duración 1 a 4 Quarters, cards fantasma en Quarters de continuación
@@ -40,13 +40,13 @@ Priori™ es una herramienta web de priorización visual de proyectos para equip
 - Tabla de capacidad: usado/disponible, % ocupación, semáforo verde(<70%) / amarillo(<90%) / rojo(≥90%)
 - Capacidad = personas × proyectos/persona × (% disponibilidad Q / 100)
 - Equipos configurables: nombre, personas, proyectos/persona, Q1%–Q4%
-- Drill-down: botón en cada iniciativa abre Modo Squad en contexto de esa iniciativa, con banner "Volver al Programa"
+- Drill-down: botón en cada iniciativa abre Modo Squad en contexto de esa iniciativa, con banner "Volver al Cross"
 
 **Compartir y exportar**
 - Barra visible en todo momento con botón "Compartir / Exportar"
 - Estado serializado en Base64 en URL (?state=...)
 - Canales: Teams, WhatsApp, correo, copiar enlace
-- Exportar PDF: Vista Squad o Programa (html2canvas + jsPDF)
+- Exportar PDF: Vista Squad o Cross (html2canvas + jsPDF)
 - Carga automática de estado desde URL al abrir
 
 **Configuración (panel ⚙)**
@@ -54,7 +54,7 @@ Priori™ es una herramienta web de priorización visual de proyectos para equip
 - Umbrales de impacto: alto ≥ $4M, medio ≥ $2M (configurables)
 - Umbrales de esfuerzo: alto ≥ 8sp, medio ≥ 4sp (configurables)
 - Developers y proyectos por developer (Modo Squad)
-- Equipos del programa con disponibilidad por Quarter (Modo Programa)
+- Equipos del programa con disponibilidad por Quarter (Modo Cross)
 
 **Equipos preconfigurados por defecto**
 Software Delivery (8p), Arquitectura (4p), Infraestructura (5p), Seg. Informática (3p), QA (6p), Data & Analytics (3p)
@@ -79,7 +79,7 @@ Software Delivery (8p), Arquitectura (4p), Infraestructura (5p), Seg. Informáti
 
 **Fase 1 (actual):** Licencia anual por empresa
 - Pequeña: USD 3.000–5.000/año (hasta 3 squads)
-- Mediana: USD 8.000–12.000/año (squads ilimitados + Programa)
+- Mediana: USD 8.000–12.000/año (squads ilimitados + Cross)
 - Enterprise: a consultar (on-premise, SSO, personalización)
 
 **Fase 2 (con webapp):** SaaS por equipo
@@ -111,7 +111,7 @@ Todos los documentos existen en dos versiones: brand Galicia Seguros (uso intern
 
 **Fases:**
 - Fase 1 (sem 1–3): Auth, rutas protegidas, DB schema, deploy en Vercel
-- Fase 2 (sem 4–8): Migración del core funcional (Squad + Programa + compartir + PDF) con persistencia en Supabase
+- Fase 2 (sem 4–8): Migración del core funcional (Squad + Cross + compartir + PDF) con persistencia en Supabase
 - Fase 3 (sem 9–12): Organizaciones, roles (Analista / Stakeholder / Líder), invitaciones, pulido
 
 **Costo infraestructura:** USD 0/mes hasta los primeros 5–10 clientes (planes gratuitos de Supabase y Vercel)

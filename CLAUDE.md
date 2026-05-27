@@ -30,11 +30,11 @@ hacia un SaaS multi-tenant con persistencia, roles y organizaciones.
 ```
 app/                    # App Router — layouts, pages, loading, error
   (auth)/               # Grupo de rutas públicas (login, signup)
-  (app)/                # Grupo de rutas protegidas (dashboard, squad, programa)
+  (app)/                # Grupo de rutas protegidas (dashboard, squad, cross)
 components/             # Componentes reutilizables
   ui/                   # Primitivos: Button, Input, Modal, Badge…
   squad/                # Componentes del Modo Squad
-  programa/             # Componentes del Modo Programa
+  cross/                # Componentes del Modo Cross
 lib/                    # Utilidades, helpers, clientes externos
   supabase/             # Cliente Supabase (server / client / middleware)
 types/                  # Tipos TypeScript compartidos
@@ -67,7 +67,7 @@ types/                  # Tipos TypeScript compartidos
 - Orden de clases: layout → spacing → sizing → typography → color → state → responsive.
 
 ### Nomenclatura
-- **Rutas:** kebab-case (`/modo-squad`, `/modo-programa`).
+- **Rutas:** kebab-case (`/modo-squad`, `/modo-cross`).
 - **Archivos de componente:** PascalCase (`BurbujaProyecto.tsx`).
 - **Archivos de utilidad/lib:** camelCase (`formatSprints.ts`).
 - **Variables y funciones:** camelCase.
@@ -100,7 +100,7 @@ types/                  # Tipos TypeScript compartidos
 | **Esfuerzo** | Sprints estimados (1–24) |
 | **Cuadrante** | P0 Descartada / P1 Quick Win / P2 Gran Proyecto / P3 Iniciativa Menor |
 | **Squad** | Modo de vista en canvas con burbujas |
-| **Programa** | Modo de vista en timeline Q1–Q4 |
+| **Cross** | Modo de vista en timeline Q1–Q4 |
 | **Capacidad** | `personas × proyectos/persona × (% disponibilidad Q / 100)` |
 | **Límite Squad** | `developers × proyectos/developer` (default: 3) |
 
@@ -126,7 +126,7 @@ types/                  # Tipos TypeScript compartidos
 
 ### Pendiente — Fase 2 (sem 4–8)
 - [ ] Modo Squad: canvas con burbujas y drag & drop
-- [ ] Modo Programa: timeline Q1–Q4
+- [ ] Modo Cross: timeline Q1–Q4
 - [ ] Persistencia de proyectos en Supabase
 - [ ] Compartir por URL (state serializado)
 - [ ] Exportar PDF

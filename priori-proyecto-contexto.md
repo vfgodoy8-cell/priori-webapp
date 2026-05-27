@@ -2,7 +2,7 @@
 
 ## Qué es Priori
 
-Priori™ es una herramienta web de priorización visual de proyectos para equipos de software. Permite clasificar proyectos e iniciativas usando la Matriz de Impacto vs Esfuerzo, simular escenarios de priorización con drag & drop, analizar el impacto de cada decisión antes de tomarla, y planificar la capacidad de equipos a lo largo del año por Quarters.
+Priori™ es una herramienta web de transparencia estratégica para equipos de software. Permite clasificar proyectos e iniciativas usando la Matriz de Impacto vs Esfuerzo, simular escenarios de priorización con drag & drop, analizar el impacto de cada decisión antes de tomarla, y planificar la capacidad de equipos a lo largo del año por Quarters.
 
 **Tagline:** "La claridad de priorizar bien."
 

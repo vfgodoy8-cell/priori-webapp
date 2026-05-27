@@ -2,7 +2,7 @@
 
 ## Qué es este proyecto
 
-Priori™ es una herramienta web de priorización visual de proyectos para equipos de software.
+Priori™ es una herramienta web de transparencia estratégica para equipos de software.
 Permite clasificar iniciativas con la Matriz de Impacto vs Esfuerzo, simular escenarios con drag & drop
 y planificar capacidad de equipos por Quarters (Q1–Q4).
 

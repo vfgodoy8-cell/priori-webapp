@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import type { Project } from "@/types/database";
-import { computeQuadrant } from "@/lib/quadrant";
+import { computeQuadrant, QUADRANT_META, type Quadrant } from "@/lib/quadrant";
 import {
   bubbleRadius,
   squadLimit,
@@ -21,11 +21,31 @@ import { updateSquadStatus, swapSquadStatus, updateProjectPosition, restoreProje
 type Pos = { x: number; y: number };
 type SquadStatus = "backlog" | "curso";
 
+const QUADRANT_EMOJI: Record<Quadrant, string> = {
+  p1: "🚀", p2: "🏗", p3: "💡", p0: "🚫",
+};
+
+function formatDate(d: string): string {
+  return new Date(d + "T00:00:00").toLocaleDateString("es-AR", {
+    day: "numeric", month: "short", year: "numeric",
+  });
+}
+
+function urgencyLabel(date: string | null): { text: string; color: string } | null {
+  if (!date) return null;
+  const diff = Math.round((new Date(date).getTime() - Date.now()) / 86400000);
+  if (diff < 0) return { text: "Vencida", color: "#E24B4A" };
+  if (diff <= 14) return { text: "Urgente", color: "#E24B4A" };
+  if (diff <= 30) return { text: "Pronto", color: "#EF9F27" };
+  return { text: "OK", color: "#1D9E75" };
+}
+
 function computePositions(
   projects: Project[],
   overrides: Map<string, SquadStatus>,
   W: number,
-  H: number
+  H: number,
+  zoneR: number
 ): Map<string, Pos> {
   const map = new Map<string, Pos>();
   const inCurso = projects.filter(p => (overrides.get(p.id) ?? p.squad_status) === "curso");
@@ -33,11 +53,11 @@ function computePositions(
 
   inCurso.forEach((p, i) => {
     const r = bubbleRadius(p.effort_sprints);
-    map.set(p.id, posIn(i, inCurso.length, r, W, H));
+    map.set(p.id, posIn(i, inCurso.length, r, W, H, zoneR));
   });
   inBacklog.forEach((p, i) => {
     const r = bubbleRadius(p.effort_sprints);
-    map.set(p.id, posOut(i, inBacklog.length, r, W, H));
+    map.set(p.id, posOut(i, inBacklog.length, r, W, H, zoneR));
   });
   return map;
 }
@@ -54,6 +74,7 @@ export function SquadCanvas({ projects, discarded, p0Projects, config, onEdit }:
   const CANVAS_H = 650;
   const canvasRef = useRef<HTMLDivElement>(null);
   const posRef = useRef<Map<string, Pos>>(new Map());
+  const zoneRRef = useRef(ZONE_R); // always-current zone radius for memoized callbacks
 
   const [W, setW] = useState(800);
   const [statusOverrides, setStatusOverrides] = useState<Map<string, SquadStatus>>(new Map());
@@ -62,6 +83,12 @@ export function SquadCanvas({ projects, discarded, p0Projects, config, onEdit }:
   const [isOverLimit, setIsOverLimit] = useState(false);
   const [infoMsg, setInfoMsg] = useState("Arrastrá burbujas al círculo para sumarlas al sprint. Doble click para editar.");
   const [impactTarget, setImpactTarget] = useState<Project | null>(null);
+  const [tooltip, setTooltip] = useState<{
+    project: Project;
+    cx: number; // bubble center x in viewport coords
+    ty: number; // bubble top y in viewport coords
+    bh: number; // bubble height (px)
+  } | null>(null);
 
   const dragRef = useRef<{
     id: string;
@@ -81,13 +108,6 @@ export function SquadCanvas({ projects, discarded, p0Projects, config, onEdit }:
     return () => obs.disconnect();
   }, []);
 
-  // Recompute positions when projects, status or dimensions change
-  useEffect(() => {
-    const newPositions = computePositions(projects, statusOverrides, W, CANVAS_H);
-    setPositions(newPositions);
-    posRef.current = newPositions;
-  }, [projects, statusOverrides, W]);
-
   const sqLim = squadLimit(config.devN, config.devP);
   const cursoIds = new Set(
     projects
@@ -98,17 +118,31 @@ export function SquadCanvas({ projects, discarded, p0Projects, config, onEdit }:
   const capPct = sqLim > 0 ? Math.min(100, (cursoCount / sqLim) * 100) : 0;
   const capColor = CAP_COLOR(capPct);
 
-  // Zone check: is a point inside the central circle?
+  // Dynamic zone: base 100 (200px ⌀), +40 per en-curso project, max 250 (500px ⌀)
+  const dynamicZoneR = Math.min(250, Math.max(100, 100 + cursoCount * 40));
+
+  // Keep ref in sync so stale useCallback closures always read the latest value
+  useEffect(() => { zoneRRef.current = dynamicZoneR; }, [dynamicZoneR]);
+
+  // Recompute positions when projects, status, dimensions, or zone radius change
+  useEffect(() => {
+    const newPositions = computePositions(projects, statusOverrides, W, CANVAS_H, dynamicZoneR);
+    setPositions(newPositions);
+    posRef.current = newPositions;
+  }, [projects, statusOverrides, W, dynamicZoneR]);
+
+  // Zone check uses ref so it's always current inside memoized callbacks
   function inZone(clientX: number, clientY: number): boolean {
     const cr = canvasRef.current?.getBoundingClientRect();
     if (!cr) return false;
     const zoneCx = cr.left + cr.width / 2;
     const zoneCy = cr.top + cr.height / 2;
-    return Math.sqrt((clientX - zoneCx) ** 2 + (clientY - zoneCy) ** 2) < ZONE_R - 10;
+    return Math.sqrt((clientX - zoneCx) ** 2 + (clientY - zoneCy) ** 2) < zoneRRef.current - 10;
   }
 
   function startDrag(id: string, e: React.MouseEvent) {
     e.preventDefault();
+    setTooltip(null); // dismiss tooltip immediately on drag start
     const pos = posRef.current.get(id);
     if (!pos) return;
     dragRef.current = {
@@ -118,6 +152,25 @@ export function SquadCanvas({ projects, discarded, p0Projects, config, onEdit }:
       startPosX: pos.x,
       startPosY: pos.y,
     };
+  }
+
+  function handleBubbleMouseEnter(id: string, e: React.MouseEvent) {
+    if (dragRef.current) return; // no tooltip during drag
+    const project = projects.find(p => p.id === id);
+    const pos = posRef.current.get(id);
+    const cr = canvasRef.current?.getBoundingClientRect();
+    if (!project || !pos || !cr) return;
+    const r = bubbleRadius(project.effort_sprints);
+    setTooltip({
+      project,
+      cx: cr.left + pos.x + r,  // bubble center x in viewport
+      ty: cr.top + pos.y,        // bubble top y in viewport
+      bh: r * 2,
+    });
+  }
+
+  function handleBubbleMouseLeave() {
+    setTooltip(null);
   }
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
@@ -138,7 +191,6 @@ export function SquadCanvas({ projects, discarded, p0Projects, config, onEdit }:
       return next;
     });
 
-    // Zone hover visual
     const inside = inZone(e.clientX, e.clientY);
     setIsDragOver(inside);
     const curStatus = statusOverrides.get(id) ?? projects.find(p => p.id === id)?.squad_status ?? "backlog";
@@ -160,9 +212,7 @@ export function SquadCanvas({ projects, discarded, p0Projects, config, onEdit }:
     const wasCurso = (statusOverrides.get(id) ?? project.squad_status) === "curso";
 
     if (inside && !wasCurso) {
-      // Drop INTO zone
       if (cursoCount >= sqLim) {
-        // Over limit: show impact modal, restore position
         setPositions(prev => {
           const next = new Map(prev);
           next.set(id, { x: startPosX, y: startPosY });
@@ -176,12 +226,10 @@ export function SquadCanvas({ projects, discarded, p0Projects, config, onEdit }:
         setInfoMsg(`✅ <strong>${project.name}</strong> en sprint — ${project.effort_sprints} sprints`);
       }
     } else if (!inside && wasCurso) {
-      // Drop OUT of zone
       setStatusOverrides(prev => new Map(prev).set(id, "backlog"));
       updateSquadStatus(id, "backlog");
       setInfoMsg(`⬆️ <strong>${project.name}</strong> movido al backlog.`);
     } else if (curPos) {
-      // Free drag within same zone — persist position
       updateProjectPosition(id, Math.round(curPos.x), Math.round(curPos.y));
     }
   }, [projects, statusOverrides, cursoCount, sqLim]);
@@ -220,9 +268,9 @@ export function SquadCanvas({ projects, discarded, p0Projects, config, onEdit }:
         <div className="text-[13px] text-brand-gray flex items-center gap-1">
           <span>En paralelo</span>
         </div>
-        <div className="flex-1 max-w-[220px]">
+        <div className="flex-1 max-w-[320px]">
           <div className="flex justify-between text-[13px] text-brand-gray mb-1">
-            <span>{cursoCount}/{sqLim}</span>
+            <span>{cursoCount}/{sqLim} proyectos ({Math.round(capPct)}%)</span>
           </div>
           <div className="h-2 bg-gray-100 rounded-full border border-gray-200 overflow-hidden">
             <div
@@ -249,15 +297,15 @@ export function SquadCanvas({ projects, discarded, p0Projects, config, onEdit }:
           }}
         />
 
-        {/* Central zone — en curso */}
+        {/* Central zone — en curso (dynamic size, animated) */}
         <div
-          className="absolute pointer-events-none flex flex-col items-center justify-center gap-1 transition-colors duration-200"
+          className="absolute pointer-events-none flex flex-col items-center justify-center gap-1"
           style={{
             left: "50%",
             top: "50%",
             transform: "translate(-50%, -50%)",
-            width: ZONE_R * 2,
-            height: ZONE_R * 2,
+            width: dynamicZoneR * 2,
+            height: dynamicZoneR * 2,
             borderRadius: "50%",
             border: `2.5px dashed ${isOverLimit ? "#E24B4A" : isDragOver ? "#1D9E75" : "#ccc"}`,
             background: isOverLimit
@@ -265,6 +313,7 @@ export function SquadCanvas({ projects, discarded, p0Projects, config, onEdit }:
               : isDragOver
               ? "rgba(29,158,117,0.07)"
               : "#F4F4F4",
+            transition: "all 0.4s ease",
           }}
         >
           <span className="text-xs font-bold text-brand-gray uppercase tracking-widest">en curso</span>
@@ -287,6 +336,8 @@ export function SquadCanvas({ projects, discarded, p0Projects, config, onEdit }:
               urgencyColor={urgencyColor}
               style={{ left: pos.x, top: pos.y }}
               onMouseDown={(e) => startDrag(project.id, e)}
+              onMouseEnter={(e) => handleBubbleMouseEnter(project.id, e)}
+              onMouseLeave={handleBubbleMouseLeave}
             />
           );
         })}
@@ -315,7 +366,6 @@ export function SquadCanvas({ projects, discarded, p0Projects, config, onEdit }:
             Backlog
           </div>
         )}
-
       </div>
 
       {/* Discarded strip */}
@@ -347,6 +397,16 @@ export function SquadCanvas({ projects, discarded, p0Projects, config, onEdit }:
           onCancel={() => setImpactTarget(null)}
         />
       )}
+
+      {/* Bubble tooltip (fixed position, never clipped by canvas overflow-hidden) */}
+      {tooltip && (
+        <BubbleTooltip
+          project={tooltip.project}
+          cx={tooltip.cx}
+          ty={tooltip.ty}
+          bh={tooltip.bh}
+        />
+      )}
     </div>
   );
 }
@@ -368,5 +428,111 @@ function DiscardedChip({ project: p, isExplicit }: { project: Project; isExplici
         </form>
       )}
     </span>
+  );
+}
+
+function BubbleTooltip({
+  project,
+  cx,
+  ty,
+  bh,
+}: {
+  project: Project;
+  cx: number;
+  ty: number;
+  bh: number;
+}) {
+  const TOOLTIP_W = 244;
+  const TOOLTIP_H = 190;
+
+  const q = computeQuadrant(project.impact_value, project.effort_sprints);
+  const m = QUADRANT_META[q];
+  const completed = project.sprints_completed ?? 0;
+  const progress = project.effort_sprints > 0 ? Math.min(1, completed / project.effort_sprints) : 0;
+  const urg = urgencyLabel(project.production_date);
+
+  // Position above bubble; flip below if near viewport top; clamp horizontally
+  let left = Math.round(cx - TOOLTIP_W / 2);
+  let top = Math.round(ty - TOOLTIP_H - 10);
+  if (top < 8) top = Math.round(ty + bh + 10);
+  if (typeof window !== "undefined") {
+    left = Math.max(8, Math.min(window.innerWidth - TOOLTIP_W - 8, left));
+  }
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        left,
+        top,
+        width: TOOLTIP_W,
+        zIndex: 9999,
+        background: "#111111",
+        color: "#fff",
+        borderRadius: 8,
+        padding: "10px 14px",
+        boxShadow: "0 4px 16px rgba(0,0,0,.25)",
+        pointerEvents: "none",
+      }}
+    >
+      {/* Title */}
+      <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 6, lineHeight: 1.3 }}>
+        {project.name}
+      </div>
+
+      {/* Quadrant badge */}
+      <div style={{ marginBottom: 8 }}>
+        <span
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 4,
+            fontSize: 11,
+            fontWeight: 700,
+            padding: "2px 8px",
+            borderRadius: 20,
+            background: `${m.color}33`,
+            color: m.color,
+            border: `1px solid ${m.color}55`,
+          }}
+        >
+          {QUADRANT_EMOJI[q]} {m.priority} {m.label}
+        </span>
+      </div>
+
+      {/* Progress */}
+      <div style={{ marginBottom: 7 }}>
+        <div style={{ fontSize: 11, color: "#aaa", marginBottom: 4 }}>
+          {completed} / {project.effort_sprints} sprints completados
+        </div>
+        <div style={{ height: 4, background: "#333", borderRadius: 2, overflow: "hidden" }}>
+          <div style={{ height: "100%", width: `${Math.round(progress * 100)}%`, background: m.color, borderRadius: 2 }} />
+        </div>
+      </div>
+
+      {/* Stakeholder */}
+      {project.stakeholder && (
+        <div style={{ fontSize: 11, color: "#ccc", marginBottom: 4 }}>
+          👤 {project.stakeholder}
+        </div>
+      )}
+
+      {/* Production date + urgency */}
+      {project.production_date && (
+        <div style={{ fontSize: 11, color: "#ccc", marginBottom: project.dependencies ? 4 : 0, display: "flex", alignItems: "center", gap: 6 }}>
+          <span>📅 {formatDate(project.production_date)}</span>
+          {urg && (
+            <span style={{ fontSize: 10, fontWeight: 700, color: urg.color }}>{urg.text}</span>
+          )}
+        </div>
+      )}
+
+      {/* Dependencies */}
+      {project.dependencies && (
+        <div style={{ fontSize: 11, color: "#ccc" }}>
+          🔗 {project.dependencies}
+        </div>
+      )}
+    </div>
   );
 }

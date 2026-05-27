@@ -53,7 +53,7 @@ const QUADRANT_LABEL: Record<Quadrant, string> = {
 
 function getBubble(effort: number) {
   const clamped = Math.max(1, Math.min(24, effort));
-  const size = Math.round(70 + (clamped - 1) * 6.39);
+  const size = Math.round(94 + (clamped - 1) * 5.35);
   const strokeWidth = Math.round(6 + (clamped - 1) * 0.13);
   return { size, strokeWidth };
 }
@@ -63,10 +63,12 @@ type Props = {
   onEdit: (project: Project) => void;
   style?: React.CSSProperties;
   onMouseDown?: (e: React.MouseEvent) => void;
-  urgencyColor?: string; // override computed urgency dot color
+  onMouseEnter?: (e: React.MouseEvent) => void;
+  onMouseLeave?: () => void;
+  urgencyColor?: string;
 };
 
-export function BubbleCard({ project, onEdit, style, onMouseDown, urgencyColor: urgencyColorProp }: Props) {
+export function BubbleCard({ project, onEdit, style, onMouseDown, onMouseEnter, onMouseLeave, urgencyColor: urgencyColorProp }: Props) {
   const quadrant = useMemo(
     () => computeQuadrant(project.impact_value, project.effort_sprints),
     [project.impact_value, project.effort_sprints]
@@ -88,19 +90,19 @@ export function BubbleCard({ project, onEdit, style, onMouseDown, urgencyColor: 
   );
   const dotFill = urgencyColorProp ?? URGENCY_COLOR[urgency];
 
-  const isSmall = size < 95;
-  const dotR = isSmall ? 4 : 5;
+  const isSmall = size < 120; // shows abbreviated "P1"/"P2"/"P3" label when true
+  const dotR = 5;
   const dotCy = cy - r;
 
-  // Proportional font sizes
+  // Proportional font sizes — always show 3 elements
   const qlFontSize = Math.max(11, Math.round(size * 0.052));
   const nameFontSize = Math.max(13, Math.round(size * 0.065));
   const spFontSize = Math.max(11, Math.round(size * 0.055));
 
-  // Text Y positions (relative to center)
+  // Text Y positions (relative to center) — fixed layout for 3 always-visible lines
   const qlOffsetY = -size * 0.145;
-  const nameOffsetY = isSmall ? -size * 0.055 : size * 0.01;
-  const spOffsetY = isSmall ? size * 0.105 : size * 0.14;
+  const nameOffsetY = size * 0.01;
+  const spOffsetY = size * 0.14;
 
   // Name truncation based on inner radius
   const rIn = r - strokeWidth / 2;
@@ -119,8 +121,9 @@ export function BubbleCard({ project, onEdit, style, onMouseDown, urgencyColor: 
       className="absolute"
       style={{ ...style, userSelect: "none", cursor: "grab" }}
       onMouseDown={onMouseDown}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
       onDoubleClick={() => onEdit(project)}
-      title={`${project.name} — doble click para editar`}
     >
       <svg
         width={size}
@@ -164,21 +167,19 @@ export function BubbleCard({ project, onEdit, style, onMouseDown, urgencyColor: 
         {/* Urgency dot at 12 o'clock */}
         <circle cx={cx} cy={dotCy} r={dotR} fill={dotFill} />
 
-        {/* Quadrant label (only medium / large) */}
-        {!isSmall && (
-          <text
-            x={cx}
-            y={cy + qlOffsetY}
-            textAnchor="middle"
-            dominantBaseline="middle"
-            fontSize={qlFontSize}
-            fontWeight="600"
-            fill={labelColor}
-            fontFamily="var(--font-geist-sans), system-ui, sans-serif"
-          >
-            {QUADRANT_LABEL[quadrant]}
-          </text>
-        )}
+        {/* Quadrant label — always visible, abbreviated on small bubbles */}
+        <text
+          x={cx}
+          y={cy + qlOffsetY}
+          textAnchor="middle"
+          dominantBaseline="middle"
+          fontSize={qlFontSize}
+          fontWeight="600"
+          fill={labelColor}
+          fontFamily="var(--font-geist-sans), system-ui, sans-serif"
+        >
+          {isSmall ? QUADRANT_LABEL[quadrant].split(" ")[0] : QUADRANT_LABEL[quadrant]}
+        </text>
 
         {/* Project name */}
         <text

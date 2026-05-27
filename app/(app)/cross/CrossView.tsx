@@ -37,7 +37,7 @@ function teamUsed(initiatives: Initiative[], teamId: string, q: number): number 
 }
 
 function capColor(pct: number): string {
-  return pct >= 90 ? "#E24B4A" : pct >= 70 ? "#EF9F27" : "#1D9E75";
+  return pct >= 100 ? "#E24B4A" : pct >= 95 ? "#E8621A" : pct >= 90 ? "#EF9F27" : "#1D9E75";
 }
 
 function SubmitBtn({ label }: { label: string }) {
@@ -289,7 +289,7 @@ export function CrossView({ orgId, initialTeams, initialInitiatives }: Props) {
         <div className="border border-gray-200 rounded-xl overflow-hidden">
           <div className="px-4 py-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
             <span className="text-sm font-bold text-brand-black">Capacidad por equipo</span>
-            <span className="text-xs text-brand-gray">Usado / Disponible · Verde &lt;70% · Amarillo &lt;90% · Rojo ≥90%</span>
+            <span className="text-xs text-brand-gray">Verde &lt;90% · Amarillo 90-95% · Naranja 95-99% · Rojo ≥100%</span>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full border-collapse">
@@ -329,11 +329,8 @@ export function CrossView({ orgId, initialTeams, initialInitiatives }: Props) {
                               style={{ width: `${Math.min(100, pct)}%`, background: col }}
                             />
                           </div>
-                          <div className="text-center text-[10px] font-bold" style={{ color: col }}>
-                            {pct}%
-                          </div>
-                          <div className="text-center text-[9px] text-brand-gray">
-                            {over ? "⚠️ " : ""}{used}/{cap}
+                          <div className="text-center text-[11px] font-bold" style={{ color: col }}>
+                            {over ? "⚠️ " : ""}{used}/{cap} ({pct}%)
                           </div>
                         </td>
                       );

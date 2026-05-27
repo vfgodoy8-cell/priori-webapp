@@ -1,7 +1,7 @@
 // Lógica de posicionamiento del canvas Squad — espejo exacto del priori-estimador-v2.html
 
 export const MAX_SP = 24;
-export const MIN_R = 28;
+export const MIN_R = 40;
 export const MAX_R = 100;
 export const ZONE_DIAMETER = 340;
 export const ZONE_R = ZONE_DIAMETER / 2;
@@ -23,10 +23,11 @@ export function posIn(
   total: number,
   r: number,
   W: number,
-  H: number
+  H: number,
+  zoneR = ZONE_R
 ): { x: number; y: number } {
   const a = (index / Math.max(total, 1)) * 360 - 90;
-  const d = Math.min(W, H) * 0.14;
+  const d = Math.min(zoneR * 0.5, 100);
   const rd = (a * Math.PI) / 180;
   return {
     x: Math.max(4, Math.min(W - r * 2 - 4, W / 2 + Math.cos(rd) * d - r)),
@@ -40,9 +41,10 @@ export function posOut(
   total: number,
   r: number,
   W: number,
-  H: number
+  H: number,
+  zoneR = ZONE_R
 ): { x: number; y: number } {
-  const rn = Math.min(W, H) * 0.43;
+  const rn = Math.max(zoneR + 110, Math.min(W, H) * 0.43);
   const a = -20 + (index / Math.max(total - 1, 1)) * 220;
   const rd = (a * Math.PI) / 180;
   return {
@@ -65,8 +67,9 @@ export const DL_COLOR: Record<DlLevel, string> = {
   danger: "#E24B4A",
 };
 
+// Verde <90% · Amarillo 90-95% · Naranja 95-99% · Rojo ≥100%
 export const CAP_COLOR = (pct: number) =>
-  pct >= 100 ? "#E24B4A" : pct >= 75 ? "#EF9F27" : "#1D9E75";
+  pct >= 100 ? "#E24B4A" : pct >= 95 ? "#E8621A" : pct >= 90 ? "#EF9F27" : "#1D9E75";
 
 export type SquadConfig = {
   devN: number;

@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { Project, Initiative, Team, SharedView, Organization } from "@/types/database";
 import { computeQuadrant } from "@/lib/quadrant";
@@ -10,6 +11,28 @@ type Props = {
 };
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const admin = createAdminClient();
+  const { data } = await admin
+    .from("shared_views")
+    .select("mode, organization_id, organizations(name)")
+    .eq("token", params.token)
+    .single();
+
+  const orgName = (data as { organizations: { name: string } | null } | null)
+    ?.organizations?.name ?? "Priori™";
+  const modeLabel = data?.mode === "squad" ? "Modo Squad" : "Modo Cross";
+  const title = `${orgName} — ${modeLabel} · Priori™`;
+  const description =
+    "Transparencia estratégica para equipos de software. Matriz de Impacto vs Esfuerzo, planificación por Quarters.";
+
+  return {
+    title,
+    description,
+    openGraph: { title, description, type: "website" },
+  };
+}
 
 export default async function SharePage({ params }: Props) {
   const admin = createAdminClient();

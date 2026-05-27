@@ -1,21 +1,25 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { redirect } from "next/navigation";
 
 export async function createOrganization(
   name: string,
   slug: string
 ): Promise<{ error: string; code?: string } | never> {
+  // 1. Verificar sesión con el cliente normal
   const supabase = createClient();
-
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
   if (!user) redirect("/login");
 
-  const { data: org, error: orgError } = await supabase
+  // 2. Escritura con cliente admin (bypasea RLS — seguro porque user ya está verificado)
+  const admin = createAdminClient();
+
+  const { data: org, error: orgError } = await admin
     .from("organizations")
     .insert({ name, slug })
     .select()
@@ -31,7 +35,7 @@ export async function createOrganization(
     };
   }
 
-  const { error: memberError } = await supabase
+  const { error: memberError } = await admin
     .from("organization_members")
     .insert({
       organization_id: org.id,

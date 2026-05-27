@@ -132,7 +132,7 @@ export async function updateProjectPosition(
     .update({ canvas_x: x, canvas_y: y })
     .eq("id", id)
     .eq("organization_id", orgId);
-  revalidatePath("/squad");
+  // No revalidatePath — position is applied optimistically client-side; server confirms on next full action
 }
 
 export async function updateSquadStatus(

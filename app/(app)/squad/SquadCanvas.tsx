@@ -57,7 +57,12 @@ function computePositions(
   });
   inBacklog.forEach((p, i) => {
     const r = bubbleRadius(p.effort_sprints);
-    map.set(p.id, posOut(i, inBacklog.length, r, W, H, zoneR));
+    // Use saved canvas position if available; fall back to algorithm
+    if (p.canvas_x != null && p.canvas_y != null) {
+      map.set(p.id, { x: p.canvas_x, y: p.canvas_y });
+    } else {
+      map.set(p.id, posOut(i, inBacklog.length, r, W, H, zoneR));
+    }
   });
   return map;
 }
@@ -88,6 +93,7 @@ export function SquadCanvas({ projects, discarded, p0Projects, config, onEdit }:
     cx: number; // bubble center x in viewport coords
     ty: number; // bubble top y in viewport coords
     bh: number; // bubble height (px)
+    aggregate?: { total: number; completed: number; count: number };
   } | null>(null);
 
   const dragRef = useRef<{
@@ -163,9 +169,10 @@ export function SquadCanvas({ projects, discarded, p0Projects, config, onEdit }:
     const r = bubbleRadius(project.effort_sprints);
     setTooltip({
       project,
-      cx: cr.left + pos.x + r,  // bubble center x in viewport
-      ty: cr.top + pos.y,        // bubble top y in viewport
+      cx: cr.left + pos.x + r,
+      ty: cr.top + pos.y,
       bh: r * 2,
+      aggregate: aggregatesMap.get(project.id),
     });
   }
 
@@ -240,8 +247,11 @@ export function SquadCanvas({ projects, discarded, p0Projects, config, onEdit }:
     } else if (!inside && wasCurso) {
       setStatusOverrides(prev => new Map(prev).set(id, "backlog"));
       updateSquadStatus(id, "backlog");
+      // Save drop position so the bubble stays where the user placed it
+      if (curPos) updateProjectPosition(id, Math.round(curPos.x), Math.round(curPos.y));
       setInfoMsg(`⬆️ <strong>${project.name}</strong> movido al backlog.`);
-    } else if (curPos) {
+    } else if (!inside && !wasCurso && curPos) {
+      // Backlog-to-backlog repositioning — persist position
       updateProjectPosition(id, Math.round(curPos.x), Math.round(curPos.y));
     }
   }, [projects, statusOverrides, cursoCount, sqLim]);
@@ -275,6 +285,20 @@ export function SquadCanvas({ projects, discarded, p0Projects, config, onEdit }:
 
   // Slice relationships
   const parentIds = new Set(projects.filter(p => p.parent_id).map(p => p.parent_id as string));
+
+  // Aggregate sprints for parent projects (sum across slices)
+  type Aggregate = { total: number; completed: number; count: number };
+  const aggregatesMap = new Map<string, Aggregate>();
+  Array.from(parentIds).forEach(pid => {
+    const slices = projects.filter(p => p.parent_id === pid);
+    if (slices.length > 0) {
+      aggregatesMap.set(pid, {
+        total: slices.reduce((s, p) => s + p.effort_sprints, 0),
+        completed: slices.reduce((s, p) => s + (p.sprints_completed ?? 0), 0),
+        count: slices.length,
+      });
+    }
+  });
 
   return (
     <div className="flex flex-col gap-3">
@@ -389,6 +413,7 @@ export function SquadCanvas({ projects, discarded, p0Projects, config, onEdit }:
               urgencyColor={urgencyColor}
               isSlice={!!project.parent_id}
               hasSlices={parentIds.has(project.id)}
+              aggregate={aggregatesMap.get(project.id)}
               style={{ left: pos.x, top: pos.y }}
               onMouseDown={(e) => startDrag(project.id, e)}
               onMouseEnter={(e) => handleBubbleMouseEnter(project.id, e)}
@@ -460,6 +485,7 @@ export function SquadCanvas({ projects, discarded, p0Projects, config, onEdit }:
           cx={tooltip.cx}
           ty={tooltip.ty}
           bh={tooltip.bh}
+          aggregate={tooltip.aggregate}
         />
       )}
     </div>
@@ -491,19 +517,22 @@ function BubbleTooltip({
   cx,
   ty,
   bh,
+  aggregate,
 }: {
   project: Project;
   cx: number;
   ty: number;
   bh: number;
+  aggregate?: { total: number; completed: number; count: number };
 }) {
   const TOOLTIP_W = 244;
-  const TOOLTIP_H = 190;
+  const TOOLTIP_H = 200;
 
   const q = computeQuadrant(project.impact_value, project.effort_sprints);
   const m = QUADRANT_META[q];
-  const completed = project.sprints_completed ?? 0;
-  const progress = project.effort_sprints > 0 ? Math.min(1, completed / project.effort_sprints) : 0;
+  const effTotal = aggregate ? aggregate.total : project.effort_sprints;
+  const effCompleted = aggregate ? aggregate.completed : (project.sprints_completed ?? 0);
+  const progress = effTotal > 0 ? Math.min(1, effCompleted / effTotal) : 0;
   const urg = urgencyLabel(project.production_date);
 
   // Position above bubble; flip below if near viewport top; clamp horizontally
@@ -561,10 +590,13 @@ function BubbleTooltip({
       {/* Progress */}
       <div style={{ marginBottom: 7 }}>
         <div style={{ fontSize: 11, color: "#aaa", marginBottom: 4 }}>
-          {completed} / {project.effort_sprints} sprints completados
+          {aggregate
+            ? `${aggregate.completed} / ${aggregate.total} sp (agregado de ${aggregate.count} slice${aggregate.count !== 1 ? "s" : ""})`
+            : `${effCompleted} / ${effTotal} sprints completados`}
+          {progress >= 1 && <span style={{ color: "#1D9E75", marginLeft: 4 }}>✓ Completado</span>}
         </div>
         <div style={{ height: 4, background: "#333", borderRadius: 2, overflow: "hidden" }}>
-          <div style={{ height: "100%", width: `${Math.round(progress * 100)}%`, background: m.color, borderRadius: 2 }} />
+          <div style={{ height: "100%", width: `${Math.round(progress * 100)}%`, background: progress >= 1 ? "#1D9E75" : m.color, borderRadius: 2 }} />
         </div>
       </div>
 

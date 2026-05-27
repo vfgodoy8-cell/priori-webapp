@@ -58,6 +58,8 @@ function getBubble(effort: number) {
   return { size, strokeWidth };
 }
 
+type Aggregate = { total: number; completed: number; count: number };
+
 type Props = {
   project: Project;
   onEdit: (project: Project) => void;
@@ -68,9 +70,10 @@ type Props = {
   urgencyColor?: string;
   isSlice?: boolean;
   hasSlices?: boolean;
+  aggregate?: Aggregate;
 };
 
-export function BubbleCard({ project, onEdit, style, onMouseDown, onMouseEnter, onMouseLeave, urgencyColor: urgencyColorProp, isSlice, hasSlices }: Props) {
+export function BubbleCard({ project, onEdit, style, onMouseDown, onMouseEnter, onMouseLeave, urgencyColor: urgencyColorProp, isSlice, hasSlices, aggregate }: Props) {
   const quadrant = useMemo(
     () => computeQuadrant(project.impact_value, project.effort_sprints),
     [project.impact_value, project.effort_sprints]
@@ -81,9 +84,12 @@ export function BubbleCard({ project, onEdit, style, onMouseDown, onMouseEnter, 
   const cy = size / 2;
   const r = cx - strokeWidth / 2 - 4;
   const circumference = 2 * Math.PI * r;
-  const progress = project.effort_sprints > 0
-    ? Math.min((project.sprints_completed ?? 0) / project.effort_sprints, 1)
-    : 0;
+
+  // Use aggregate totals when available (parent with slices)
+  const effTotal = aggregate ? aggregate.total : project.effort_sprints;
+  const effCompleted = aggregate ? aggregate.completed : (project.sprints_completed ?? 0);
+  const progress = effTotal > 0 ? Math.min(effCompleted / effTotal, 1) : 0;
+  const isComplete = progress >= 1 && effTotal > 0;
   const dashOffset = circumference * (1 - progress);
 
   const urgency = useMemo(
@@ -158,7 +164,7 @@ export function BubbleCard({ project, onEdit, style, onMouseDown, onMouseEnter, 
             cy={cy}
             r={r}
             fill="none"
-            stroke={ringColor}
+            stroke={isComplete ? "#1D9E75" : ringColor}
             strokeWidth={strokeWidth}
             strokeLinecap="round"
             strokeDasharray={`${circumference} ${circumference}`}
@@ -205,10 +211,11 @@ export function BubbleCard({ project, onEdit, style, onMouseDown, onMouseEnter, 
           textAnchor="middle"
           dominantBaseline="middle"
           fontSize={spFontSize}
-          fill="#6B6B6B"
+          fill={isComplete ? "#1D9E75" : "#6B6B6B"}
+          fontWeight={isComplete ? "700" : undefined}
           fontFamily="var(--font-geist-sans), system-ui, sans-serif"
         >
-          {project.sprints_completed ?? 0}/{project.effort_sprints} sp
+          {isComplete ? `${effTotal} sp ✓` : `${effCompleted}/${effTotal} sp`}
         </text>
 
         {/* Slice label badge (top-left) */}

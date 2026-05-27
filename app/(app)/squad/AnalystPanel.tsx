@@ -93,6 +93,9 @@ export function AnalystPanel({ projects, orgId, config, onConfigChange, forceEdi
     formRef.current?.reset();
   }
 
+  // Whether the project being edited has slices (sprints_completed is computed, not editable)
+  const hasSlicesForEdit = !!(editProject && projects.some(p => p.parent_id === editProject.id));
+
   // Quadrant preview
   const [prevImp, setPrevImp] = useState(editProject?.impact_value ?? 0);
   const [prevSp, setPrevSp] = useState(editProject?.effort_sprints ?? 0);
@@ -245,8 +248,16 @@ export function AnalystPanel({ projects, orgId, config, onConfigChange, forceEdi
                           onChange={e => setPrevSp(parseInt(e.target.value) || 0)} />
                       </F>
                       <F label="Completados">
-                        <input name="sprints_completed" type="number" min="0" max="24"
-                          defaultValue={editProject?.sprints_completed ?? 0} className={inp} />
+                        <input
+                          name="sprints_completed"
+                          type="number"
+                          min="0"
+                          max="24"
+                          defaultValue={hasSlicesForEdit ? "" : (editProject?.sprints_completed ?? 0)}
+                          placeholder={hasSlicesForEdit ? "calculado desde slices" : undefined}
+                          disabled={hasSlicesForEdit}
+                          className={`${inp} ${hasSlicesForEdit ? "opacity-50 cursor-not-allowed bg-gray-50" : ""}`}
+                        />
                       </F>
                     </div>
                     <div className="grid grid-cols-2 gap-2">

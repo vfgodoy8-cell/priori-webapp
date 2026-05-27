@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useFormState, useFormStatus } from "react-dom";
-import { createProject, updateProject, discardProject, deleteProject, restoreProject } from "./actions";
+import { createProject, updateProject, discardProject, deleteProject, restoreProject, createSlice } from "./actions";
 import { computeQuadrant, QUADRANT_META } from "@/lib/quadrant";
 import { saveConfig, type SquadConfig } from "@/lib/squad-logic";
 import type { Project } from "@/types/database";
@@ -36,7 +36,9 @@ export function AnalystPanel({ projects, orgId, config, onConfigChange, forceEdi
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState<Tab>("form");
   const [editProject, setEditProject] = useState<Project | undefined>();
+  const [sliceParent, setSliceParent] = useState<Project | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
+  const sliceFormRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
     if (forceEdit) {
@@ -59,6 +61,7 @@ export function AnalystPanel({ projects, orgId, config, onConfigChange, forceEdi
 
   const action = editProject ? updateProject : createProject;
   const [state, formAction] = useFormState(action, { error: null });
+  const [sliceState, sliceFormAction] = useFormState(createSlice, { error: null });
 
   // Close form / clear edit on success
   useEffect(() => {
@@ -69,6 +72,15 @@ export function AnalystPanel({ projects, orgId, config, onConfigChange, forceEdi
     }
   }, [state]);
 
+  // Close slice form on success
+  useEffect(() => {
+    if (sliceState.success && sliceFormRef.current?.dataset.submitted === "true") {
+      sliceFormRef.current.dataset.submitted = "";
+      setSliceParent(null);
+      sliceFormRef.current.reset();
+    }
+  }, [sliceState]);
+
   function openEdit(p: Project) {
     setEditProject(p);
     setTab("form");
@@ -77,6 +89,7 @@ export function AnalystPanel({ projects, orgId, config, onConfigChange, forceEdi
 
   function cancelEdit() {
     setEditProject(undefined);
+    setSliceParent(null);
     formRef.current?.reset();
   }
 
@@ -144,96 +157,150 @@ export function AnalystPanel({ projects, orgId, config, onConfigChange, forceEdi
           {/* ── TAB: FORMULARIO ── */}
           {tab === "form" && (
             <div className="p-4 flex flex-col gap-3">
-              {editProject && (
-                <div className="flex items-center gap-2 px-3 py-2 bg-orange-50 border border-orange-100 rounded-lg text-xs text-brand-orange font-semibold">
-                  ✏️ <span>Editando: {editProject.name}</span>
-                </div>
-              )}
-              <div className="text-xs font-bold text-brand-gray uppercase tracking-wider">
-                {editProject ? "Editar proyecto" : "Nuevo proyecto"}
-              </div>
 
-              <form
-                ref={formRef}
-                action={formAction}
-                onSubmit={() => { if (formRef.current) formRef.current.dataset.submitted = "true"; }}
-                className="flex flex-col gap-3"
-              >
-                {editProject && <input type="hidden" name="id" value={editProject.id} />}
-
-                <F label="Nombre *">
-                  <input name="name" type="text" required defaultValue={editProject?.name} placeholder="Ej: Portal clientes" className={inp} />
-                </F>
-                <F label="Stakeholder">
-                  <input name="stakeholder" type="text" defaultValue={editProject?.stakeholder ?? ""} placeholder="Ej: Banco XYZ" className={inp} />
-                </F>
-                <div className="grid grid-cols-2 gap-2">
-                  <F label="Impacto ($) *">
-                    <input name="impact_value" type="number" min="0" step="any" required
-                      defaultValue={editProject?.impact_value ?? ""}
-                      placeholder="0"
-                      className={inp}
-                      onChange={e => setPrevImp(parseFloat(e.target.value) || 0)} />
-                  </F>
-                  <F label="Métrica">
-                    <select name="impact_metric" defaultValue={editProject?.impact_metric ?? "revenue"} className={inp}>
-                      <option value="revenue">Ventas ($)</option>
-                      <option value="customers">Clientes</option>
-                    </select>
-                  </F>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <F label="Sprints *">
-                    <input name="effort_sprints" type="number" min="1" max="24" required
-                      defaultValue={editProject?.effort_sprints ?? ""}
-                      placeholder="1–24"
-                      className={inp}
-                      onChange={e => setPrevSp(parseInt(e.target.value) || 0)} />
-                  </F>
-                  <F label="Completados">
-                    <input name="sprints_completed" type="number" min="0" max="24"
-                      defaultValue={editProject?.sprints_completed ?? 0} className={inp} />
-                  </F>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <F label="Estado">
-                    <select name="squad_status" defaultValue={editProject?.squad_status ?? "backlog"} className={inp}>
-                      <option value="backlog">Backlog</option>
-                      <option value="curso">En curso</option>
-                    </select>
-                  </F>
-                  <F label="Fecha prod.">
-                    <input name="production_date" type="date" defaultValue={editProject?.production_date ?? ""} className={inp} />
-                  </F>
-                </div>
-                <F label="Dependencias">
-                  <input name="dependencies" type="text" defaultValue={editProject?.dependencies ?? ""} placeholder="Ej: API pagos" className={inp} />
-                </F>
-                <F label="Descripción">
-                  <textarea name="description" rows={2} defaultValue={editProject?.description ?? ""} placeholder="Objetivo principal..." className={`${inp} resize-none`} />
-                </F>
-
-                {/* Quadrant preview */}
-                {mPrev && (
-                  <div className="px-3 py-2 rounded-lg border text-xs" style={{ background: mPrev.bg, borderColor: `${mPrev.color}44` }}>
-                    <div className="font-bold uppercase tracking-wider text-[10px] text-brand-gray mb-1">Cuadrante asignado</div>
-                    <div className="font-bold" style={{ color: mPrev.color }}>{mPrev.priority} {mPrev.label}</div>
+              {/* Slice creation form */}
+              {sliceParent && (
+                <>
+                  <div className="flex items-center gap-2 px-3 py-2 bg-blue-50 border border-blue-100 rounded-lg text-xs text-brand-blue font-semibold">
+                    ⑂ <span>Slice de: {sliceParent.name}</span>
                   </div>
-                )}
+                  <div className="text-xs font-bold text-brand-gray uppercase tracking-wider">Nuevo slice</div>
+                  <p className="text-xs text-brand-gray">El impacto se hereda del proyecto padre ({sliceParent.impact_value.toLocaleString("es-AR")} {sliceParent.impact_metric === "revenue" ? "$" : "clientes"}).</p>
+                  <form
+                    ref={sliceFormRef}
+                    action={sliceFormAction}
+                    onSubmit={() => { if (sliceFormRef.current) sliceFormRef.current.dataset.submitted = "true"; }}
+                    className="flex flex-col gap-3"
+                  >
+                    <input type="hidden" name="parent_id" value={sliceParent.id} />
+                    <F label="Sprints *">
+                      <input name="effort_sprints" type="number" min="1" max="24" required placeholder="1–24" className={inp} />
+                    </F>
+                    <F label="Stakeholder">
+                      <input name="stakeholder" type="text" placeholder="Ej: Banco XYZ" className={inp} />
+                    </F>
+                    <F label="Fecha prod.">
+                      <input name="production_date" type="date" className={inp} />
+                    </F>
+                    {sliceState.error && (
+                      <p className="text-xs text-red-600 bg-red-50 rounded px-3 py-2">{sliceState.error}</p>
+                    )}
+                    <div className="flex gap-2 pt-1">
+                      <button type="button" onClick={() => setSliceParent(null)} className="px-4 py-2.5 text-sm text-brand-gray border border-gray-200 rounded-lg hover:text-brand-black transition">
+                        Cancelar
+                      </button>
+                      <SubmitBtn label="Crear slice" />
+                    </div>
+                  </form>
+                </>
+              )}
 
-                {state.error && (
-                  <p className="text-xs text-red-600 bg-red-50 rounded px-3 py-2">{state.error}</p>
-                )}
-
-                <div className="flex gap-2 pt-1">
+              {/* Main create / edit form */}
+              {!sliceParent && (
+                <>
                   {editProject && (
-                    <button type="button" onClick={cancelEdit} className="px-4 py-2.5 text-sm text-brand-gray border border-gray-200 rounded-lg hover:text-brand-black transition">
-                      Cancelar
+                    <div className="flex items-center gap-2 px-3 py-2 bg-orange-50 border border-orange-100 rounded-lg text-xs text-brand-orange font-semibold">
+                      ✏️ <span>Editando: {editProject.name}</span>
+                    </div>
+                  )}
+                  <div className="text-xs font-bold text-brand-gray uppercase tracking-wider">
+                    {editProject ? "Editar proyecto" : "Nuevo proyecto"}
+                  </div>
+
+                  <form
+                    ref={formRef}
+                    action={formAction}
+                    onSubmit={() => { if (formRef.current) formRef.current.dataset.submitted = "true"; }}
+                    className="flex flex-col gap-3"
+                  >
+                    {editProject && <input type="hidden" name="id" value={editProject.id} />}
+
+                    <F label="Nombre *">
+                      <input name="name" type="text" required defaultValue={editProject?.name} placeholder="Ej: Portal clientes" className={inp} />
+                    </F>
+                    <F label="Stakeholder">
+                      <input name="stakeholder" type="text" defaultValue={editProject?.stakeholder ?? ""} placeholder="Ej: Banco XYZ" className={inp} />
+                    </F>
+                    <div className="grid grid-cols-2 gap-2">
+                      <F label="Impacto ($) *">
+                        <input name="impact_value" type="number" min="0" step="any" required
+                          defaultValue={editProject?.impact_value ?? ""}
+                          placeholder="0"
+                          className={inp}
+                          onChange={e => setPrevImp(parseFloat(e.target.value) || 0)} />
+                      </F>
+                      <F label="Métrica">
+                        <select name="impact_metric" defaultValue={editProject?.impact_metric ?? "revenue"} className={inp}>
+                          <option value="revenue">Ventas ($)</option>
+                          <option value="customers">Clientes</option>
+                        </select>
+                      </F>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <F label="Sprints *">
+                        <input name="effort_sprints" type="number" min="1" max="24" required
+                          defaultValue={editProject?.effort_sprints ?? ""}
+                          placeholder="1–24"
+                          className={inp}
+                          onChange={e => setPrevSp(parseInt(e.target.value) || 0)} />
+                      </F>
+                      <F label="Completados">
+                        <input name="sprints_completed" type="number" min="0" max="24"
+                          defaultValue={editProject?.sprints_completed ?? 0} className={inp} />
+                      </F>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <F label="Estado">
+                        <select name="squad_status" defaultValue={editProject?.squad_status ?? "backlog"} className={inp}>
+                          <option value="backlog">Backlog</option>
+                          <option value="curso">En curso</option>
+                        </select>
+                      </F>
+                      <F label="Fecha prod.">
+                        <input name="production_date" type="date" defaultValue={editProject?.production_date ?? ""} className={inp} />
+                      </F>
+                    </div>
+                    <F label="Dependencias">
+                      <input name="dependencies" type="text" defaultValue={editProject?.dependencies ?? ""} placeholder="Ej: API pagos" className={inp} />
+                    </F>
+                    <F label="Descripción">
+                      <textarea name="description" rows={2} defaultValue={editProject?.description ?? ""} placeholder="Objetivo principal..." className={`${inp} resize-none`} />
+                    </F>
+
+                    {/* Quadrant preview */}
+                    {mPrev && (
+                      <div className="px-3 py-2 rounded-lg border text-xs" style={{ background: mPrev.bg, borderColor: `${mPrev.color}44` }}>
+                        <div className="font-bold uppercase tracking-wider text-[10px] text-brand-gray mb-1">Cuadrante asignado</div>
+                        <div className="font-bold" style={{ color: mPrev.color }}>{mPrev.priority} {mPrev.label}</div>
+                      </div>
+                    )}
+
+                    {state.error && (
+                      <p className="text-xs text-red-600 bg-red-50 rounded px-3 py-2">{state.error}</p>
+                    )}
+
+                    <div className="flex gap-2 pt-1">
+                      {editProject && (
+                        <button type="button" onClick={cancelEdit} className="px-4 py-2.5 text-sm text-brand-gray border border-gray-200 rounded-lg hover:text-brand-black transition">
+                          Cancelar
+                        </button>
+                      )}
+                      <SubmitBtn label={editProject ? "Guardar cambios" : "Agregar"} />
+                    </div>
+                  </form>
+
+                  {/* Slice button — only for existing non-slice projects */}
+                  {editProject && !editProject.parent_id && (
+                    <button
+                      type="button"
+                      onClick={() => setSliceParent(editProject)}
+                      className="flex items-center justify-center gap-2 w-full py-2 text-[13px] font-semibold text-brand-blue border border-blue-200 rounded-lg hover:bg-blue-50 transition"
+                    >
+                      ⑂ Crear slice
                     </button>
                   )}
-                  <SubmitBtn label={editProject ? "Guardar cambios" : "Agregar"} />
-                </div>
-              </form>
+                </>
+              )}
             </div>
           )}
 
@@ -243,42 +310,25 @@ export function AnalystPanel({ projects, orgId, config, onConfigChange, forceEdi
               {allSorted.length === 0 && (
                 <p className="text-xs text-gray-400 text-center py-8">No hay proyectos.</p>
               )}
-              {allSorted.map(p => {
-                const q = computeQuadrant(p.impact_value, p.effort_sprints);
-                const m = QUADRANT_META[q];
-                const isEd = p.id === editProject?.id;
-                const discardWithId = discardProject.bind(null, p.id);
-                const deleteWithId = deleteProject.bind(null, p.id);
-
-                return (
-                  <div
-                    key={p.id}
-                    className={`flex items-center gap-2 px-3 py-2.5 rounded-lg border ${isEd ? "border-brand-orange bg-orange-50" : "border-gray-100 bg-gray-50"}`}
-                  >
-                    <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: m.color }} />
-                    <div className="flex-1 min-w-0">
-                      <div className="text-[13px] font-semibold text-brand-black truncate">
-                        {p.name} {isEd && <span className="text-brand-orange">✏️</span>}
-                      </div>
-                      <div className="text-xs text-brand-gray">
-                        {p.stakeholder} · {p.effort_sprints}sp · {p.squad_status === "curso" ? "En curso" : "Backlog"}
-                      </div>
-                    </div>
-                    <span className="text-xs font-bold px-1.5 py-0.5 rounded-full flex-shrink-0" style={{ background: `${m.color}22`, color: m.color }}>
-                      {m.priority}
-                    </span>
-                    <div className="flex gap-1 flex-shrink-0">
-                      <button onClick={() => openEdit(p)} className="text-xs text-gray-400 hover:text-brand-orange px-1 transition" title="Editar">✏️</button>
-                      <form action={discardWithId} style={{ display: "inline" }}>
-                        <button type="submit" className="text-xs text-gray-400 hover:text-brand-orange px-1 transition" title="Descartar">📥</button>
-                      </form>
-                      <form action={deleteWithId} style={{ display: "inline" }}>
-                        <button type="submit" className="text-xs text-gray-400 hover:text-red-600 px-1 transition" title="Eliminar">🗑️</button>
-                      </form>
-                    </div>
-                  </div>
-                );
-              })}
+              {(() => {
+                const parents = allSorted.filter(p => !p.parent_id);
+                const slicesMap = new Map<string, Project[]>();
+                for (const p of allSorted) {
+                  if (p.parent_id) {
+                    const arr = slicesMap.get(p.parent_id) ?? [];
+                    arr.push(p);
+                    slicesMap.set(p.parent_id, arr);
+                  }
+                }
+                const rows: React.ReactNode[] = [];
+                for (const p of parents) {
+                  rows.push(<ProjectRow key={p.id} p={p} editProject={editProject} onEdit={openEdit} indent={false} hasSlices={slicesMap.has(p.id)} />);
+                  for (const s of slicesMap.get(p.id) ?? []) {
+                    rows.push(<ProjectRow key={s.id} p={s} editProject={editProject} onEdit={openEdit} indent={true} hasSlices={false} />);
+                  }
+                }
+                return rows;
+              })()}
             </div>
           )}
 
@@ -365,6 +415,49 @@ export function AnalystPanel({ projects, orgId, config, onConfigChange, forceEdi
         </div>
       </div>
     </>
+  );
+}
+
+function ProjectRow({ p, editProject, onEdit, indent, hasSlices }: { p: Project; editProject: Project | undefined; onEdit: (p: Project) => void; indent: boolean; hasSlices: boolean }) {
+  const q = computeQuadrant(p.impact_value, p.effort_sprints);
+  const m = QUADRANT_META[q];
+  const isEd = p.id === editProject?.id;
+  const discardWithId = discardProject.bind(null, p.id);
+  const deleteWithId = deleteProject.bind(null, p.id);
+
+  return (
+    <div
+      className={`flex items-center gap-2 px-3 py-2.5 rounded-lg border ${isEd ? "border-brand-orange bg-orange-50" : "border-gray-100 bg-gray-50"}`}
+      style={indent ? { marginLeft: 16, borderLeft: `2px solid ${m.color}44` } : undefined}
+    >
+      {indent ? (
+        <span className="text-[10px] text-brand-gray flex-shrink-0">⑂</span>
+      ) : (
+        <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: m.color }} />
+      )}
+      <div className="flex-1 min-w-0">
+        <div className="text-[13px] font-semibold text-brand-black truncate">
+          {p.slice_label && <span className="text-brand-blue mr-1">{p.slice_label}</span>}
+          {p.name} {isEd && <span className="text-brand-orange">✏️</span>}
+          {hasSlices && <span className="text-[10px] text-brand-gray ml-1">⑂</span>}
+        </div>
+        <div className="text-xs text-brand-gray">
+          {p.stakeholder && `${p.stakeholder} · `}{p.effort_sprints}sp · {p.squad_status === "curso" ? "En curso" : "Backlog"}
+        </div>
+      </div>
+      <span className="text-xs font-bold px-1.5 py-0.5 rounded-full flex-shrink-0" style={{ background: `${m.color}22`, color: m.color }}>
+        {m.priority}
+      </span>
+      <div className="flex gap-1 flex-shrink-0">
+        <button onClick={() => onEdit(p)} className="text-xs text-gray-400 hover:text-brand-orange px-1 transition" title="Editar">✏️</button>
+        <form action={discardWithId} style={{ display: "inline" }}>
+          <button type="submit" className="text-xs text-gray-400 hover:text-brand-orange px-1 transition" title="Descartar">📥</button>
+        </form>
+        <form action={deleteWithId} style={{ display: "inline" }}>
+          <button type="submit" className="text-xs text-gray-400 hover:text-red-600 px-1 transition" title="Eliminar">🗑️</button>
+        </form>
+      </div>
+    </div>
   );
 }
 

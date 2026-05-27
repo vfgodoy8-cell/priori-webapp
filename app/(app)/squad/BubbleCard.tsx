@@ -66,9 +66,11 @@ type Props = {
   onMouseEnter?: (e: React.MouseEvent) => void;
   onMouseLeave?: () => void;
   urgencyColor?: string;
+  isSlice?: boolean;
+  hasSlices?: boolean;
 };
 
-export function BubbleCard({ project, onEdit, style, onMouseDown, onMouseEnter, onMouseLeave, urgencyColor: urgencyColorProp }: Props) {
+export function BubbleCard({ project, onEdit, style, onMouseDown, onMouseEnter, onMouseLeave, urgencyColor: urgencyColorProp, isSlice, hasSlices }: Props) {
   const quadrant = useMemo(
     () => computeQuadrant(project.impact_value, project.effort_sprints),
     [project.impact_value, project.effort_sprints]
@@ -146,6 +148,7 @@ export function BubbleCard({ project, onEdit, style, onMouseDown, onMouseEnter, 
           fill="none"
           stroke="#E8E8E8"
           strokeWidth={strokeWidth}
+          strokeDasharray={isSlice ? "6 4" : undefined}
         />
 
         {/* Progress arc */}
@@ -207,6 +210,39 @@ export function BubbleCard({ project, onEdit, style, onMouseDown, onMouseEnter, 
         >
           {project.sprints_completed ?? 0}/{project.effort_sprints} sp
         </text>
+
+        {/* Slice label badge (top-left) */}
+        {isSlice && project.slice_label && (
+          <text
+            x={strokeWidth + 4}
+            y={strokeWidth + 4}
+            textAnchor="start"
+            dominantBaseline="hanging"
+            fontSize={Math.max(9, Math.round(size * 0.075))}
+            fontWeight="700"
+            fill={labelColor}
+            fontFamily="var(--font-geist-sans), system-ui, sans-serif"
+            opacity={0.85}
+          >
+            {project.slice_label}
+          </text>
+        )}
+
+        {/* ⑂ icon (top-right) for parents that have slices */}
+        {hasSlices && (
+          <text
+            x={size - strokeWidth - 4}
+            y={strokeWidth + 4}
+            textAnchor="end"
+            dominantBaseline="hanging"
+            fontSize={Math.max(9, Math.round(size * 0.075))}
+            fill={labelColor}
+            fontFamily="var(--font-geist-sans), system-ui, sans-serif"
+            opacity={0.75}
+          >
+            ⑂
+          </text>
+        )}
       </svg>
     </div>
   );

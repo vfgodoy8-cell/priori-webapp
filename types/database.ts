@@ -89,6 +89,8 @@ export type Database = {
           squad_status: "backlog" | "curso";
           canvas_x: number | null;
           canvas_y: number | null;
+          parent_id: string | null;
+          slice_label: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -108,6 +110,8 @@ export type Database = {
           squad_status?: "backlog" | "curso";
           canvas_x?: number | null;
           canvas_y?: number | null;
+          parent_id?: string | null;
+          slice_label?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -125,6 +129,8 @@ export type Database = {
           squad_status?: "backlog" | "curso";
           canvas_x?: number | null;
           canvas_y?: number | null;
+          parent_id?: string | null;
+          slice_label?: string | null;
           updated_at?: string;
         };
       };

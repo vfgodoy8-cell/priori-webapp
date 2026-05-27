@@ -6,7 +6,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import type { Project } from "@/types/database";
 
-type State = { error: string | null };
+type State = { error: string | null; success?: boolean };
 
 async function getAuthContext() {
   const supabase = createClient();
@@ -146,6 +146,54 @@ export async function updateSquadStatus(
     .eq("id", id)
     .eq("organization_id", orgId);
   revalidatePath("/squad");
+}
+
+export async function createSlice(
+  _prevState: State,
+  formData: FormData
+): Promise<State> {
+  const { admin, orgId } = await getAuthContext();
+
+  const parentId = formData.get("parent_id") as string;
+  if (!parentId) return { error: "parent_id requerido." };
+
+  const { data: parent } = await admin
+    .from("projects")
+    .select("name, impact_value, impact_metric")
+    .eq("id", parentId)
+    .eq("organization_id", orgId)
+    .single();
+
+  if (!parent) return { error: "Proyecto padre no encontrado." };
+
+  const { count } = await admin
+    .from("projects")
+    .select("*", { count: "exact", head: true })
+    .eq("parent_id", parentId);
+
+  const sliceNum = (count ?? 0) + 1;
+  const initial = parent.name.trim()[0]?.toUpperCase() ?? "X";
+  const sliceLabel = `${initial}.${sliceNum}`;
+
+  const payload = {
+    organization_id: orgId,
+    name: `${parent.name} — ${sliceLabel}`,
+    parent_id: parentId,
+    slice_label: sliceLabel,
+    impact_value: parent.impact_value,
+    impact_metric: parent.impact_metric as "revenue" | "customers",
+    effort_sprints: parseInt(formData.get("effort_sprints") as string) || 1,
+    sprints_completed: 0,
+    stakeholder: (formData.get("stakeholder") as string)?.trim() || null,
+    production_date: (formData.get("production_date") as string) || null,
+    squad_status: "backlog" as const,
+  };
+
+  const { error } = await admin.from("projects").insert(payload);
+  if (error) return { error: error.message };
+
+  revalidatePath("/squad");
+  return { error: null, success: true };
 }
 
 export async function swapSquadStatus(

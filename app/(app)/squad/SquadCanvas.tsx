@@ -211,6 +211,18 @@ export function SquadCanvas({ projects, discarded, p0Projects, config, onEdit }:
     const inside = inZone(e.clientX, e.clientY);
     const wasCurso = (statusOverrides.get(id) ?? project.squad_status) === "curso";
 
+    // Block parent projects from entering zone — move their slices instead
+    if (inside && !wasCurso && parentIds.has(id)) {
+      setPositions(prev => {
+        const next = new Map(prev);
+        next.set(id, { x: startPosX, y: startPosY });
+        posRef.current = next;
+        return next;
+      });
+      setInfoMsg(`⑂ <strong>${project.name}</strong> tiene slices — agregá los slices al sprint.`);
+      return;
+    }
+
     if (inside && !wasCurso) {
       if (cursoCount >= sqLim) {
         setPositions(prev => {
@@ -260,6 +272,9 @@ export function SquadCanvas({ projects, discarded, p0Projects, config, onEdit }:
 
   const cursoProjects = projects.filter(p => (statusOverrides.get(p.id) ?? p.squad_status) === "curso");
   const allDiscarded = [...discarded, ...p0Projects];
+
+  // Slice relationships
+  const parentIds = new Set(projects.filter(p => p.parent_id).map(p => p.parent_id as string));
 
   return (
     <div className="flex flex-col gap-3">
@@ -321,6 +336,44 @@ export function SquadCanvas({ projects, discarded, p0Projects, config, onEdit }:
           <span className="text-xs text-gray-400">límite: {sqLim}</span>
         </div>
 
+        {/* Slice connection lines */}
+        <svg
+          className="absolute inset-0 pointer-events-none"
+          width={W}
+          height={CANVAS_H}
+          style={{ overflow: "visible" }}
+        >
+          {projects.filter(p => p.parent_id).map(slice => {
+            const parent = projects.find(p => p.id === slice.parent_id);
+            const slicePos = positions.get(slice.id);
+            const parentPos = positions.get(parent?.id ?? "");
+            if (!parent || !slicePos || !parentPos) return null;
+            const sr = bubbleRadius(slice.effort_sprints);
+            const pr = bubbleRadius(parent.effort_sprints);
+            const x1 = parentPos.x + pr;
+            const y1 = parentPos.y + pr;
+            const x2 = slicePos.x + sr;
+            const y2 = slicePos.y + sr;
+            const mx = (x1 + x2) / 2;
+            const my = (y1 + y2) / 2;
+            const q = computeQuadrant(parent.impact_value, parent.effort_sprints);
+            const color = QUADRANT_META[q].color;
+            return (
+              <g key={slice.id} opacity={0.4}>
+                <line x1={x1} y1={y1} x2={x2} y2={y2} stroke={color} strokeWidth={1.5} strokeDasharray="5 4" />
+                <text
+                  x={mx} y={my}
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                  fontSize={11}
+                  fill={color}
+                  fontFamily="var(--font-geist-sans), system-ui, sans-serif"
+                >⑂</text>
+              </g>
+            );
+          })}
+        </svg>
+
         {/* Bubbles */}
         {projects.map(project => {
           const pos = positions.get(project.id);
@@ -334,6 +387,8 @@ export function SquadCanvas({ projects, discarded, p0Projects, config, onEdit }:
               project={project}
               onEdit={onEdit}
               urgencyColor={urgencyColor}
+              isSlice={!!project.parent_id}
+              hasSlices={parentIds.has(project.id)}
               style={{ left: pos.x, top: pos.y }}
               onMouseDown={(e) => startDrag(project.id, e)}
               onMouseEnter={(e) => handleBubbleMouseEnter(project.id, e)}
@@ -476,9 +531,12 @@ function BubbleTooltip({
       }}
     >
       {/* Title */}
-      <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 6, lineHeight: 1.3 }}>
+      <div style={{ fontWeight: 700, fontSize: 14, marginBottom: project.slice_label ? 3 : 6, lineHeight: 1.3 }}>
         {project.name}
       </div>
+      {project.slice_label && (
+        <div style={{ fontSize: 11, color: "#aaa", marginBottom: 5 }}>⑂ Slice {project.slice_label}</div>
+      )}
 
       {/* Quadrant badge */}
       <div style={{ marginBottom: 8 }}>

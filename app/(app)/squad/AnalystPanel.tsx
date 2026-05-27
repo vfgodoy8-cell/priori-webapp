@@ -117,11 +117,11 @@ export function AnalystPanel({ projects, orgId, config, onConfigChange, forceEdi
 
       {/* Sliding panel */}
       <div
-        className={`fixed top-0 right-0 z-[300] h-full w-[360px] bg-white border-l border-gray-100 shadow-2xl flex flex-col transition-transform duration-300 ${open ? "translate-x-0" : "translate-x-full"}`}
+        className={`fixed top-0 right-0 z-[300] h-full w-[420px] bg-white border-l border-gray-100 shadow-2xl flex flex-col transition-transform duration-300 ${open ? "translate-x-0" : "translate-x-full"}`}
       >
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3.5 bg-orange-50 border-b-2 border-brand-orange">
-          <h3 className="text-sm font-bold text-brand-orange">Panel del analista</h3>
+          <h3 className="text-[15px] font-bold text-brand-orange">Panel del analista</h3>
           <button onClick={() => { setOpen(false); cancelEdit(); }} className="text-brand-gray hover:text-brand-black text-xl leading-none">×</button>
         </div>
 
@@ -131,7 +131,7 @@ export function AnalystPanel({ projects, orgId, config, onConfigChange, forceEdi
             <button
               key={t}
               onClick={() => setTab(t)}
-              className={`flex-1 py-2.5 text-xs font-semibold transition border-b-2 ${tab === t ? "text-brand-orange border-brand-orange" : "text-brand-gray border-transparent hover:text-brand-black"}`}
+              className={`flex-1 py-2.5 text-[13px] font-semibold transition border-b-2 ${tab === t ? "text-brand-orange border-brand-orange" : "text-brand-gray border-transparent hover:text-brand-black"}`}
             >
               {t === "form" ? "Formulario" : t === "items" ? "Proyectos" : "Configuración"}
             </button>
@@ -257,23 +257,23 @@ export function AnalystPanel({ projects, orgId, config, onConfigChange, forceEdi
                   >
                     <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: m.color }} />
                     <div className="flex-1 min-w-0">
-                      <div className="text-xs font-semibold text-brand-black truncate">
+                      <div className="text-[13px] font-semibold text-brand-black truncate">
                         {p.name} {isEd && <span className="text-brand-orange">✏️</span>}
                       </div>
-                      <div className="text-[10px] text-brand-gray">
+                      <div className="text-xs text-brand-gray">
                         {p.stakeholder} · {p.effort_sprints}sp · {p.squad_status === "curso" ? "En curso" : "Backlog"}
                       </div>
                     </div>
-                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0" style={{ background: `${m.color}22`, color: m.color }}>
+                    <span className="text-xs font-bold px-1.5 py-0.5 rounded-full flex-shrink-0" style={{ background: `${m.color}22`, color: m.color }}>
                       {m.priority}
                     </span>
                     <div className="flex gap-1 flex-shrink-0">
-                      <button onClick={() => openEdit(p)} className="text-[11px] text-gray-400 hover:text-brand-orange px-1 transition" title="Editar">✏️</button>
+                      <button onClick={() => openEdit(p)} className="text-xs text-gray-400 hover:text-brand-orange px-1 transition" title="Editar">✏️</button>
                       <form action={discardWithId} style={{ display: "inline" }}>
-                        <button type="submit" className="text-[11px] text-gray-400 hover:text-brand-orange px-1 transition" title="Descartar">📥</button>
+                        <button type="submit" className="text-xs text-gray-400 hover:text-brand-orange px-1 transition" title="Descartar">📥</button>
                       </form>
                       <form action={deleteWithId} style={{ display: "inline" }}>
-                        <button type="submit" className="text-[11px] text-gray-400 hover:text-red-600 px-1 transition" title="Eliminar">🗑️</button>
+                        <button type="submit" className="text-xs text-gray-400 hover:text-red-600 px-1 transition" title="Eliminar">🗑️</button>
                       </form>
                     </div>
                   </div>
@@ -287,7 +287,7 @@ export function AnalystPanel({ projects, orgId, config, onConfigChange, forceEdi
             <div className="p-4 flex flex-col gap-5">
               {/* Squad */}
               <section>
-                <div className="text-xs font-bold text-brand-gray uppercase tracking-wider mb-3">Developers del Squad</div>
+                <div className="text-sm font-bold text-brand-gray uppercase tracking-wider mb-3">Developers del Squad</div>
                 <div className="flex flex-col gap-2 p-3 bg-gray-50 rounded-lg border border-gray-100">
                   <CfgRow label="Developers" hint="personas en el squad">
                     <input type="number" min="1" max="30" value={config.devN}
@@ -304,21 +304,21 @@ export function AnalystPanel({ projects, orgId, config, onConfigChange, forceEdi
 
               {/* Matrix */}
               <section>
-                <div className="text-xs font-bold text-brand-gray uppercase tracking-wider mb-3">Criterios de la Matriz</div>
+                <div className="text-sm font-bold text-brand-gray uppercase tracking-wider mb-3">Criterios de la Matriz</div>
                 <div className="flex flex-col gap-3">
                   <div>
-                    <div className="text-xs font-semibold text-brand-black mb-2">Métrica de impacto</div>
+                    <div className="text-[13px] font-semibold text-brand-black mb-2">Métrica de impacto</div>
                     <div className="flex gap-2">
                       {(["money", "clients"] as const).map(m => (
                         <button key={m} onClick={() => { const c = { ...config, metric: m }; onConfigChange(c); saveConfig(orgId, c); }}
-                          className={`flex-1 py-1.5 text-xs rounded-lg border font-semibold transition ${config.metric === m ? "bg-brand-orange text-white border-brand-orange" : "bg-white text-brand-gray border-gray-200 hover:border-brand-orange"}`}>
+                          className={`flex-1 py-1.5 text-[13px] rounded-lg border font-semibold transition ${config.metric === m ? "bg-brand-orange text-white border-brand-orange" : "bg-white text-brand-gray border-gray-200 hover:border-brand-orange"}`}>
                           {m === "money" ? "💰 Ventas ($)" : "👥 Clientes"}
                         </button>
                       ))}
                     </div>
                   </div>
                   <div>
-                    <div className="text-xs font-semibold text-brand-black mb-2">Umbrales de impacto</div>
+                    <div className="text-[13px] font-semibold text-brand-black mb-2">Umbrales de impacto</div>
                     <ThrRow label="Alto ≥" badge="Alto" badgeColor="#0d6e52" badgeBg="rgba(29,158,117,.15)">
                       <input type="number" min="0" value={config.iHigh}
                         onChange={e => { const c = { ...config, iHigh: parseFloat(e.target.value) || 0 }; onConfigChange(c); saveConfig(orgId, c); }}
@@ -331,7 +331,7 @@ export function AnalystPanel({ projects, orgId, config, onConfigChange, forceEdi
                     </ThrRow>
                   </div>
                   <div>
-                    <div className="text-xs font-semibold text-brand-black mb-2">Umbrales de esfuerzo (sprints)</div>
+                    <div className="text-[13px] font-semibold text-brand-black mb-2">Umbrales de esfuerzo (sprints)</div>
                     <ThrRow label="Alto ≥" badge="Alto" badgeColor="#8a1f1f" badgeBg="rgba(226,75,74,.12)">
                       <input type="number" min="1" max="24" value={config.eHigh}
                         onChange={e => { const c = { ...config, eHigh: parseInt(e.target.value) || 1 }; onConfigChange(c); saveConfig(orgId, c); }}
@@ -345,7 +345,7 @@ export function AnalystPanel({ projects, orgId, config, onConfigChange, forceEdi
                   </div>
 
                   {/* Matrix preview */}
-                  <div className="grid grid-cols-2 gap-1 rounded-lg overflow-hidden border border-gray-100 text-xs font-bold">
+                  <div className="grid grid-cols-2 gap-1 rounded-lg overflow-hidden border border-gray-100 text-[13px] font-bold">
                     {[
                       { bg: "rgba(29,158,117,.12)", color: "#0d6e52", label: "P1 Quick Win", desc: "Alto/med impacto + bajo esfuerzo" },
                       { bg: "rgba(30,111,197,.12)", color: "#0f4a8a", label: "P2 Gran Proyecto", desc: "Alto/med impacto + alto/med esfuerzo" },
@@ -354,7 +354,7 @@ export function AnalystPanel({ projects, orgId, config, onConfigChange, forceEdi
                     ].map(cell => (
                       <div key={cell.label} className="p-2 leading-snug" style={{ background: cell.bg, color: cell.color }}>
                         {cell.label}
-                        <span className="block text-[9px] font-normal opacity-80 mt-0.5">{cell.desc}</span>
+                        <span className="block text-[11px] font-normal opacity-80 mt-0.5">{cell.desc}</span>
                       </div>
                     ))}
                   </div>
@@ -372,7 +372,7 @@ export function AnalystPanel({ projects, orgId, config, onConfigChange, forceEdi
 function F({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-1">
-      <label className="text-[10px] font-bold text-brand-gray uppercase tracking-wider">{label}</label>
+      <label className="text-xs font-bold text-brand-gray uppercase tracking-wider">{label}</label>
       {children}
     </div>
   );
@@ -381,9 +381,9 @@ function F({ label, children }: { label: string; children: React.ReactNode }) {
 function CfgRow({ label, hint, children }: { label: string; hint: string; children: React.ReactNode }) {
   return (
     <div className="flex items-center gap-2">
-      <label className="text-xs text-brand-gray min-w-[70px]">{label}</label>
+      <label className="text-[13px] text-brand-gray min-w-[70px]">{label}</label>
       {children}
-      <span className="text-[10px] text-gray-400">{hint}</span>
+      <span className="text-xs text-gray-400">{hint}</span>
     </div>
   );
 }
@@ -391,11 +391,11 @@ function CfgRow({ label, hint, children }: { label: string; hint: string; childr
 function ThrRow({ label, badge, badgeColor, badgeBg, children }: { label: string; badge: string; badgeColor: string; badgeBg: string; children: React.ReactNode }) {
   return (
     <div className="flex items-center gap-2 mb-2">
-      <label className="text-xs text-brand-gray min-w-[56px]">{label}</label>
+      <label className="text-[13px] text-brand-gray min-w-[56px]">{label}</label>
       {children}
-      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full min-w-[48px] text-center" style={{ background: badgeBg, color: badgeColor }}>{badge}</span>
+      <span className="text-xs font-bold px-2 py-0.5 rounded-full min-w-[48px] text-center" style={{ background: badgeBg, color: badgeColor }}>{badge}</span>
     </div>
   );
 }
 
-const inp = "w-full rounded-lg border border-gray-200 px-2.5 py-2 text-xs text-brand-black placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-orange focus:border-transparent bg-white";
+const inp = "w-full rounded-lg border border-gray-200 px-2.5 py-2 text-sm text-brand-black placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-orange focus:border-transparent bg-white";

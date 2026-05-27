@@ -1,9 +1,9 @@
 // Lógica de posicionamiento del canvas Squad — espejo exacto del priori-estimador-v2.html
 
 export const MAX_SP = 24;
-export const MIN_R = 20;
-export const MAX_R = 74;
-export const ZONE_DIAMETER = 280;
+export const MIN_R = 28;
+export const MAX_R = 100;
+export const ZONE_DIAMETER = 340;
 export const ZONE_R = ZONE_DIAMETER / 2;
 
 export type DlLevel = "ok" | "caution" | "danger";

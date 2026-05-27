@@ -51,7 +51,7 @@ type Props = {
 };
 
 export function SquadCanvas({ projects, discarded, p0Projects, config, onEdit }: Props) {
-  const CANVAS_H = 520;
+  const CANVAS_H = 650;
   const canvasRef = useRef<HTMLDivElement>(null);
   const posRef = useRef<Map<string, Pos>>(new Map());
 
@@ -217,14 +217,14 @@ export function SquadCanvas({ projects, discarded, p0Projects, config, onEdit }:
     <div className="flex flex-col gap-3">
       {/* Capacity bar */}
       <div className="flex items-center gap-3">
-        <div className="text-xs text-brand-gray flex items-center gap-1">
+        <div className="text-[13px] text-brand-gray flex items-center gap-1">
           <span>En paralelo</span>
         </div>
         <div className="flex-1 max-w-[220px]">
-          <div className="flex justify-between text-xs text-brand-gray mb-1">
+          <div className="flex justify-between text-[13px] text-brand-gray mb-1">
             <span>{cursoCount}/{sqLim}</span>
           </div>
-          <div className="h-1.5 bg-gray-100 rounded-full border border-gray-200 overflow-hidden">
+          <div className="h-2 bg-gray-100 rounded-full border border-gray-200 overflow-hidden">
             <div
               className="h-full rounded-full transition-all duration-300"
               style={{ width: `${capPct}%`, background: capColor }}
@@ -256,8 +256,8 @@ export function SquadCanvas({ projects, discarded, p0Projects, config, onEdit }:
             left: "50%",
             top: "50%",
             transform: "translate(-50%, -50%)",
-            width: 280,
-            height: 280,
+            width: ZONE_R * 2,
+            height: ZONE_R * 2,
             borderRadius: "50%",
             border: `2.5px dashed ${isOverLimit ? "#E24B4A" : isDragOver ? "#1D9E75" : "#ccc"}`,
             background: isOverLimit
@@ -267,9 +267,9 @@ export function SquadCanvas({ projects, discarded, p0Projects, config, onEdit }:
               : "#F4F4F4",
           }}
         >
-          <span className="text-[10px] font-bold text-brand-gray uppercase tracking-widest">en curso</span>
+          <span className="text-xs font-bold text-brand-gray uppercase tracking-widest">en curso</span>
           <span className="text-xs text-brand-gray">{cursoCount} proyecto{cursoCount !== 1 ? "s" : ""}</span>
-          <span className="text-[10px] text-gray-400">límite: {sqLim}</span>
+          <span className="text-xs text-gray-400">límite: {sqLim}</span>
         </div>
 
         {/* Bubbles */}
@@ -304,7 +304,7 @@ export function SquadCanvas({ projects, discarded, p0Projects, config, onEdit }:
             style={{
               bottom: 10,
               right: 14,
-              fontSize: 10,
+              fontSize: 12,
               fontWeight: 700,
               color: "#ccc",
               border: "1px dashed #ddd",

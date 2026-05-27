@@ -53,8 +53,8 @@ const QUADRANT_LABEL: Record<Quadrant, string> = {
 
 function getBubble(effort: number) {
   const clamped = Math.max(1, Math.min(24, effort));
-  const size = Math.round(72 + (clamped - 1) * 4.2);
-  const strokeWidth = Math.round(5 + (clamped - 1) * 0.13);
+  const size = Math.round(70 + (clamped - 1) * 6.39);
+  const strokeWidth = Math.round(6 + (clamped - 1) * 0.13);
   return { size, strokeWidth };
 }
 
@@ -93,9 +93,9 @@ export function BubbleCard({ project, onEdit, style, onMouseDown, urgencyColor: 
   const dotCy = cy - r;
 
   // Proportional font sizes
-  const qlFontSize = Math.max(7, Math.round(size * 0.052));
-  const nameFontSize = Math.max(8, Math.round(size * 0.065));
-  const spFontSize = Math.max(7, Math.round(size * 0.048));
+  const qlFontSize = Math.max(11, Math.round(size * 0.052));
+  const nameFontSize = Math.max(13, Math.round(size * 0.065));
+  const spFontSize = Math.max(11, Math.round(size * 0.055));
 
   // Text Y positions (relative to center)
   const qlOffsetY = -size * 0.145;

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useFormState, useFormStatus } from "react-dom";
 import { createOrganization } from "./actions";
 
 function nameToSlug(name: string): string {
@@ -12,26 +13,24 @@ function nameToSlug(name: string): string {
     .replace(/^-|-$/g, "");
 }
 
+function SubmitButton({ disabled }: { disabled: boolean }) {
+  const { pending } = useFormStatus();
+  return (
+    <button
+      type="submit"
+      disabled={pending || disabled}
+      className="w-full bg-brand-orange hover:bg-orange-600 disabled:opacity-60 text-white font-semibold rounded-lg py-2.5 text-sm transition"
+    >
+      {pending ? "Creando…" : "Crear organización"}
+    </button>
+  );
+}
+
 export default function OnboardingPage() {
   const [name, setName] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [state, formAction] = useFormState(createOrganization, { error: null });
 
   const slug = nameToSlug(name);
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!slug) return;
-    setLoading(true);
-    setError(null);
-
-    const result = await createOrganization(name.trim(), slug);
-    if (result?.error) {
-      setError(result.error);
-      setLoading(false);
-    }
-    // Si no hay error, el server action hace redirect("/dashboard")
-  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
@@ -59,7 +58,10 @@ export default function OnboardingPage() {
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+          {/* form action={} — Next.js lo intercepta server-side */}
+          <form action={formAction} className="flex flex-col gap-5">
+            <input type="hidden" name="slug" value={slug} />
+
             <div className="flex flex-col gap-1.5">
               <label
                 className="text-sm font-medium text-brand-black"
@@ -69,6 +71,7 @@ export default function OnboardingPage() {
               </label>
               <input
                 id="name"
+                name="name"
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
@@ -85,19 +88,13 @@ export default function OnboardingPage() {
               )}
             </div>
 
-            {error && (
+            {state.error && (
               <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">
-                {error}
+                {state.error}
               </p>
             )}
 
-            <button
-              type="submit"
-              disabled={loading || !slug}
-              className="w-full bg-brand-orange hover:bg-orange-600 disabled:opacity-60 text-white font-semibold rounded-lg py-2.5 text-sm transition"
-            >
-              {loading ? "Creando…" : "Crear organización"}
-            </button>
+            <SubmitButton disabled={!slug} />
           </form>
         </div>
       </div>

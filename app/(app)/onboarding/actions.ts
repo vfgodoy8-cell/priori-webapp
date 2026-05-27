@@ -4,11 +4,17 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { redirect } from "next/navigation";
 
+type State = { error: string | null };
+
 export async function createOrganization(
-  name: string,
-  slug: string
-): Promise<{ error: string; code?: string } | never> {
-  // 1. Verificar sesión con el cliente normal
+  _prevState: State,
+  formData: FormData
+): Promise<State> {
+  const name = (formData.get("name") as string)?.trim();
+  const slug = (formData.get("slug") as string)?.trim();
+
+  if (!name || !slug) return { error: "Nombre requerido." };
+
   const supabase = createClient();
   const {
     data: { user },
@@ -16,7 +22,6 @@ export async function createOrganization(
 
   if (!user) redirect("/login");
 
-  // 2. Escritura con cliente admin (bypasea RLS — seguro porque user ya está verificado)
   const admin = createAdminClient();
 
   const { data: org, error: orgError } = await admin
@@ -31,21 +36,14 @@ export async function createOrganization(
         orgError.code === "23505"
           ? "Ya existe una organización con ese nombre. Probá con uno diferente."
           : orgError.message,
-      code: orgError.code,
     };
   }
 
   const { error: memberError } = await admin
     .from("organization_members")
-    .insert({
-      organization_id: org.id,
-      profile_id: user.id,
-      role: "owner",
-    });
+    .insert({ organization_id: org.id, profile_id: user.id, role: "owner" });
 
-  if (memberError) {
-    return { error: memberError.message };
-  }
+  if (memberError) return { error: memberError.message };
 
   redirect("/dashboard");
 }

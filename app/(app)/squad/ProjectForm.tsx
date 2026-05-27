@@ -104,19 +104,32 @@ export function ProjectForm({ project, onClose }: Props) {
           </div>
 
           {/* Esfuerzo */}
-          <Field label={`Esfuerzo (sprints) *`} htmlFor="effort_sprints">
-            <input
-              id="effort_sprints"
-              name="effort_sprints"
-              type="number"
-              min="1"
-              max="24"
-              required
-              defaultValue={project?.effort_sprints ?? ""}
-              placeholder="1 – 24"
-              className={inputClass}
-            />
-          </Field>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Esfuerzo (sprints) *" htmlFor="effort_sprints">
+              <input
+                id="effort_sprints"
+                name="effort_sprints"
+                type="number"
+                min="1"
+                max="24"
+                required
+                defaultValue={project?.effort_sprints ?? ""}
+                placeholder="1 – 24"
+                className={inputClass}
+              />
+            </Field>
+            <Field label="Sprints completados" htmlFor="sprints_completed">
+              <input
+                id="sprints_completed"
+                name="sprints_completed"
+                type="number"
+                min="0"
+                max="24"
+                defaultValue={project?.sprints_completed ?? 0}
+                className={inputClass}
+              />
+            </Field>
+          </div>
 
           {/* Stakeholder */}
           <Field label="Stakeholder" htmlFor="stakeholder">

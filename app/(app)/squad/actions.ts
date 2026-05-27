@@ -41,6 +41,8 @@ export async function createProject(
     impact_value: parseFloat(formData.get("impact_value") as string) || 0,
     impact_metric: (formData.get("impact_metric") as string) || "revenue",
     effort_sprints: parseInt(formData.get("effort_sprints") as string) || 1,
+    sprints_completed: parseInt(formData.get("sprints_completed") as string) || 0,
+    squad_status: ((formData.get("squad_status") as string) || "backlog") as "backlog" | "curso",
     stakeholder: (formData.get("stakeholder") as string)?.trim() || null,
     production_date: (formData.get("production_date") as string) || null,
     dependencies: (formData.get("dependencies") as string)?.trim() || null,
@@ -70,6 +72,8 @@ export async function updateProject(
     impact_value: parseFloat(formData.get("impact_value") as string) || 0,
     impact_metric: (formData.get("impact_metric") as "revenue" | "customers") || "revenue",
     effort_sprints: parseInt(formData.get("effort_sprints") as string) || 1,
+    sprints_completed: parseInt(formData.get("sprints_completed") as string) || 0,
+    squad_status: ((formData.get("squad_status") as string) || "backlog") as "backlog" | "curso",
     stakeholder: (formData.get("stakeholder") as string)?.trim() || null,
     production_date: (formData.get("production_date") as string) || null,
     dependencies: (formData.get("dependencies") as string)?.trim() || null,
@@ -114,5 +118,44 @@ export async function deleteProject(id: string): Promise<void> {
     .delete()
     .eq("id", id)
     .eq("organization_id", orgId);
+  revalidatePath("/squad");
+}
+
+export async function updateProjectPosition(
+  id: string,
+  x: number,
+  y: number
+): Promise<void> {
+  const { admin, orgId } = await getAuthContext();
+  await admin
+    .from("projects")
+    .update({ canvas_x: x, canvas_y: y })
+    .eq("id", id)
+    .eq("organization_id", orgId);
+  revalidatePath("/squad");
+}
+
+export async function updateSquadStatus(
+  id: string,
+  squadStatus: "backlog" | "curso"
+): Promise<void> {
+  const { admin, orgId } = await getAuthContext();
+  await admin
+    .from("projects")
+    .update({ squad_status: squadStatus })
+    .eq("id", id)
+    .eq("organization_id", orgId);
+  revalidatePath("/squad");
+}
+
+export async function swapSquadStatus(
+  incomingId: string,
+  outgoingId: string
+): Promise<void> {
+  const { admin, orgId } = await getAuthContext();
+  await Promise.all([
+    admin.from("projects").update({ squad_status: "curso" }).eq("id", incomingId).eq("organization_id", orgId),
+    admin.from("projects").update({ squad_status: "backlog" }).eq("id", outgoingId).eq("organization_id", orgId),
+  ]);
   revalidatePath("/squad");
 }

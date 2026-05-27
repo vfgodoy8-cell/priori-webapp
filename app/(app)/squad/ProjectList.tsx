@@ -1,7 +1,5 @@
 "use client";
 
-import { useState } from "react";
-import { ProjectForm } from "./ProjectForm";
 import { discardProject, restoreProject, deleteProject } from "./actions";
 import { computeQuadrant, QUADRANT_META } from "@/lib/quadrant";
 import type { Project } from "@/types/database";
@@ -9,62 +7,34 @@ import type { Project } from "@/types/database";
 type Props = {
   projects: Project[];
   discarded: Project[];
+  onEdit: (p: Project) => void;
+  onNew: () => void;
 };
 
-export function ProjectList({ projects, discarded }: Props) {
-  const [showForm, setShowForm] = useState(false);
-  const [editProject, setEditProject] = useState<Project | undefined>();
-
-  function openCreate() {
-    setEditProject(undefined);
-    setShowForm(true);
-  }
-
-  function openEdit(p: Project) {
-    setEditProject(p);
-    setShowForm(true);
-  }
-
-  function closeForm() {
-    setShowForm(false);
-    setEditProject(undefined);
-  }
-
+export function ProjectList({ projects, discarded, onEdit, onNew }: Props) {
   return (
     <div className="flex flex-col gap-8">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-bold text-brand-black">Modo Squad</h1>
-          <p className="text-sm text-brand-gray mt-0.5">
-            {projects.length} proyecto{projects.length !== 1 ? "s" : ""} activo
-            {projects.length !== 1 ? "s" : ""}
-          </p>
-        </div>
+        <p className="text-sm text-brand-gray">
+          {projects.length} proyecto{projects.length !== 1 ? "s" : ""} activo
+          {projects.length !== 1 ? "s" : ""}
+        </p>
         <button
-          onClick={openCreate}
+          onClick={onNew}
           className="bg-brand-orange hover:bg-orange-600 text-white font-semibold rounded-lg px-4 py-2 text-sm transition"
         >
           + Nuevo proyecto
         </button>
       </div>
 
-      {/* Tabla de proyectos activos */}
       {projects.length === 0 ? (
-        <EmptyState onAdd={openCreate} />
+        <EmptyState onAdd={onNew} />
       ) : (
-        <ProjectTable projects={projects} onEdit={openEdit} />
+        <ProjectTable projects={projects} onEdit={onEdit} />
       )}
 
-      {/* Proyectos descartados */}
-      {discarded.length > 0 && (
-        <DiscardedSection discarded={discarded} />
-      )}
-
-      {/* Modal */}
-      {showForm && (
-        <ProjectForm project={editProject} onClose={closeForm} />
-      )}
+      {discarded.length > 0 && <DiscardedSection discarded={discarded} />}
     </div>
   );
 }
@@ -85,6 +55,7 @@ function ProjectTable({
             <th className="text-left px-4 py-3 font-medium">Cuadrante</th>
             <th className="text-right px-4 py-3 font-medium">Impacto</th>
             <th className="text-right px-4 py-3 font-medium">Sprints</th>
+            <th className="text-right px-4 py-3 font-medium">Progreso</th>
             <th className="text-left px-4 py-3 font-medium">Stakeholder</th>
             <th className="text-right px-4 py-3 font-medium">Fecha prod.</th>
             <th className="px-4 py-3" />
@@ -134,6 +105,9 @@ function ProjectRow({
       <td className="px-4 py-3 text-right text-brand-black tabular-nums">
         {p.effort_sprints} sp
       </td>
+      <td className="px-4 py-3 text-right text-brand-gray tabular-nums">
+        {p.sprints_completed ?? 0}/{p.effort_sprints}
+      </td>
       <td className="px-4 py-3 text-brand-gray max-w-[150px] truncate">
         {p.stakeholder ?? "—"}
       </td>
@@ -181,9 +155,7 @@ function DiscardedSection({ discarded }: { discarded: Project[] }) {
     <details className="group">
       <summary className="flex items-center gap-2 cursor-pointer text-sm text-brand-gray hover:text-brand-black transition list-none">
         <span className="text-xs">▶</span>
-        <span>
-          Descartados ({discarded.length})
-        </span>
+        <span>Descartados ({discarded.length})</span>
       </summary>
       <div className="mt-3 bg-white rounded-xl border border-gray-100 overflow-hidden">
         <table className="w-full text-sm">

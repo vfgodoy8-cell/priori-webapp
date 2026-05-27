@@ -2,11 +2,10 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { SquadView } from "./SquadView";
-import { computeQuadrant } from "@/lib/quadrant";
-import type { OrganizationMember, Organization, Project } from "@/types/database";
+import { CrossView } from "./CrossView";
+import type { OrganizationMember, Organization, Team, Initiative } from "@/types/database";
 
-export default async function SquadPage() {
+export default async function CrossPage() {
   const supabase = createClient();
   const {
     data: { user },
@@ -33,23 +32,22 @@ export default async function SquadPage() {
   const org = orgData as Organization | null;
   if (!org) redirect("/onboarding");
 
-  const { data: projectsData } = await admin
-    .from("projects")
-    .select("*")
-    .eq("organization_id", org.id)
-    .order("created_at", { ascending: false });
+  const [{ data: teamsData }, { data: initiativesData }] = await Promise.all([
+    admin
+      .from("teams")
+      .select("*")
+      .eq("organization_id", org.id)
+      .order("sort_order", { ascending: true }),
+    admin
+      .from("initiatives")
+      .select("*")
+      .eq("organization_id", org.id)
+      .eq("status", "active")
+      .order("created_at", { ascending: false }),
+  ]);
 
-  const all = (projectsData ?? []) as Project[];
-  const allActive = all.filter((p) => p.status === "active");
-  const discarded = all.filter((p) => p.status === "discarded");
-
-  // Separate p0 projects (active but discarded quadrant — not shown on canvas)
-  const p0Projects = allActive.filter(
-    (p) => computeQuadrant(p.impact_value, p.effort_sprints) === "p0"
-  );
-  const projects = allActive.filter(
-    (p) => computeQuadrant(p.impact_value, p.effort_sprints) !== "p0"
-  );
+  const teams = (teamsData ?? []) as Team[];
+  const initiatives = (initiativesData ?? []) as Initiative[];
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -66,16 +64,16 @@ export default async function SquadPage() {
               <span className="font-bold text-brand-black text-lg">priori</span>
             </Link>
             <span className="text-gray-200">|</span>
-            <span className="text-sm font-medium text-brand-black">Modo Squad</span>
+            <span className="text-sm font-medium text-brand-black">Modo Cross</span>
           </div>
 
           <div className="flex items-center gap-4">
             <Link
-              href="/cross"
+              href="/squad"
               className="text-sm font-bold px-3.5 py-1.5 rounded-lg bg-white text-brand-gray hover:text-brand-orange hover:border-brand-orange transition"
               style={{ border: "1.5px solid #E5E5E5", borderRadius: 8 }}
             >
-              📅 Modo Cross →
+              👥 Modo Squad →
             </Link>
             <span className="text-sm text-brand-gray">{org.name}</span>
             <LogoutButton />
@@ -85,12 +83,22 @@ export default async function SquadPage() {
 
       {/* Content */}
       <main className="max-w-7xl mx-auto px-6 py-8">
-        <SquadView
-          projects={projects}
-          discarded={discarded}
-          p0Projects={p0Projects}
-          allActive={allActive}
+        <div className="flex items-start justify-between mb-6">
+          <div>
+            <h1 className="text-xl font-bold text-brand-black">Planificación del Programa</h1>
+            <p className="text-xs text-brand-gray mt-0.5">
+              Iniciativas multi-equipo · Capacidad por Quarter · Año 2026
+            </p>
+          </div>
+          <span className="text-xs font-bold px-4 py-1.5 rounded-full bg-orange-50 text-brand-orange border border-orange-200">
+            Planificación Anual
+          </span>
+        </div>
+
+        <CrossView
           orgId={org.id}
+          initialTeams={teams}
+          initialInitiatives={initiatives}
         />
       </main>
     </div>

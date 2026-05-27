@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import type { Organization, OrganizationMember, MemberRole } from "@/types/database";
 
 export default async function DashboardPage() {
@@ -11,8 +12,9 @@ export default async function DashboardPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  // Verificar si el usuario tiene organización
-  const { data: membershipData } = await supabase
+  const admin = createAdminClient();
+
+  const { data: membershipData } = await admin
     .from("organization_members")
     .select("*")
     .eq("profile_id", user.id)
@@ -21,7 +23,7 @@ export default async function DashboardPage() {
   const membership = membershipData as OrganizationMember | null;
   if (!membership) redirect("/onboarding");
 
-  const { data: orgData } = await supabase
+  const { data: orgData } = await admin
     .from("organizations")
     .select("*")
     .eq("id", membership.organization_id)
@@ -31,6 +33,20 @@ export default async function DashboardPage() {
   if (!org) redirect("/onboarding");
 
   const role = membership.role as MemberRole;
+
+  // Counts for badges
+  const [{ count: projectCount }, { count: initiativeCount }] = await Promise.all([
+    admin
+      .from("projects")
+      .select("*", { count: "exact", head: true })
+      .eq("organization_id", org.id)
+      .eq("status", "active"),
+    admin
+      .from("initiatives")
+      .select("*", { count: "exact", head: true })
+      .eq("organization_id", org.id)
+      .eq("status", "active"),
+  ]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -61,25 +77,31 @@ export default async function DashboardPage() {
           <h1 className="text-2xl font-bold text-brand-black">{org.name}</h1>
           <p className="text-brand-gray text-sm">
             Rol:{" "}
-            <span className="font-medium text-brand-black capitalize">
-              {role}
-            </span>
+            <span className="font-medium text-brand-black capitalize">{role}</span>
           </p>
         </div>
 
-        {/* Modos */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-xl">
           <Link href="/squad">
             <ModeCard
+              icon="👥"
               title="Modo Squad"
               description="Canvas de burbujas con Matriz de Impacto vs Esfuerzo."
+              accentColor="#E8621A"
+              badge={projectCount != null ? `${projectCount} proyecto${projectCount !== 1 ? "s" : ""} activo${projectCount !== 1 ? "s" : ""}` : undefined}
+              badgeColor="#E8621A"
             />
           </Link>
-          <ModeCard
-            title="Modo Cross"
-            description="Timeline Q1–Q4 con planificación de capacidad por equipo."
-            disabled
-          />
+          <Link href="/cross">
+            <ModeCard
+              icon="📅"
+              title="Modo Cross"
+              description="Timeline Q1–Q4 con planificación de capacidad por equipo."
+              accentColor="#1E6FC5"
+              badge={initiativeCount != null ? `${initiativeCount} iniciativa${initiativeCount !== 1 ? "s" : ""}` : undefined}
+              badgeColor="#1E6FC5"
+            />
+          </Link>
         </div>
       </main>
     </div>
@@ -87,29 +109,47 @@ export default async function DashboardPage() {
 }
 
 function ModeCard({
+  icon,
   title,
   description,
-  disabled,
+  accentColor,
+  badge,
+  badgeColor,
 }: {
+  icon: string;
   title: string;
   description: string;
-  disabled?: boolean;
+  accentColor: string;
+  badge?: string;
+  badgeColor?: string;
 }) {
   return (
     <div
-      className={`bg-white rounded-xl border border-gray-100 p-6 flex flex-col gap-2 ${
-        disabled
-          ? "opacity-50 cursor-not-allowed"
-          : "hover:border-brand-orange hover:shadow-sm cursor-pointer transition"
-      }`}
+      className="bg-white rounded-xl border border-gray-100 p-6 flex flex-col gap-2 hover:shadow-sm transition cursor-pointer group"
+      style={{ borderTop: `3px solid ${accentColor}` }}
     >
-      <h2 className="font-semibold text-brand-black text-sm">{title}</h2>
+      <div className="flex items-center justify-between">
+        <span className="text-2xl">{icon}</span>
+        {badge && (
+          <span
+            className="text-[10px] font-bold px-2.5 py-1 rounded-full"
+            style={{
+              background: `${badgeColor}18`,
+              color: badgeColor,
+              border: `1px solid ${badgeColor}33`,
+            }}
+          >
+            {badge}
+          </span>
+        )}
+      </div>
+      <h2
+        className="font-bold text-brand-black text-sm group-hover:text-brand-orange transition"
+        style={{ color: undefined }}
+      >
+        {title}
+      </h2>
       <p className="text-brand-gray text-xs leading-relaxed">{description}</p>
-      {disabled && (
-        <span className="text-xs text-brand-orange font-medium mt-1">
-          Próximamente
-        </span>
-      )}
     </div>
   );
 }

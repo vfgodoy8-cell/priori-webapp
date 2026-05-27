@@ -103,6 +103,8 @@ types/                  # Tipos TypeScript compartidos
 | **Cross** | Modo de vista en timeline Q1–Q4 |
 | **Capacidad** | `personas × proyectos/persona × (% disponibilidad Q / 100)` |
 | **Límite Squad** | `developers × proyectos/developer` (default: 3) |
+| **Semáforo capacidad** | Verde < 90% ocup. · Amarillo 90–95% · Naranja 95–99% · Rojo ≥ 100% |
+| **Display disponibilidad** | `"2/4 personas (50%)"` — fracción + porcentaje |
 
 ---
 

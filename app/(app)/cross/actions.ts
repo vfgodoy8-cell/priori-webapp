@@ -74,8 +74,9 @@ export async function createInitiative(_prev: State, formData: FormData): Promis
   const teamAllocations: Record<string, number> = allocRaw ? JSON.parse(allocRaw) : {};
   const teamIds = Object.keys(teamAllocations).filter((k) => teamAllocations[k] > 0);
 
+  const effortSprints = parseInt(formData.get("effort_sprints") as string) || 1;
   let qStart: number | null = null;
-  let durationQuarters = parseInt(formData.get("duration_quarters") as string) || 1;
+  let durationQuarters = Math.min(4, Math.max(1, Math.ceil(effortSprints / 6)));
   if (startDate) {
     qStart = dateToQuarter(startDate);
     if (endDate) durationQuarters = quartersBetween(startDate, endDate);
@@ -87,7 +88,7 @@ export async function createInitiative(_prev: State, formData: FormData): Promis
     stakeholder: (formData.get("stakeholder") as string)?.trim() || null,
     impact_value: parseFloat(formData.get("impact_value") as string) || 0,
     impact_metric: ((formData.get("impact_metric") as string) || "revenue") as "revenue" | "customers",
-    effort_sprints: parseInt(formData.get("effort_sprints") as string) || 1,
+    effort_sprints: effortSprints,
     duration_quarters: durationQuarters,
     q_start: qStart,
     team_ids: teamIds,
@@ -117,13 +118,14 @@ export async function updateInitiative(_prev: State, formData: FormData): Promis
   const teamAllocations: Record<string, number> = allocRaw ? JSON.parse(allocRaw) : {};
   const teamIds = Object.keys(teamAllocations).filter((k) => teamAllocations[k] > 0);
 
-  let durationQuarters = parseInt(formData.get("duration_quarters") as string) || 1;
+  const effortSprints = parseInt(formData.get("effort_sprints") as string) || 1;
+  let durationQuarters = Math.min(4, Math.max(1, Math.ceil(effortSprints / 6)));
   const patch: Partial<Initiative> = {
     name: (formData.get("name") as string).trim(),
     stakeholder: (formData.get("stakeholder") as string)?.trim() || null,
     impact_value: parseFloat(formData.get("impact_value") as string) || 0,
     impact_metric: ((formData.get("impact_metric") as string) || "revenue") as "revenue" | "customers",
-    effort_sprints: parseInt(formData.get("effort_sprints") as string) || 1,
+    effort_sprints: effortSprints,
     team_ids: teamIds,
     team_allocations: teamAllocations,
     description: (formData.get("description") as string)?.trim() || null,

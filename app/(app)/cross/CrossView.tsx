@@ -95,7 +95,6 @@ export function CrossView({ orgId, initialTeams, initialInitiatives, squadProjec
   const [prevSp, setPrevSp] = useState(0);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
-  const [duration, setDuration] = useState(1);
   const [teamAllocations, setTeamAllocations] = useState<Record<string, number>>({});
   const [sqProjectIds, setSqProjectIds] = useState<string[]>([]);
 
@@ -104,13 +103,15 @@ export function CrossView({ orgId, initialTeams, initialInitiatives, squadProjec
     setPrevSp(editIni?.effort_sprints ?? 0);
     setStartDate(editIni?.start_date ?? "");
     setEndDate(editIni?.end_date ?? "");
-    setDuration(Number(editIni?.duration_quarters ?? 1));
     setTeamAllocations((editIni?.team_allocations as Record<string, number>) ?? {});
     setSqProjectIds((editIni?.sq_project_ids as string[]) ?? []);
   }, [editIni]);
 
+  // Auto-calculate duration from sprints: 1 quarter = 6 sprints (2-week sprints)
+  const autoCalcDuration = Math.min(4, Math.max(1, Math.ceil(prevSp / 6)));
   const calcQStart = startDate ? dateToQuarter(startDate) : null;
   const calcDuration = startDate && endDate ? quartersBetween(startDate, endDate) : null;
+  const effectiveDuration = calcDuration ?? autoCalcDuration;
 
   const qPrev = prevImp > 0 || prevSp > 0 ? computeQuadrant(prevImp, prevSp) : null;
   const mPrev = qPrev ? QUADRANT_META[qPrev] : null;
@@ -119,7 +120,7 @@ export function CrossView({ orgId, initialTeams, initialInitiatives, squadProjec
   const teamWarnings = useMemo<Record<string, string[]>>(() => {
     const result: Record<string, string[]> = {};
     if (calcQStart === null) return result;
-    const dur = calcDuration ?? 1;
+    const dur = effectiveDuration;
     Object.entries(teamAllocations).forEach(([teamId, n]) => {
       if (!n) return;
       const team = teams.find((t) => t.id === teamId);
@@ -141,7 +142,7 @@ export function CrossView({ orgId, initialTeams, initialInitiatives, squadProjec
       if (overQ.length > 0) result[teamId] = overQ;
     });
     return result;
-  }, [teamAllocations, calcQStart, calcDuration, teams, initiatives, editIni]);
+  }, [teamAllocations, calcQStart, effectiveDuration, teams, initiatives, editIni]);
 
   // Reset form on successful save + refresh data
   useEffect(() => {
@@ -151,7 +152,6 @@ export function CrossView({ orgId, initialTeams, initialInitiatives, squadProjec
       formRef.current.reset();
       setPrevImp(0); setPrevSp(0);
       setStartDate(""); setEndDate("");
-      setDuration(1);
       setTeamAllocations({});
       setSqProjectIds([]);
       router.refresh();
@@ -200,7 +200,6 @@ export function CrossView({ orgId, initialTeams, initialInitiatives, squadProjec
   }
 
   function openEdit(ini: Initiative) {
-    console.log("[CrossView] openEdit:", ini.name, ini);
     setEditIni(ini);
     setPanelOpen(true);
     // Sync form state immediately (not via useEffect — avoids reference-equality skips)
@@ -208,7 +207,6 @@ export function CrossView({ orgId, initialTeams, initialInitiatives, squadProjec
     setPrevSp(ini.effort_sprints);
     setStartDate(ini.start_date ?? "");
     setEndDate(ini.end_date ?? "");
-    setDuration(Number(ini.duration_quarters));
     setTeamAllocations((ini.team_allocations as Record<string, number>) ?? {});
     setSqProjectIds((ini.sq_project_ids as string[]) ?? []);
   }
@@ -503,6 +501,7 @@ export function CrossView({ orgId, initialTeams, initialInitiatives, squadProjec
               <input type="hidden" name="team_allocations" value={JSON.stringify(teamAllocations)} />
               <input type="hidden" name="team_ids" value={JSON.stringify(Object.keys(teamAllocations).filter((k) => (teamAllocations[k] ?? 0) > 0))} />
               <input type="hidden" name="sq_project_ids" value={JSON.stringify(sqProjectIds)} />
+              <input type="hidden" name="duration_quarters" value={effectiveDuration} />
 
               <F label="Nombre *">
                 <input name="name" type="text" required defaultValue={editIni?.name} placeholder="Ej: Transformación Digital" className={inp} />
@@ -522,6 +521,11 @@ export function CrossView({ orgId, initialTeams, initialInitiatives, squadProjec
                     defaultValue={editIni?.effort_sprints ?? ""}
                     placeholder="1–24" className={inp}
                     onChange={(e) => setPrevSp(parseInt(e.target.value) || 0)} />
+                  {prevSp > 0 && (
+                    <span style={{ fontSize: 11, color: "#6B6B6B" }}>
+                      ↔ {autoCalcDuration}Q (calculado)
+                    </span>
+                  )}
                 </F>
               </div>
 
@@ -548,8 +552,8 @@ export function CrossView({ orgId, initialTeams, initialInitiatives, squadProjec
                 </F>
               </div>
 
-              {/* Auto-calculated quarter/duration */}
-              {startDate && endDate ? (
+              {/* Quarter range from dates (when both are set) */}
+              {startDate && endDate && (
                 <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-50 border border-blue-100">
                   <span className="text-xs font-bold text-brand-blue">
                     {Q_LABELS[dateToQuarter(startDate)]} → {Q_LABELS[dateToQuarter(endDate)]}
@@ -558,25 +562,6 @@ export function CrossView({ orgId, initialTeams, initialInitiatives, squadProjec
                     · {quartersBetween(startDate, endDate)} trimestre{quartersBetween(startDate, endDate) !== 1 ? "s" : ""}
                   </span>
                 </div>
-              ) : (
-                <F label="Duración">
-                  <select
-                    name="duration_quarters"
-                    value={String(duration)}
-                    onChange={(e) => setDuration(Number(e.target.value))}
-                    className={inp}
-                  >
-                    <option value="1">1 Quarter</option>
-                    <option value="2">2 Quarters</option>
-                    <option value="3">3 Quarters</option>
-                    <option value="4">4 Quarters (año completo)</option>
-                  </select>
-                  {editIni && (
-                    <span className="text-[10px] text-gray-400 mt-0.5">
-                      DB: duration_quarters={String(editIni.duration_quarters)} · estado={duration}
-                    </span>
-                  )}
-                </F>
               )}
 
               {/* Team allocation */}

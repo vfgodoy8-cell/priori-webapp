@@ -34,7 +34,7 @@ export async function createInvitation(_prev: State, formData: FormData): Promis
   const invRole = (formData.get("role") as string) || "member";
 
   if (!email) return { error: "El email es requerido." };
-  if (!["admin", "member"].includes(invRole)) return { error: "Rol invÃ¡lido." };
+  if (!["admin", "member"].includes(invRole)) return { error: "Rol inválido." };
 
   const { data: { user } } = await createClient().auth.getUser();
   if (!user) redirect("/login");
@@ -48,7 +48,7 @@ export async function createInvitation(_prev: State, formData: FormData): Promis
     .is("accepted_at", null)
     .single();
 
-  if (pendingInv) return { error: "Ya hay una invitaciÃ³n pendiente para ese email." };
+  if (pendingInv) return { error: "Ya hay una invitación pendiente para ese email." };
 
   const token = randomBytes(12).toString("base64url").slice(0, 16);
 

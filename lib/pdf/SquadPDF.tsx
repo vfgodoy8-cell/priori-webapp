@@ -66,7 +66,7 @@ export function SquadPDF({ orgName, date, projects, devN, devP }: Props) {
   const occ      = Math.round((inCourse / Math.max(capacity, 1)) * 100);
 
   return (
-    <Document title={`priori - Modo Squad - ${orgName}`} author="priori">
+    <Document title={`priori - Modo Squad - ${orgName}`} author="priori™">
       <Page size="A4" style={s.page}>
         <View style={s.headerBar}>
           <View style={s.logoRow}>
@@ -130,7 +130,7 @@ export function SquadPDF({ orgName, date, projects, devN, devP }: Props) {
         </View>
 
         <View style={s.footer} fixed>
-          <Text style={s.footerTxt}>priori - La claridad de priorizar bien.</Text>
+          <Text style={s.footerTxt}>priori™ — La claridad de priorizar bien.</Text>
           <Text style={s.footerTxt} render={({ pageNumber, totalPages }) => `${pageNumber} / ${totalPages}`} />
         </View>
       </Page>

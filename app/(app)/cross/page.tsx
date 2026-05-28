@@ -75,7 +75,7 @@ export default async function CrossPage() {
               </div>
               <div className="flex flex-col gap-0.5">
                 <span className="font-bold text-brand-black text-lg leading-none">priori</span>
-                <span className="uppercase text-brand-gray leading-none" style={{ fontSize: 10, letterSpacing: "0.08em" }}>Transparencia EstratÃ©gica</span>
+                <span className="uppercase text-brand-gray leading-none" style={{ fontSize: 10, letterSpacing: "0.08em" }}>Transparencia Estratégica</span>
               </div>
             </Link>
             <span className="text-gray-200">|</span>
@@ -91,13 +91,13 @@ export default async function CrossPage() {
       <main className="max-w-7xl mx-auto px-6 py-8">
         <div className="flex items-start justify-between mb-6">
           <div>
-            <h1 className="text-xl font-bold text-brand-black">PlanificaciÃ³n del Programa</h1>
+            <h1 className="text-xl font-bold text-brand-black">Planificación del Programa</h1>
             <p className="text-xs text-brand-gray mt-0.5">
-              Iniciativas multi-equipo Â· Capacidad por Quarter Â· AÃ±o 2026
+              Iniciativas multi-equipo · Capacidad por Quarter · Año 2026
             </p>
           </div>
           <span className="text-xs font-bold px-4 py-1.5 rounded-full bg-orange-50 text-brand-orange border border-orange-200">
-            PlanificaciÃ³n Anual
+            Planificación Anual
           </span>
         </div>
 

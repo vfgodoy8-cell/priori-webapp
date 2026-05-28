@@ -7,6 +7,7 @@ import { computeQuadrant } from "@/lib/quadrant";
 import { LogoutButton } from "@/components/ui/LogoutButton";
 import type { OrganizationMember, Organization, Project } from "@/types/database";
 import { type AppRole } from "@/lib/roles";
+import { IconCalendarEvent, IconSettings } from "@tabler/icons-react";
 
 export default async function SquadPage({ searchParams }: { searchParams?: { ini?: string } }) {
   const supabase = createClient();
@@ -60,7 +61,7 @@ export default async function SquadPage({ searchParams }: { searchParams?: { ini
   const filterInitiative = iniId ? initiatives.find((i) => i.id === iniId) ?? null : null;
   const highlightIds = filterInitiative ? new Set(filterInitiative.sq_project_ids ?? []) : null;
 
-  // Map projectId â†’ first initiative name (for tooltip "Parte de: X")
+  // Map projectId → first initiative name (for tooltip "Parte de: X")
   const projectIniMap: Record<string, string> = {};
   initiatives.forEach((i) => {
     (i.sq_project_ids ?? []).forEach((pid) => {
@@ -93,7 +94,7 @@ export default async function SquadPage({ searchParams }: { searchParams?: { ini
               </div>
               <div className="flex flex-col gap-0.5">
                 <span className="font-bold text-brand-black text-lg leading-none">priori</span>
-                <span className="uppercase text-brand-gray leading-none" style={{ fontSize: 10, letterSpacing: "0.08em" }}>Transparencia EstratÃ©gica</span>
+                <span className="uppercase text-brand-gray leading-none" style={{ fontSize: 10, letterSpacing: "0.08em" }}>Transparencia Estratégica</span>
               </div>
             </Link>
             <span className="text-gray-200">|</span>
@@ -107,14 +108,14 @@ export default async function SquadPage({ searchParams }: { searchParams?: { ini
               className="text-sm font-bold px-3.5 py-1.5 rounded-lg bg-white text-brand-gray hover:text-brand-orange hover:border-brand-orange transition"
               style={{ border: "1.5px solid #E5E5E5", borderRadius: 8 }}
             >
-              ðŸ“… Modo Cross â†’
+              <IconCalendarEvent size={14} strokeWidth={2} /> Modo Cross →
             </Link>
             <Link
               href="/settings/members"
               className="text-sm px-3 py-1.5 rounded-lg bg-white text-brand-gray hover:text-brand-black transition"
               style={{ border: "1.5px solid #E5E5E5", borderRadius: 8 }}
             >
-              âš™ Equipo
+              <IconSettings size={14} strokeWidth={2} /> Equipo
             </Link>
             <span className="text-sm text-brand-gray">{org.name}</span>
             <LogoutButton />

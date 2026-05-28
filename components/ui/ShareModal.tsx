@@ -1,4 +1,5 @@
 ﻿"use client";
+import { IconBrandTeams, IconBrandWhatsapp, IconMail, IconLink, IconFileTypePdf } from "@tabler/icons-react";
 
 import { useState, useRef } from "react";
 import { createSharedView } from "@/app/(app)/share/actions";
@@ -19,7 +20,7 @@ export function ShareModal({ mode, targetRef, onClose }: Props) {
   const modeLabel = mode === "squad" ? "Modo Squad" : "Modo Cross";
   const origin = typeof window !== "undefined" ? window.location.origin : "";
   const publicUrl = publicToken ? `${origin}/share/${publicToken}` : null;
-  const message = `Prioriâ„¢ â€” PriorizaciÃ³n visual (${modeLabel}): ${publicUrl ?? origin}`;
+  const message = `Prioriâ„¢ â€” Priorización visual (${modeLabel}): ${publicUrl ?? origin}`;
 
   function showToast(msg: string) {
     setToast(msg);
@@ -58,21 +59,21 @@ export function ShareModal({ mode, targetRef, onClose }: Props) {
       `https://teams.microsoft.com/share?href=${encodeURIComponent(url)}&msgText=${encodeURIComponent(message)}`,
       "_blank"
     );
-    showToast("Abriendo Microsoft Teamsâ€¦");
+    showToast("Abriendo Microsoft Teams…");
   }
 
   function shareWhatsApp() {
     window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, "_blank");
-    showToast("Abriendo WhatsAppâ€¦");
+    showToast("Abriendo WhatsApp…");
   }
 
   function shareMail() {
-    const subject = encodeURIComponent("Prioriâ„¢ â€” PriorizaciÃ³n visual");
+    const subject = encodeURIComponent("Prioriâ„¢ â€” Priorización visual");
     const body = encodeURIComponent(
-      `Te comparto la previsualizaciÃ³n del Estimador de Proyectos:\n\n${message}\n\nAbrÃ­ el enlace para ver el estado actual de la planificaciÃ³n.`
+      `Te comparto la previsualización del Estimador de Proyectos:\n\n${message}\n\nAbrí el enlace para ver el estado actual de la planificación.`
     );
     window.location.href = `mailto:?subject=${subject}&body=${body}`;
-    showToast("Abriendo cliente de correoâ€¦");
+    showToast("Abriendo cliente de correo…");
   }
 
   async function exportPDF() {
@@ -140,7 +141,7 @@ export function ShareModal({ mode, targetRef, onClose }: Props) {
           <div className="p-5 flex flex-col gap-4">
             {/* Public link section */}
             <div>
-              <div className="text-[11px] font-bold text-brand-gray uppercase tracking-wider mb-2">Link pÃºblico de solo lectura</div>
+              <div className="text-[11px] font-bold text-brand-gray uppercase tracking-wider mb-2">Link público de solo lectura</div>
 
               {publicUrl ? (
                 <div className="flex gap-2">
@@ -166,26 +167,26 @@ export function ShareModal({ mode, targetRef, onClose }: Props) {
                       onChange={(e) => setExpireIn7Days(e.target.checked)}
                       className="accent-brand-orange"
                     />
-                    Expira en 7 dÃ­as
+                    Expira en 7 días
                   </label>
                   <button
                     onClick={generateLink}
                     disabled={generatingLink}
                     className="w-full py-2.5 text-sm font-bold rounded-lg bg-brand-orange hover:bg-orange-600 disabled:opacity-60 text-white transition flex items-center justify-center gap-2"
                   >
-                    {generatingLink ? "Generandoâ€¦" : "ðŸ”— Generar link pÃºblico"}
+                    {generatingLink ? "Generando…" : "ðŸ”— Generar link público"}
                   </button>
                 </div>
               )}
 
               {publicToken && expireIn7Days && (
                 <p className="text-[10px] text-brand-gray mt-1.5">
-                  Expira en 7 dÃ­as Â· cualquier persona con el link puede verlo sin iniciar sesiÃ³n
+                  Expira en 7 días · cualquier persona con el link puede verlo sin iniciar sesión
                 </p>
               )}
               {publicToken && !expireIn7Days && (
                 <p className="text-[10px] text-brand-gray mt-1.5">
-                  Sin vencimiento Â· cualquier persona con el link puede verlo sin iniciar sesiÃ³n
+                  Sin vencimiento · cualquier persona con el link puede verlo sin iniciar sesión
                 </p>
               )}
             </div>
@@ -193,12 +194,12 @@ export function ShareModal({ mode, targetRef, onClose }: Props) {
             {/* Channels â€” available once link is generated */}
             {publicUrl && (
               <div>
-                <div className="text-[11px] font-bold text-brand-gray uppercase tracking-wider mb-2">Compartir vÃ­a</div>
+                <div className="text-[11px] font-bold text-brand-gray uppercase tracking-wider mb-2">Compartir vía</div>
                 <div className="grid grid-cols-2 gap-2">
                   {[
-                    { icon: "ðŸŸ¦", name: "Microsoft Teams", desc: "Compartir en Teams", action: shareTeams },
-                    { icon: "ðŸŸ¢", name: "WhatsApp", desc: "Compartir por WhatsApp", action: shareWhatsApp },
-                    { icon: "ðŸ“§", name: "Email", desc: "Enviar por correo", action: shareMail },
+                    { icon: <IconBrandTeams size={20} />, name: "Microsoft Teams", desc: "Compartir en Teams", action: shareTeams },
+                    { icon: <IconBrandWhatsapp size={20} />, name: "WhatsApp", desc: "Compartir por WhatsApp", action: shareWhatsApp },
+                    { icon: <IconMail size={20} />, name: "Email", desc: "Enviar por correo", action: shareMail },
                   ].map((ch) => (
                     <button
                       key={ch.name}
@@ -227,13 +228,13 @@ export function ShareModal({ mode, targetRef, onClose }: Props) {
                   disabled={pdfProgress}
                   className="flex flex-col items-center gap-1 px-3 py-3 rounded-xl border border-gray-100 hover:border-brand-orange hover:bg-orange-50 transition disabled:opacity-60"
                 >
-                  <span className="text-xl">ðŸ“„</span>
+                  <IconFileTypePdf size={22} />
                   <span className="text-xs font-bold text-brand-black">Vista actual</span>
                   <span className="text-[10px] text-brand-gray">{modeLabel}</span>
                 </button>
               </div>
               {pdfProgress && (
-                <p className="text-xs text-brand-orange font-semibold text-center mt-2">Generando PDFâ€¦</p>
+                <p className="text-xs text-brand-orange font-semibold text-center mt-2">Generando PDF…</p>
               )}
             </div>
           </div>

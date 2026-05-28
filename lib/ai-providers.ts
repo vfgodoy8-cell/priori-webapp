@@ -10,7 +10,7 @@ const DEFAULT_MODELS: Record<AiProvider, string> = {
   anthropic: "claude-sonnet-4-6",
   openai:    "gpt-4o",
   azure:     "gpt-4o",
-  google:    "gemini-1.5-flash",
+  google:    "gemini-2.0-flash",
 };
 
 export type { AiProvider };
@@ -36,7 +36,7 @@ export function buildLanguageModel(s: AiSettingsRow): LanguageModel {
     case "azure":
       return createAzure({ apiKey: s.api_key, baseURL: s.azure_endpoint ?? undefined })(modelId);
     case "google":
-      return createGoogleGenerativeAI({ apiKey: s.api_key })("gemini-1.5-flash");
+      return createGoogleGenerativeAI({ apiKey: s.api_key })("gemini-2.0-flash");
     default:
       throw new Error("Unknown AI provider: " + s.provider);
   }

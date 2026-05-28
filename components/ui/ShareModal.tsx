@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useRef } from "react";
 import { createSharedView } from "@/app/(app)/share/actions";
@@ -19,7 +19,7 @@ export function ShareModal({ mode, targetRef, onClose }: Props) {
   const modeLabel = mode === "squad" ? "Modo Squad" : "Modo Cross";
   const origin = typeof window !== "undefined" ? window.location.origin : "";
   const publicUrl = publicToken ? `${origin}/share/${publicToken}` : null;
-  const message = `Priori™ — Priorización visual (${modeLabel}): ${publicUrl ?? origin}`;
+  const message = `Prioriâ„¢ â€” PriorizaciÃ³n visual (${modeLabel}): ${publicUrl ?? origin}`;
 
   function showToast(msg: string) {
     setToast(msg);
@@ -35,7 +35,7 @@ export function ShareModal({ mode, targetRef, onClose }: Props) {
       const url = `${origin}/share/${result.token}`;
       setPublicToken(result.token);
       navigator.clipboard?.writeText(url).catch(() => {});
-      showToast("✅ Link generado y copiado al portapapeles");
+      showToast("âœ… Link generado y copiado al portapapeles");
     }
     setGeneratingLink(false);
   }
@@ -43,12 +43,12 @@ export function ShareModal({ mode, targetRef, onClose }: Props) {
   function copyPublicLink() {
     if (!publicUrl) return;
     if (navigator.clipboard) {
-      navigator.clipboard.writeText(publicUrl).then(() => showToast("✅ Enlace copiado al portapapeles"));
+      navigator.clipboard.writeText(publicUrl).then(() => showToast("âœ… Enlace copiado al portapapeles"));
     } else {
       const inp = document.querySelector<HTMLInputElement>("#share-public-inp");
       inp?.select();
       document.execCommand("copy");
-      showToast("✅ Enlace copiado al portapapeles");
+      showToast("âœ… Enlace copiado al portapapeles");
     }
   }
 
@@ -58,21 +58,21 @@ export function ShareModal({ mode, targetRef, onClose }: Props) {
       `https://teams.microsoft.com/share?href=${encodeURIComponent(url)}&msgText=${encodeURIComponent(message)}`,
       "_blank"
     );
-    showToast("Abriendo Microsoft Teams…");
+    showToast("Abriendo Microsoft Teamsâ€¦");
   }
 
   function shareWhatsApp() {
     window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, "_blank");
-    showToast("Abriendo WhatsApp…");
+    showToast("Abriendo WhatsAppâ€¦");
   }
 
   function shareMail() {
-    const subject = encodeURIComponent("Priori™ — Priorización visual");
+    const subject = encodeURIComponent("Prioriâ„¢ â€” PriorizaciÃ³n visual");
     const body = encodeURIComponent(
-      `Te comparto la previsualización del Estimador de Proyectos:\n\n${message}\n\nAbrí el enlace para ver el estado actual de la planificación.`
+      `Te comparto la previsualizaciÃ³n del Estimador de Proyectos:\n\n${message}\n\nAbrÃ­ el enlace para ver el estado actual de la planificaciÃ³n.`
     );
     window.location.href = `mailto:?subject=${subject}&body=${body}`;
-    showToast("Abriendo cliente de correo…");
+    showToast("Abriendo cliente de correoâ€¦");
   }
 
   async function exportPDF() {
@@ -103,7 +103,7 @@ export function ShareModal({ mode, targetRef, onClose }: Props) {
       pdf.rect(0, 0, pageW, 8, "F");
       pdf.setTextColor(255, 255, 255);
       pdf.setFontSize(10);
-      pdf.text(`priori™  —  ${modeLabel}`, margin, 5.5);
+      pdf.text(`prioriâ„¢  â€”  ${modeLabel}`, margin, 5.5);
       const today = new Date().toLocaleDateString("es-AR", { day: "2-digit", month: "short", year: "numeric" });
       pdf.text(today, pageW - margin, 5.5, { align: "right" });
 
@@ -115,7 +115,7 @@ export function ShareModal({ mode, targetRef, onClose }: Props) {
       pdf.addImage(imgData, "PNG", imgX, margin + 10, imgW, imgH);
 
       pdf.save(`priori-${mode}-${new Date().toISOString().slice(0, 10)}.pdf`);
-      showToast("✅ PDF descargado");
+      showToast("âœ… PDF descargado");
     } catch (err) {
       console.error(err);
       showToast("Error al generar el PDF");
@@ -134,13 +134,13 @@ export function ShareModal({ mode, targetRef, onClose }: Props) {
           {/* Header */}
           <div className="flex items-center justify-between px-5 py-4 bg-orange-50 border-b border-orange-100">
             <h3 className="text-sm font-bold text-brand-orange">Compartir / Exportar</h3>
-            <button onClick={onClose} className="text-brand-gray hover:text-brand-black text-xl leading-none">×</button>
+            <button onClick={onClose} className="text-brand-gray hover:text-brand-black text-xl leading-none">Ã—</button>
           </div>
 
           <div className="p-5 flex flex-col gap-4">
             {/* Public link section */}
             <div>
-              <div className="text-[11px] font-bold text-brand-gray uppercase tracking-wider mb-2">Link público de solo lectura</div>
+              <div className="text-[11px] font-bold text-brand-gray uppercase tracking-wider mb-2">Link pÃºblico de solo lectura</div>
 
               {publicUrl ? (
                 <div className="flex gap-2">
@@ -166,39 +166,39 @@ export function ShareModal({ mode, targetRef, onClose }: Props) {
                       onChange={(e) => setExpireIn7Days(e.target.checked)}
                       className="accent-brand-orange"
                     />
-                    Expira en 7 días
+                    Expira en 7 dÃ­as
                   </label>
                   <button
                     onClick={generateLink}
                     disabled={generatingLink}
                     className="w-full py-2.5 text-sm font-bold rounded-lg bg-brand-orange hover:bg-orange-600 disabled:opacity-60 text-white transition flex items-center justify-center gap-2"
                   >
-                    {generatingLink ? "Generando…" : "🔗 Generar link público"}
+                    {generatingLink ? "Generandoâ€¦" : "ðŸ”— Generar link pÃºblico"}
                   </button>
                 </div>
               )}
 
               {publicToken && expireIn7Days && (
                 <p className="text-[10px] text-brand-gray mt-1.5">
-                  Expira en 7 días · cualquier persona con el link puede verlo sin iniciar sesión
+                  Expira en 7 dÃ­as Â· cualquier persona con el link puede verlo sin iniciar sesiÃ³n
                 </p>
               )}
               {publicToken && !expireIn7Days && (
                 <p className="text-[10px] text-brand-gray mt-1.5">
-                  Sin vencimiento · cualquier persona con el link puede verlo sin iniciar sesión
+                  Sin vencimiento Â· cualquier persona con el link puede verlo sin iniciar sesiÃ³n
                 </p>
               )}
             </div>
 
-            {/* Channels — available once link is generated */}
+            {/* Channels â€” available once link is generated */}
             {publicUrl && (
               <div>
-                <div className="text-[11px] font-bold text-brand-gray uppercase tracking-wider mb-2">Compartir vía</div>
+                <div className="text-[11px] font-bold text-brand-gray uppercase tracking-wider mb-2">Compartir vÃ­a</div>
                 <div className="grid grid-cols-2 gap-2">
                   {[
-                    { icon: "🟦", name: "Microsoft Teams", desc: "Compartir en Teams", action: shareTeams },
-                    { icon: "🟢", name: "WhatsApp", desc: "Compartir por WhatsApp", action: shareWhatsApp },
-                    { icon: "📧", name: "Email", desc: "Enviar por correo", action: shareMail },
+                    { icon: "ðŸŸ¦", name: "Microsoft Teams", desc: "Compartir en Teams", action: shareTeams },
+                    { icon: "ðŸŸ¢", name: "WhatsApp", desc: "Compartir por WhatsApp", action: shareWhatsApp },
+                    { icon: "ðŸ“§", name: "Email", desc: "Enviar por correo", action: shareMail },
                   ].map((ch) => (
                     <button
                       key={ch.name}
@@ -227,13 +227,13 @@ export function ShareModal({ mode, targetRef, onClose }: Props) {
                   disabled={pdfProgress}
                   className="flex flex-col items-center gap-1 px-3 py-3 rounded-xl border border-gray-100 hover:border-brand-orange hover:bg-orange-50 transition disabled:opacity-60"
                 >
-                  <span className="text-xl">📄</span>
+                  <span className="text-xl">ðŸ“„</span>
                   <span className="text-xs font-bold text-brand-black">Vista actual</span>
                   <span className="text-[10px] text-brand-gray">{modeLabel}</span>
                 </button>
               </div>
               {pdfProgress && (
-                <p className="text-xs text-brand-orange font-semibold text-center mt-2">Generando PDF…</p>
+                <p className="text-xs text-brand-orange font-semibold text-center mt-2">Generando PDFâ€¦</p>
               )}
             </div>
           </div>

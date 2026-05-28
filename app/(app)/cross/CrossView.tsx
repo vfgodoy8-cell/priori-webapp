@@ -228,6 +228,7 @@ export function CrossView({ orgId, initialTeams, initialInitiatives, role }: Pro
 
       {/* Timeline */}
       <div className="border border-gray-200 rounded-xl overflow-hidden">
+        {/* Quarter column headers */}
         <div className="grid grid-cols-4 bg-gray-50 border-b border-gray-200">
           {Q_LABELS.map((q, qi) => (
             <div key={q} className={`px-4 py-3 flex flex-col gap-0.5 ${qi < 3 ? "border-r border-gray-200" : ""}`}>
@@ -237,66 +238,101 @@ export function CrossView({ orgId, initialTeams, initialInitiatives, role }: Pro
           ))}
         </div>
 
+        {/* CSS Grid timeline — each card uses gridColumn span for multi-quarter stretch */}
         <div
           ref={gridRef}
-          className="relative min-h-[240px]"
-          style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gridAutoFlow: "row", alignContent: "start" }}
+          className="relative min-h-[200px]"
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(4, 1fr)",
+            alignContent: "start",
+          }}
           onDragOver={readOnly ? undefined : handleGridDragOver}
           onDragLeave={readOnly ? undefined : (e) => { if (!gridRef.current?.contains(e.relatedTarget as Node)) setDragOverQ(null); }}
           onDrop={readOnly ? undefined : handleGridDrop}
         >
+          {/* Quarter column background highlights for drag feedback */}
           {[0, 1, 2, 3].map((q) => (
             <div
               key={q}
-              className="absolute inset-y-0 pointer-events-none transition-colors duration-150"
-              style={{ left: `${q * 25}%`, width: "25%", background: dragOverQ === q ? "rgba(232,98,26,0.06)" : "transparent", borderRight: q < 3 ? "1px solid #E5E7EB" : undefined }}
+              className="absolute inset-y-0 pointer-events-none"
+              style={{
+                left: `${q * 25}%`,
+                width: "25%",
+                background: dragOverQ === q ? "rgba(232,98,26,0.06)" : "transparent",
+                borderRight: q < 3 ? "1px solid #E5E7EB" : undefined,
+                transition: "background 0.15s",
+              }}
             />
           ))}
 
+          {/* Empty state */}
           {initiatives.filter((i) => i.q_start !== null && i.status === "active").length === 0 && (
-            <div className="col-span-4 flex items-center justify-center py-10 select-none">
+            <div style={{ gridColumn: "1 / span 4" }} className="flex items-center justify-center py-10 select-none">
               <p className="text-xs text-gray-300">{readOnly ? "Sin iniciativas asignadas" : "Arrastrá iniciativas al timeline"}</p>
             </div>
           )}
 
+          {/* Initiative cards — gridColumn span makes them visually stretch across quarters */}
           {[...initiatives]
             .filter((i) => i.q_start !== null && i.status === "active")
-            .sort((a, b) => { if (a.q_start! !== b.q_start!) return a.q_start! - b.q_start!; return b.duration_quarters - a.duration_quarters; })
+            .sort((a, b) => {
+              if (a.q_start! !== b.q_start!) return a.q_start! - b.q_start!;
+              return b.duration_quarters - a.duration_quarters;
+            })
             .map((ini) => {
               const qd = QUADRANT_META[computeQuadrant(ini.impact_value, ini.effort_sprints)];
-              const tNames = (ini.team_ids ?? []).map((tid) => teams.find((t) => t.id === tid)?.name.split(" ")[0] ?? "?").slice(0, 3);
-              const span = Math.min(ini.duration_quarters, 4 - ini.q_start!);
+              const tNames = (ini.team_ids ?? [])
+                .map((tid) => teams.find((t) => t.id === tid)?.name.split(" ")[0] ?? "?")
+                .slice(0, 3);
+              const colStart = ini.q_start! + 1;
+              const span = Math.min(ini.duration_quarters, 5 - colStart);
+
               return (
                 <div
                   key={ini.id}
                   draggable={!readOnly}
                   onDragStart={readOnly ? undefined : () => setDragId(ini.id)}
-                  className={`rounded-lg p-2.5 border-[1.5px] select-none hover:shadow-md transition-shadow m-1.5 ${readOnly ? "cursor-default" : "cursor-grab"}`}
-                  style={{ gridColumn: `${ini.q_start! + 1} / span ${span}`, background: qd.bg, borderColor: `${qd.color}55`, borderRight: ini.duration_quarters > 1 ? `2px dashed ${qd.color}99` : undefined }}
+                  className={`rounded-lg border-[1.5px] select-none hover:shadow-md transition-shadow ${readOnly ? "cursor-default" : "cursor-grab"}`}
+                  style={{
+                    gridColumn: `${colStart} / span ${span}`,
+                    margin: "5px 4px",
+                    backgroundColor: qd.bg,
+                    borderColor: `${qd.color}55`,
+                    backgroundImage: span > 1 ? quarterDividerLines(span, qd.color) : undefined,
+                  }}
                 >
-                  <div className="flex items-start justify-between gap-1">
-                    <div className="text-xs font-bold text-brand-black leading-snug">{qd.priority} {ini.name}</div>
-                    {ini.duration_quarters > 1 && (
-                      <span className="text-[10px] font-bold flex-shrink-0 ml-1" style={{ color: qd.color }}>↔ {ini.duration_quarters}Q</span>
-                    )}
+                  <div className="flex items-start gap-1.5 p-2.5">
+                    {/* Left — title, meta, teams */}
+                    <div className="flex-1 min-w-0">
+                      <div className="text-xs font-bold text-brand-black leading-snug">{qd.priority} {ini.name}</div>
+                      <div className="text-[10px] text-brand-gray mt-1">{ini.stakeholder} · {ini.effort_sprints}sp</div>
+                      {ini.start_date && (
+                        <div className="text-[10px] text-brand-gray">{ini.start_date} → {ini.end_date ?? "…"}</div>
+                      )}
+                      {tNames.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-1.5">
+                          {tNames.map((n) => (
+                            <span key={n} className="text-[9px] px-1.5 py-0.5 rounded bg-black/[.07] text-brand-gray font-semibold">{n}</span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    {/* Right — multi-quarter badge + actions */}
+                    <div className="flex flex-col items-end gap-1.5 flex-shrink-0 pl-1">
+                      {span > 1 && (
+                        <span className="text-[10px] font-bold whitespace-nowrap" style={{ color: qd.color }}>
+                          ↔ {span}Q
+                        </span>
+                      )}
+                      {!readOnly && (
+                        <div className="flex gap-0.5 mt-auto">
+                          <button onClick={() => openEdit(ini)} className="text-[10px] text-gray-400 hover:text-brand-orange px-0.5" title="Editar">✏️</button>
+                          <button onClick={() => handleUnplace(ini)} className="text-[10px] text-gray-400 hover:text-brand-orange px-0.5" title="Quitar del Quarter">✕</button>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <div className="text-[10px] text-brand-gray mt-1">{ini.stakeholder} · {ini.effort_sprints}sp</div>
-                  {ini.start_date && (
-                    <div className="text-[10px] text-brand-gray">{ini.start_date} → {ini.end_date ?? "…"}</div>
-                  )}
-                  {tNames.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mt-1.5">
-                      {tNames.map((n) => (
-                        <span key={n} className="text-[9px] px-1.5 py-0.5 rounded bg-black/[.07] text-brand-gray font-semibold">{n}</span>
-                      ))}
-                    </div>
-                  )}
-                  {!readOnly && (
-                    <div className="flex gap-1 mt-2">
-                      <button onClick={() => openEdit(ini)} className="text-[10px] text-gray-400 hover:text-brand-orange px-1" title="Editar">✏️</button>
-                      <button onClick={() => handleUnplace(ini)} className="text-[10px] text-gray-400 hover:text-brand-orange px-1" title="Quitar del Quarter">✕</button>
-                    </div>
-                  )}
                 </div>
               );
             })}
@@ -674,3 +710,15 @@ function F({ label, children }: { label: string; children: React.ReactNode }) {
 }
 
 const inp = "w-full rounded-lg border border-gray-200 px-2.5 py-2 text-xs text-brand-black placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-orange focus:border-transparent bg-white";
+
+// Generates subtle vertical divider lines at each internal quarter boundary for spanning cards.
+// For a 2Q card: 1 line at 50%. For 3Q: lines at 33% and 67%. For 4Q: 25%, 50%, 75%.
+function quarterDividerLines(span: number, color: string): string {
+  const stops: string[] = [];
+  for (let k = 1; k < span; k++) {
+    const lo = ((k / span) * 100 - 0.35).toFixed(2);
+    const hi = ((k / span) * 100 + 0.35).toFixed(2);
+    stops.push(`transparent ${lo}%`, `${color}55 ${lo}%`, `${color}55 ${hi}%`, `transparent ${hi}%`);
+  }
+  return `linear-gradient(90deg, transparent 0%, ${stops.join(", ")}, transparent 100%)`;
+}

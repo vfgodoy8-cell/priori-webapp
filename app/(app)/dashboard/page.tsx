@@ -1,4 +1,4 @@
-import { redirect } from "next/navigation";
+﻿import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -56,7 +56,7 @@ export default async function DashboardPage() {
   const initiatives = (initiativesData ?? []) as Pick<Initiative, "id" | "q_start" | "duration_quarters" | "team_ids" | "team_allocations" | "status">[];
   const teams = (teamsData ?? []) as Team[];
 
-  // ── Squad stats ──
+  // â”€â”€ Squad stats â”€â”€
   const enCurso = projects.filter((p) => p.squad_status === "curso").length;
   const enBacklog = projects.filter((p) => p.squad_status === "backlog").length;
 
@@ -66,7 +66,7 @@ export default async function DashboardPage() {
   }
   const quadrantMax = Math.max(...Object.values(quadrantCounts), 1);
 
-  // ── Cross stats ──
+  // â”€â”€ Cross stats â”€â”€
   const onTimeline = initiatives.filter((i) => i.q_start !== null).length;
   const inBacklog = initiatives.filter((i) => i.q_start === null).length;
 
@@ -100,7 +100,7 @@ export default async function DashboardPage() {
 
   const greeting = firstName ? `Hola, ${firstName}` : "Bienvenido";
   const hour = new Date().getHours();
-  const timeGreeting = hour < 12 ? "Buenos días" : hour < 19 ? "Buenas tardes" : "Buenas noches";
+  const timeGreeting = hour < 12 ? "Buenos dÃ­as" : hour < 19 ? "Buenas tardes" : "Buenas noches";
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -115,15 +115,8 @@ export default async function DashboardPage() {
             </div>
             <div className="flex flex-col gap-0.5">
               <span className="font-bold text-brand-black text-lg leading-none">priori</span>
-              <span className="uppercase text-brand-gray leading-none" style={{ fontSize: 10, letterSpacing: "0.08em" }}>Transparencia Estratégica</span>
+              <span className="uppercase text-brand-gray leading-none" style={{ fontSize: 10, letterSpacing: "0.08em" }}>Transparencia EstratÃ©gica</span>
             </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="flex flex-col items-center gap-0.5">
-              <span className="text-brand-black leading-none" style={{ fontWeight: 700, fontSize: 14 }}>Estimador de Proyectos</span>
-              <span className="text-brand-gray leading-none" style={{ fontSize: 11 }}>Gestión de Capacidad</span>
-            </div>
-            <span className="leading-none px-2 py-0.5 rounded-full border border-brand-orange text-brand-orange" style={{ fontSize: 11, borderRadius: 20 }}>v2.0</span>
           </div>
           <DashboardHeaderRight orgName={org.name} userEmail={user.email ?? ""} teams={teams} orgId={org.id} />
         </div>
@@ -134,11 +127,11 @@ export default async function DashboardPage() {
         {/* Header */}
         <div className="flex items-start justify-between">
           <div className="flex flex-col gap-1">
-            <p className="text-xs text-brand-gray">{timeGreeting} ·</p>
+            <p className="text-xs text-brand-gray">{timeGreeting} Â·</p>
             <h1 className="text-2xl font-bold text-brand-black">{greeting}</h1>
             <div className="flex items-center gap-2 mt-0.5">
               <span className="text-sm text-brand-gray">{org.name}</span>
-              <span className="text-gray-200">·</span>
+              <span className="text-gray-200">Â·</span>
               <span
                 className="text-xs font-bold px-2.5 py-0.5 rounded-full"
                 style={{ background: ROLE_BG[role], color: ROLE_COLOR[role], border: `1px solid ${ROLE_BORDER[role]}` }}
@@ -152,13 +145,13 @@ export default async function DashboardPage() {
               href="/squad"
               className="flex items-center gap-1.5 px-4 py-2 text-sm font-bold rounded-lg bg-brand-orange hover:bg-orange-600 text-white transition"
             >
-              👥 Modo Squad
+              ðŸ‘¥ Modo Squad
             </Link>
             <Link
               href="/cross"
               className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-lg border border-gray-200 bg-white text-brand-gray hover:text-brand-black hover:border-gray-300 transition"
             >
-              📅 Modo Cross
+              ðŸ“… Modo Cross
             </Link>
           </div>
         </div>
@@ -168,25 +161,25 @@ export default async function DashboardPage() {
           <StatCard
             label="Proyectos activos"
             value={projects.length}
-            sub={`${enCurso} en curso · ${enBacklog} en backlog`}
+            sub={`${enCurso} en curso Â· ${enBacklog} en backlog`}
             color="#E8621A"
           />
           <StatCard
             label="En curso ahora"
             value={enCurso}
-            sub={projects.length > 0 ? `${Math.round((enCurso / projects.length) * 100)}% del total activo` : "—"}
+            sub={projects.length > 0 ? `${Math.round((enCurso / projects.length) * 100)}% del total activo` : "â€”"}
             color="#1D9E75"
           />
           <StatCard
             label="Iniciativas del programa"
             value={initiatives.length}
-            sub={`${onTimeline} en timeline · ${inBacklog} sin asignar`}
+            sub={`${onTimeline} en timeline Â· ${inBacklog} sin asignar`}
             color="#1E6FC5"
           />
           <StatCard
             label="Equipos configurados"
             value={teams.length}
-            sub={teams.length > 0 ? teams.map((t) => t.name.split(" ")[0]).slice(0, 3).join(", ") : "Sin equipos aún"}
+            sub={teams.length > 0 ? teams.map((t) => t.name.split(" ")[0]).slice(0, 3).join(", ") : "Sin equipos aÃºn"}
             color="#6B6B6B"
           />
         </div>
@@ -194,15 +187,15 @@ export default async function DashboardPage() {
         {/* Main panels */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
 
-          {/* Squad — cuadrantes */}
+          {/* Squad â€” cuadrantes */}
           <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
             <div className="px-5 py-3.5 bg-gray-50 border-b border-gray-100 flex items-center justify-between">
-              <span className="text-sm font-bold text-brand-black">Distribución Squad</span>
-              <Link href="/squad" className="text-xs text-brand-gray hover:text-brand-orange transition">Ver canvas →</Link>
+              <span className="text-sm font-bold text-brand-black">DistribuciÃ³n Squad</span>
+              <Link href="/squad" className="text-xs text-brand-gray hover:text-brand-orange transition">Ver canvas â†’</Link>
             </div>
             <div className="p-5 flex flex-col gap-3">
               {projects.length === 0 ? (
-                <EmptyState text="Sin proyectos activos aún." cta={{ href: "/squad", label: "Crear primer proyecto →" }} />
+                <EmptyState text="Sin proyectos activos aÃºn." cta={{ href: "/squad", label: "Crear primer proyecto â†’" }} />
               ) : (
                 (["p1", "p2", "p3", "p0"] as const).map((q) => {
                   const meta = QUADRANT_META[q];
@@ -230,17 +223,17 @@ export default async function DashboardPage() {
             </div>
           </div>
 
-          {/* Cross — capacidad */}
+          {/* Cross â€” capacidad */}
           <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
             <div className="px-5 py-3.5 bg-gray-50 border-b border-gray-100 flex items-center justify-between">
               <span className="text-sm font-bold text-brand-black">Capacidad del Programa</span>
-              <Link href="/cross" className="text-xs text-brand-gray hover:text-brand-orange transition">Ver timeline →</Link>
+              <Link href="/cross" className="text-xs text-brand-gray hover:text-brand-orange transition">Ver timeline â†’</Link>
             </div>
             <div className="p-5 flex flex-col gap-3">
               {teams.length === 0 ? (
-                <EmptyState text="Sin equipos configurados." cta={{ href: "/settings/members", label: "Configurar equipos →" }} />
+                <EmptyState text="Sin equipos configurados." cta={{ href: "/settings/members", label: "Configurar equipos â†’" }} />
               ) : initiatives.length === 0 ? (
-                <EmptyState text="Sin iniciativas en el programa aún." cta={{ href: "/cross", label: "Agregar iniciativas →" }} />
+                <EmptyState text="Sin iniciativas en el programa aÃºn." cta={{ href: "/cross", label: "Agregar iniciativas â†’" }} />
               ) : (
                 capacityByQ.map((pct, qi) => {
                   const col = capColor(pct);
@@ -282,7 +275,7 @@ export default async function DashboardPage() {
                         style={{ background: inQ.length > 0 ? "#FFF9F6" : "#FAFAFA" }}
                       >
                         {inQ.length === 0 ? (
-                          <span className="text-[10px] text-gray-300 mt-1">vacío</span>
+                          <span className="text-[10px] text-gray-300 mt-1">vacÃ­o</span>
                         ) : (
                           <>
                             <span className="text-xl font-bold text-brand-orange">{inQ.length}</span>
@@ -321,21 +314,21 @@ export default async function DashboardPage() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <QuickLink
             href="/squad"
-            icon="👥"
+            icon="ðŸ‘¥"
             title="Modo Squad"
-            description="Canvas de priorización por Impacto vs Esfuerzo"
+            description="Canvas de priorizaciÃ³n por Impacto vs Esfuerzo"
             color="#E8621A"
           />
           <QuickLink
             href="/cross"
-            icon="📅"
+            icon="ðŸ“…"
             title="Modo Cross"
-            description="Timeline Q1–Q4 con capacidad por equipo"
+            description="Timeline Q1â€“Q4 con capacidad por equipo"
             color="#1E6FC5"
           />
           <QuickLink
             href="/settings/members"
-            icon="⚙"
+            icon="âš™"
             title="Equipo"
             description="Miembros, roles e invitaciones"
             color="#6B6B6B"
@@ -411,7 +404,7 @@ function timeAgoStatic(iso: string): string {
   if (hrs < 24) return `hace ${hrs}h`;
   const days = Math.floor(hrs / 24);
   if (days === 1) return "ayer";
-  if (days < 7) return `hace ${days} días`;
+  if (days < 7) return `hace ${days} dÃ­as`;
   return new Date(iso).toLocaleDateString("es-AR", { day: "2-digit", month: "short" });
 }
 

@@ -1,4 +1,4 @@
-import { redirect } from "next/navigation";
+﻿import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { CrossView } from "./CrossView";
@@ -75,20 +75,11 @@ export default async function CrossPage() {
               </div>
               <div className="flex flex-col gap-0.5">
                 <span className="font-bold text-brand-black text-lg leading-none">priori</span>
-                <span className="uppercase text-brand-gray leading-none" style={{ fontSize: 10, letterSpacing: "0.08em" }}>Transparencia Estratégica</span>
+                <span className="uppercase text-brand-gray leading-none" style={{ fontSize: 10, letterSpacing: "0.08em" }}>Transparencia EstratÃ©gica</span>
               </div>
             </Link>
             <span className="text-gray-200">|</span>
             <span className="text-sm font-medium text-brand-black">Modo Cross</span>
-          </div>
-
-          {/* Center */}
-          <div className="flex items-center gap-2">
-            <div className="flex flex-col items-center gap-0.5">
-              <span className="text-brand-black leading-none" style={{ fontWeight: 700, fontSize: 14 }}>Estimador de Proyectos</span>
-              <span className="text-brand-gray leading-none" style={{ fontSize: 11 }}>Gestión de Capacidad</span>
-            </div>
-            <span className="leading-none px-2 py-0.5 rounded-full border border-brand-orange text-brand-orange" style={{ fontSize: 11, borderRadius: 20 }}>v2.0</span>
           </div>
 
           {/* Right */}
@@ -100,13 +91,13 @@ export default async function CrossPage() {
       <main className="max-w-7xl mx-auto px-6 py-8">
         <div className="flex items-start justify-between mb-6">
           <div>
-            <h1 className="text-xl font-bold text-brand-black">Planificación del Programa</h1>
+            <h1 className="text-xl font-bold text-brand-black">PlanificaciÃ³n del Programa</h1>
             <p className="text-xs text-brand-gray mt-0.5">
-              Iniciativas multi-equipo · Capacidad por Quarter · Año 2026
+              Iniciativas multi-equipo Â· Capacidad por Quarter Â· AÃ±o 2026
             </p>
           </div>
           <span className="text-xs font-bold px-4 py-1.5 rounded-full bg-orange-50 text-brand-orange border border-orange-200">
-            Planificación Anual
+            PlanificaciÃ³n Anual
           </span>
         </div>
 

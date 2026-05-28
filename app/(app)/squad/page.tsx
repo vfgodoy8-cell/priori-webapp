@@ -1,4 +1,4 @@
-import { redirect } from "next/navigation";
+﻿import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -60,7 +60,7 @@ export default async function SquadPage({ searchParams }: { searchParams?: { ini
   const filterInitiative = iniId ? initiatives.find((i) => i.id === iniId) ?? null : null;
   const highlightIds = filterInitiative ? new Set(filterInitiative.sq_project_ids ?? []) : null;
 
-  // Map projectId → first initiative name (for tooltip "Parte de: X")
+  // Map projectId â†’ first initiative name (for tooltip "Parte de: X")
   const projectIniMap: Record<string, string> = {};
   initiatives.forEach((i) => {
     (i.sq_project_ids ?? []).forEach((pid) => {
@@ -70,7 +70,7 @@ export default async function SquadPage({ searchParams }: { searchParams?: { ini
   const allActive = all.filter((p) => p.status === "active");
   const discarded = all.filter((p) => p.status === "discarded");
 
-  // Separate p0 projects (active but discarded quadrant — not shown on canvas)
+  // Separate p0 projects (active but discarded quadrant â€” not shown on canvas)
   const p0Projects = allActive.filter(
     (p) => computeQuadrant(p.impact_value, p.effort_sprints) === "p0"
   );
@@ -93,20 +93,11 @@ export default async function SquadPage({ searchParams }: { searchParams?: { ini
               </div>
               <div className="flex flex-col gap-0.5">
                 <span className="font-bold text-brand-black text-lg leading-none">priori</span>
-                <span className="uppercase text-brand-gray leading-none" style={{ fontSize: 10, letterSpacing: "0.08em" }}>Transparencia Estratégica</span>
+                <span className="uppercase text-brand-gray leading-none" style={{ fontSize: 10, letterSpacing: "0.08em" }}>Transparencia EstratÃ©gica</span>
               </div>
             </Link>
             <span className="text-gray-200">|</span>
             <span className="text-sm font-medium text-brand-black">Modo Squad</span>
-          </div>
-
-          {/* Center */}
-          <div className="flex items-center gap-2">
-            <div className="flex flex-col items-center gap-0.5">
-              <span className="text-brand-black leading-none" style={{ fontWeight: 700, fontSize: 14 }}>Estimador de Proyectos</span>
-              <span className="text-brand-gray leading-none" style={{ fontSize: 11 }}>Gestión de Capacidad</span>
-            </div>
-            <span className="leading-none px-2 py-0.5 rounded-full border border-brand-orange text-brand-orange" style={{ fontSize: 11, borderRadius: 20 }}>v2.0</span>
           </div>
 
           {/* Right */}
@@ -116,14 +107,14 @@ export default async function SquadPage({ searchParams }: { searchParams?: { ini
               className="text-sm font-bold px-3.5 py-1.5 rounded-lg bg-white text-brand-gray hover:text-brand-orange hover:border-brand-orange transition"
               style={{ border: "1.5px solid #E5E5E5", borderRadius: 8 }}
             >
-              📅 Modo Cross →
+              ðŸ“… Modo Cross â†’
             </Link>
             <Link
               href="/settings/members"
               className="text-sm px-3 py-1.5 rounded-lg bg-white text-brand-gray hover:text-brand-black transition"
               style={{ border: "1.5px solid #E5E5E5", borderRadius: 8 }}
             >
-              ⚙ Equipo
+              âš™ Equipo
             </Link>
             <span className="text-sm text-brand-gray">{org.name}</span>
             <LogoutButton />

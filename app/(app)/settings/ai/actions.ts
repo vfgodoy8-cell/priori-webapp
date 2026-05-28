@@ -30,7 +30,7 @@ export async function saveAiSettings(_prev: State, formData: FormData): Promise<
   const azure_endpoint = (formData.get("azure_endpoint") as string)?.trim() || null;
 
   if (!api_key) return { error: "La API key es requerida." };
-  if (!["anthropic", "openai", "azure", "google"].includes(provider))
+  if (!["anthropic", "openai", "azure", "google", "groq"].includes(provider))
     return { error: "Proveedor invalido." };
 
   const { error } = await admin.from("ai_settings").upsert({

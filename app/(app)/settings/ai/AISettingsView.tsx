@@ -8,6 +8,7 @@ const PROVIDERS = [
   { value: "openai",    label: "OpenAI GPT-4",     placeholder: "sk-..."     },
   { value: "azure",     label: "Azure OpenAI",      placeholder: "..."        },
   { value: "google",    label: "Google Gemini",      placeholder: "AIza..."    },
+  { value: "groq",      label: "Groq",               placeholder: "gsk_..."    },
 ] as const;
 
 type Props = {
@@ -65,7 +66,7 @@ export function AISettingsView({ current }: Props) {
           placeholder="Dejar vacio para usar el default del proveedor"
           className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm text-brand-black placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-orange" />
         <p className="text-[11px] text-brand-gray">
-          Defaults: Anthropic = claude-sonnet-4-6 | OpenAI = gpt-4o | Azure = gpt-4o | Google = gemini-2.0-flash
+          Defaults: Anthropic = claude-sonnet-4-6 | OpenAI = gpt-4o | Azure = gpt-4o | Google = gemini-2.0-flash | Groq = llama-3.3-70b-versatile
         </p>
       </div>
 

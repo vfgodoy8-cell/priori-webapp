@@ -59,6 +59,14 @@ export default async function SquadPage({ searchParams }: { searchParams?: { ini
   const iniId = searchParams?.ini;
   const filterInitiative = iniId ? initiatives.find((i) => i.id === iniId) ?? null : null;
   const highlightIds = filterInitiative ? new Set(filterInitiative.sq_project_ids ?? []) : null;
+
+  // Map projectId → first initiative name (for tooltip "Parte de: X")
+  const projectIniMap: Record<string, string> = {};
+  initiatives.forEach((i) => {
+    (i.sq_project_ids ?? []).forEach((pid) => {
+      if (!projectIniMap[pid]) projectIniMap[pid] = i.name;
+    });
+  });
   const allActive = all.filter((p) => p.status === "active");
   const discarded = all.filter((p) => p.status === "discarded");
 
@@ -135,6 +143,7 @@ export default async function SquadPage({ searchParams }: { searchParams?: { ini
           crossLinkedIds={crossLinkedIds}
           highlightIds={highlightIds}
           filterInitiative={filterInitiative ? { id: filterInitiative.id, name: filterInitiative.name } : null}
+          projectIniMap={projectIniMap}
         />
       </main>
     </div>

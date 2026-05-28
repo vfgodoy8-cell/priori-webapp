@@ -22,9 +22,10 @@ type Props = {
   crossLinkedIds?: Set<string>;
   highlightIds?: Set<string> | null;
   filterInitiative?: { id: string; name: string } | null;
+  projectIniMap?: Record<string, string>;
 };
 
-export function SquadView({ projects, discarded, p0Projects, allActive, orgId, role, crossLinkedIds, highlightIds, filterInitiative }: Props) {
+export function SquadView({ projects, discarded, p0Projects, allActive, orgId, role, crossLinkedIds, highlightIds, filterInitiative, projectIniMap }: Props) {
   const router = useRouter();
   const [view, setView] = useState<View>("canvas");
   const [quarterOverlay, setQuarterOverlay] = useState(false);
@@ -138,6 +139,7 @@ export function SquadView({ projects, discarded, p0Projects, allActive, orgId, r
           readOnly={role === "member"}
           crossLinkedIds={crossLinkedIds}
           highlightIds={highlightIds}
+          projectIniMap={projectIniMap}
         />
       ) : (
         <ProjectList

@@ -335,9 +335,9 @@ export function CrossView({ orgId, initialTeams, initialInitiatives, squadProjec
                         <a
                           href={`/squad?ini=${ini.id}`}
                           className="flex items-center gap-0.5 text-[10px] font-semibold text-brand-blue hover:underline whitespace-nowrap"
-                          title={`Ver ${ini.sq_project_ids.length} proyecto${ini.sq_project_ids.length !== 1 ? "s" : ""} en Squad`}
+                          title={`Ver proyectos vinculados en Modo Squad`}
                         >
-                          👥 {ini.sq_project_ids.length}
+                          👥 {ini.sq_project_ids.length} proyecto{ini.sq_project_ids.length !== 1 ? "s" : ""} Squad
                         </a>
                       )}
                       {!readOnly && (

@@ -105,9 +105,10 @@ type Props = {
   readOnly?: boolean;
   crossLinkedIds?: Set<string>;
   highlightIds?: Set<string> | null;
+  projectIniMap?: Record<string, string>;
 };
 
-export function SquadCanvas({ projects, discarded, p0Projects, config, onEdit, quarterOverlay = false, readOnly = false, crossLinkedIds, highlightIds }: Props) {
+export function SquadCanvas({ projects, discarded, p0Projects, config, onEdit, quarterOverlay = false, readOnly = false, crossLinkedIds, highlightIds, projectIniMap }: Props) {
   const CANVAS_H = 650;
   const canvasRef = useRef<HTMLDivElement>(null);
   const posRef = useRef<Map<string, Pos>>(new Map());
@@ -128,6 +129,7 @@ export function SquadCanvas({ projects, discarded, p0Projects, config, onEdit, q
     ty: number; // bubble top y in viewport coords
     bh: number; // bubble height (px)
     aggregate?: { total: number; completed: number; count: number };
+    iniName?: string;
   } | null>(null);
 
   const dragRef = useRef<{
@@ -209,6 +211,7 @@ export function SquadCanvas({ projects, discarded, p0Projects, config, onEdit, q
       ty: cr.top + pos.y,
       bh: r * 2,
       aggregate: aggregatesMap.get(project.id),
+      iniName: projectIniMap?.[project.id],
     });
   }
 
@@ -599,6 +602,7 @@ export function SquadCanvas({ projects, discarded, p0Projects, config, onEdit, q
           ty={tooltip.ty}
           bh={tooltip.bh}
           aggregate={tooltip.aggregate}
+          iniName={tooltip.iniName}
         />
       )}
     </div>
@@ -631,12 +635,14 @@ function BubbleTooltip({
   ty,
   bh,
   aggregate,
+  iniName,
 }: {
   project: Project;
   cx: number;
   ty: number;
   bh: number;
   aggregate?: { total: number; completed: number; count: number };
+  iniName?: string;
 }) {
   const TOOLTIP_W = 244;
   const TOOLTIP_H = 200;
@@ -732,8 +738,15 @@ function BubbleTooltip({
 
       {/* Dependencies */}
       {project.dependencies && (
-        <div style={{ fontSize: 11, color: "#ccc" }}>
+        <div style={{ fontSize: 11, color: "#ccc", marginBottom: iniName ? 4 : 0 }}>
           🔗 {project.dependencies}
+        </div>
+      )}
+
+      {/* Cross initiative link */}
+      {iniName && (
+        <div style={{ fontSize: 11, color: "#6CA0E8", marginTop: project.dependencies ? 0 : 2 }}>
+          🔗 Parte de: <span style={{ fontWeight: 700 }}>{iniName}</span>
         </div>
       )}
     </div>

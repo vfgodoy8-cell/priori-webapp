@@ -1,18 +1,17 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useFormState, useFormStatus } from "react-dom";
+import { useRouter } from "next/navigation";
 import type { Team, Initiative } from "@/types/database";
 import { computeQuadrant, QUADRANT_META } from "@/lib/quadrant";
+import { dateToQuarter, quartersBetween } from "@/lib/squad-logic";
 import {
   createInitiative,
   updateInitiative,
   deleteInitiative,
   placeInitiative,
   unplaceInitiative,
-  createTeam,
-  updateTeam,
-  deleteTeam,
 } from "./actions";
 import { ShareModal } from "@/components/ui/ShareModal";
 import { type AppRole, ROLE_LABEL, ROLE_COLOR, ROLE_BG, ROLE_BORDER } from "@/lib/roles";
@@ -23,6 +22,11 @@ const Q_SUB = ["Ene – Mar", "Abr – Jun", "Jul – Sep", "Oct – Dic"];
 function teamCap(team: Team, q: number): number {
   const pcts = [team.q1_pct, team.q2_pct, team.q3_pct, team.q4_pct];
   return Math.floor(team.personas * team.proy_per_persona * (pcts[q] / 100));
+}
+
+function teamAvailPeople(team: Team, q: number): number {
+  const pcts = [team.q1_pct, team.q2_pct, team.q3_pct, team.q4_pct];
+  return Math.floor(team.personas * (pcts[q] / 100));
 }
 
 function teamUsed(initiatives: Initiative[], teamId: string, q: number): number {
@@ -54,8 +58,6 @@ function SubmitBtn({ label }: { label: string }) {
   );
 }
 
-type PanelTab = "form" | "teams";
-
 type Props = {
   orgId: string;
   initialTeams: Team[];
@@ -65,42 +67,87 @@ type Props = {
 
 export function CrossView({ orgId, initialTeams, initialInitiatives, role }: Props) {
   const readOnly = role === "member";
+  const router = useRouter();
+
   const [teams, setTeams] = useState<Team[]>(initialTeams);
   const [initiatives, setInitiatives] = useState<Initiative[]>(initialInitiatives);
   const [dragId, setDragId] = useState<string | null>(null);
   const [dragOverQ, setDragOverQ] = useState<number | null>(null);
   const [warnMsg, setWarnMsg] = useState<string | null>(null);
   const [panelOpen, setPanelOpen] = useState(false);
-  const [panelTab, setPanelTab] = useState<PanelTab>("form");
   const [editIni, setEditIni] = useState<Initiative | undefined>();
-  const [newTeamName, setNewTeamName] = useState("");
   const [showShare, setShowShare] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
   const gridRef = useRef<HTMLDivElement>(null);
 
+  // Sync local state when server sends fresh props (after router.refresh())
+  useEffect(() => { setInitiatives(initialInitiatives); }, [initialInitiatives]);
+  useEffect(() => { setTeams(initialTeams); }, [initialTeams]);
+
   const iniAction = editIni ? updateInitiative : createInitiative;
   const [iniState, iniFormAction] = useFormState(iniAction, { error: null });
 
-  // Quadrant preview state
+  // Form reactive state
   const [prevImp, setPrevImp] = useState(0);
   const [prevSp, setPrevSp] = useState(0);
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [teamAllocations, setTeamAllocations] = useState<Record<string, number>>({});
+
   useEffect(() => {
     setPrevImp(editIni?.impact_value ?? 0);
     setPrevSp(editIni?.effort_sprints ?? 0);
+    setStartDate(editIni?.start_date ?? "");
+    setEndDate(editIni?.end_date ?? "");
+    setTeamAllocations((editIni?.team_allocations as Record<string, number>) ?? {});
   }, [editIni]);
+
+  const calcQStart = startDate ? dateToQuarter(startDate) : null;
+  const calcDuration = startDate && endDate ? quartersBetween(startDate, endDate) : null;
+
   const qPrev = prevImp > 0 || prevSp > 0 ? computeQuadrant(prevImp, prevSp) : null;
   const mPrev = qPrev ? QUADRANT_META[qPrev] : null;
 
-  // Reset form on successful save
+  // Inline capacity warnings (people-based)
+  const iniWarnings = useMemo(() => {
+    if (calcQStart === null || Object.keys(teamAllocations).length === 0) return [];
+    const dur = calcDuration ?? 1;
+    const warns: string[] = [];
+    Object.entries(teamAllocations).forEach(([teamId, n]) => {
+      if (!n) return;
+      const team = teams.find((t) => t.id === teamId);
+      if (!team) return;
+      for (let d = 0; d < dur; d++) {
+        const q = calcQStart + d;
+        if (q > 3) continue;
+        const avail = teamAvailPeople(team, q);
+        const used = initiatives
+          .filter((i) => i.q_start !== null && i.status === "active" && i.id !== editIni?.id)
+          .filter((i) => i.q_start! <= q && i.q_start! + i.duration_quarters - 1 >= q)
+          .reduce((sum, i) => {
+            const alloc = i.team_allocations as Record<string, number> | null;
+            return sum + (alloc?.[teamId] ?? 0);
+          }, 0);
+        if (used + n > avail) {
+          warns.push(`${team.name} supera capacidad en Q${q + 1}`);
+        }
+      }
+    });
+    return Array.from(new Set(warns));
+  }, [teamAllocations, calcQStart, calcDuration, teams, initiatives, editIni]);
+
+  // Reset form on successful save + refresh data
   useEffect(() => {
     if (iniState.error === null && formRef.current?.dataset.submitted === "true") {
       formRef.current.dataset.submitted = "";
       setEditIni(undefined);
       formRef.current.reset();
-      setPrevImp(0);
-      setPrevSp(0);
+      setPrevImp(0); setPrevSp(0);
+      setStartDate(""); setEndDate("");
+      setTeamAllocations({});
+      router.refresh();
     }
-  }, [iniState]);
+  }, [iniState, router]);
 
   function getQFromEvent(e: React.DragEvent<HTMLDivElement>): number {
     if (!gridRef.current) return 0;
@@ -134,22 +181,6 @@ export function CrossView({ orgId, initialTeams, initialInitiatives, role }: Pro
   }
 
   function handleDrop(q: number, ini: Initiative) {
-    const overCapTeams = ini.team_ids?.filter((tid) => {
-      for (let d = 0; d < ini.duration_quarters; d++) {
-        const qc = q + d;
-        if (qc > 3) continue;
-        const team = teams.find((t) => t.id === tid);
-        if (!team) continue;
-        if (teamUsed(initiatives, tid, qc) + 1 > teamCap(team, qc)) return true;
-      }
-      return false;
-    }) ?? [];
-
-    if (overCapTeams.length > 0) {
-      const names = overCapTeams.map((tid) => teams.find((t) => t.id === tid)?.name ?? tid).join(", ");
-      if (!confirm(`Capacidad superada en: ${names}. ¿Asignar de todas formas?`)) return;
-    }
-
     setInitiatives((prev) => prev.map((i) => (i.id === ini.id ? { ...i, q_start: q } : i)));
     placeInitiative(ini.id, q);
   }
@@ -161,7 +192,6 @@ export function CrossView({ orgId, initialTeams, initialInitiatives, role }: Pro
 
   function openEdit(ini: Initiative) {
     setEditIni(ini);
-    setPanelTab("form");
     setPanelOpen(true);
   }
 
@@ -170,19 +200,8 @@ export function CrossView({ orgId, initialTeams, initialInitiatives, role }: Pro
     deleteInitiative(id);
   }
 
-  function handleTeamUpdate(id: string, field: string, value: string | number) {
-    setTeams((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, [field]: value } : t))
-    );
-    updateTeam(id, { [field]: value } as Partial<Team>);
-  }
-
-  function handleTeamDelete(id: string) {
-    setTeams((prev) => prev.filter((t) => t.id !== id));
-    deleteTeam(id);
-  }
-
   const backlog = initiatives.filter((i) => i.q_start === null && i.status === "active");
+  void orgId;
 
   return (
     <div className="flex flex-col gap-4">
@@ -198,11 +217,7 @@ export function CrossView({ orgId, initialTeams, initialInitiatives, role }: Pro
         <span className="ml-auto">
           <span
             className="text-xs font-bold px-2.5 py-1 rounded-full"
-            style={{
-              background: ROLE_BG[role],
-              color: ROLE_COLOR[role],
-              border: `1px solid ${ROLE_BORDER[role]}`,
-            }}
+            style={{ background: ROLE_BG[role], color: ROLE_COLOR[role], border: `1px solid ${ROLE_BORDER[role]}` }}
           >
             {ROLE_LABEL[role]}
           </span>
@@ -213,20 +228,15 @@ export function CrossView({ orgId, initialTeams, initialInitiatives, role }: Pro
 
       {/* Timeline */}
       <div className="border border-gray-200 rounded-xl overflow-hidden">
-        {/* Quarter headers */}
         <div className="grid grid-cols-4 bg-gray-50 border-b border-gray-200">
           {Q_LABELS.map((q, qi) => (
-            <div
-              key={q}
-              className={`px-4 py-3 flex flex-col gap-0.5 ${qi < 3 ? "border-r border-gray-200" : ""}`}
-            >
+            <div key={q} className={`px-4 py-3 flex flex-col gap-0.5 ${qi < 3 ? "border-r border-gray-200" : ""}`}>
               <span className="text-sm font-bold text-brand-black">{q}</span>
               <span className="text-xs text-brand-gray">{Q_SUB[qi]}</span>
             </div>
           ))}
         </div>
 
-        {/* Q grid — single CSS-grid container; cards span columns */}
         <div
           ref={gridRef}
           className="relative min-h-[240px]"
@@ -235,37 +245,26 @@ export function CrossView({ orgId, initialTeams, initialInitiatives, role }: Pro
           onDragLeave={readOnly ? undefined : (e) => { if (!gridRef.current?.contains(e.relatedTarget as Node)) setDragOverQ(null); }}
           onDrop={readOnly ? undefined : handleGridDrop}
         >
-          {/* Column dividers + drag-hover highlight */}
           {[0, 1, 2, 3].map((q) => (
             <div
               key={q}
               className="absolute inset-y-0 pointer-events-none transition-colors duration-150"
-              style={{
-                left: `${q * 25}%`,
-                width: "25%",
-                background: dragOverQ === q ? "rgba(232,98,26,0.06)" : "transparent",
-                borderRight: q < 3 ? "1px solid #E5E7EB" : undefined,
-              }}
+              style={{ left: `${q * 25}%`, width: "25%", background: dragOverQ === q ? "rgba(232,98,26,0.06)" : "transparent", borderRight: q < 3 ? "1px solid #E5E7EB" : undefined }}
             />
           ))}
 
           {initiatives.filter((i) => i.q_start !== null && i.status === "active").length === 0 && (
             <div className="col-span-4 flex items-center justify-center py-10 select-none">
-              <p className="text-xs text-gray-300">Arrastrá iniciativas al timeline</p>
+              <p className="text-xs text-gray-300">{readOnly ? "Sin iniciativas asignadas" : "Arrastrá iniciativas al timeline"}</p>
             </div>
           )}
 
           {[...initiatives]
             .filter((i) => i.q_start !== null && i.status === "active")
-            .sort((a, b) => {
-              if (a.q_start! !== b.q_start!) return a.q_start! - b.q_start!;
-              return b.duration_quarters - a.duration_quarters;
-            })
+            .sort((a, b) => { if (a.q_start! !== b.q_start!) return a.q_start! - b.q_start!; return b.duration_quarters - a.duration_quarters; })
             .map((ini) => {
               const qd = QUADRANT_META[computeQuadrant(ini.impact_value, ini.effort_sprints)];
-              const tNames = (ini.team_ids ?? [])
-                .map((tid) => teams.find((t) => t.id === tid)?.name.split(" ")[0] ?? "?")
-                .slice(0, 3);
+              const tNames = (ini.team_ids ?? []).map((tid) => teams.find((t) => t.id === tid)?.name.split(" ")[0] ?? "?").slice(0, 3);
               const span = Math.min(ini.duration_quarters, 4 - ini.q_start!);
               return (
                 <div
@@ -273,32 +272,22 @@ export function CrossView({ orgId, initialTeams, initialInitiatives, role }: Pro
                   draggable={!readOnly}
                   onDragStart={readOnly ? undefined : () => setDragId(ini.id)}
                   className={`rounded-lg p-2.5 border-[1.5px] select-none hover:shadow-md transition-shadow m-1.5 ${readOnly ? "cursor-default" : "cursor-grab"}`}
-                  style={{
-                    gridColumn: `${ini.q_start! + 1} / span ${span}`,
-                    background: qd.bg,
-                    borderColor: `${qd.color}55`,
-                    borderRight: ini.duration_quarters > 1 ? `2px dashed ${qd.color}99` : undefined,
-                  }}
+                  style={{ gridColumn: `${ini.q_start! + 1} / span ${span}`, background: qd.bg, borderColor: `${qd.color}55`, borderRight: ini.duration_quarters > 1 ? `2px dashed ${qd.color}99` : undefined }}
                 >
                   <div className="flex items-start justify-between gap-1">
-                    <div className="text-xs font-bold text-brand-black leading-snug">
-                      {qd.priority} {ini.name}
-                    </div>
+                    <div className="text-xs font-bold text-brand-black leading-snug">{qd.priority} {ini.name}</div>
                     {ini.duration_quarters > 1 && (
-                      <span className="text-[10px] font-bold flex-shrink-0 ml-1" style={{ color: qd.color }}>
-                        ↔ {ini.duration_quarters}Q
-                      </span>
+                      <span className="text-[10px] font-bold flex-shrink-0 ml-1" style={{ color: qd.color }}>↔ {ini.duration_quarters}Q</span>
                     )}
                   </div>
-                  <div className="text-[10px] text-brand-gray mt-1">
-                    {ini.stakeholder} · {ini.effort_sprints}sp
-                  </div>
+                  <div className="text-[10px] text-brand-gray mt-1">{ini.stakeholder} · {ini.effort_sprints}sp</div>
+                  {ini.start_date && (
+                    <div className="text-[10px] text-brand-gray">{ini.start_date} → {ini.end_date ?? "…"}</div>
+                  )}
                   {tNames.length > 0 && (
                     <div className="flex flex-wrap gap-1 mt-1.5">
                       {tNames.map((n) => (
-                        <span key={n} className="text-[9px] px-1.5 py-0.5 rounded bg-black/[.07] text-brand-gray font-semibold">
-                          {n}
-                        </span>
+                        <span key={n} className="text-[9px] px-1.5 py-0.5 rounded bg-black/[.07] text-brand-gray font-semibold">{n}</span>
                       ))}
                     </div>
                   )}
@@ -314,7 +303,6 @@ export function CrossView({ orgId, initialTeams, initialInitiatives, role }: Pro
         </div>
       </div>
 
-      {/* Warning bar */}
       {warnMsg && (
         <div className="flex items-center gap-2 px-4 py-2.5 bg-orange-50 border border-orange-200 rounded-lg text-xs text-brand-orange">
           <span className="flex-shrink-0">⚠</span>
@@ -334,22 +322,16 @@ export function CrossView({ orgId, initialTeams, initialInitiatives, role }: Pro
             <table className="w-full border-collapse">
               <thead>
                 <tr>
-                  <th className="text-left text-[10px] text-brand-gray uppercase tracking-wide font-semibold px-4 py-2 border-b border-gray-100 min-w-[160px]">
-                    Equipo
-                  </th>
+                  <th className="text-left text-[10px] text-brand-gray uppercase tracking-wide font-semibold px-4 py-2 border-b border-gray-100 min-w-[160px]">Equipo</th>
                   {Q_LABELS.map((q) => (
-                    <th key={q} className="text-center text-[10px] text-brand-gray uppercase tracking-wide font-semibold px-3 py-2 border-b border-gray-100">
-                      {q}
-                    </th>
+                    <th key={q} className="text-center text-[10px] text-brand-gray uppercase tracking-wide font-semibold px-3 py-2 border-b border-gray-100">{q}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {teams.map((team) => (
                   <tr key={team.id}>
-                    <td className="px-4 py-2 text-xs font-semibold text-brand-black border-b border-gray-50">
-                      {team.name}
-                    </td>
+                    <td className="px-4 py-2 text-xs font-semibold text-brand-black border-b border-gray-50">{team.name}</td>
                     {[0, 1, 2, 3].map((q) => {
                       const cap = teamCap(team, q);
                       const used = teamUsed(initiatives, team.id, q);
@@ -357,16 +339,9 @@ export function CrossView({ orgId, initialTeams, initialInitiatives, role }: Pro
                       const col = capColor(pct);
                       const over = used > cap;
                       return (
-                        <td
-                          key={q}
-                          className="px-3 py-2 min-w-[90px] border-b border-gray-50"
-                          style={over ? { background: "#FEF3F3" } : {}}
-                        >
+                        <td key={q} className="px-3 py-2 min-w-[90px] border-b border-gray-50" style={over ? { background: "#FEF3F3" } : {}}>
                           <div className="h-1.5 bg-gray-100 rounded-full border border-gray-200 overflow-hidden mb-1">
-                            <div
-                              className="h-full rounded-full transition-all"
-                              style={{ width: `${Math.min(100, pct)}%`, background: col }}
-                            />
+                            <div className="h-full rounded-full transition-all" style={{ width: `${Math.min(100, pct)}%`, background: col }} />
                           </div>
                           <div className="text-center text-[11px] font-bold" style={{ color: col }}>
                             {over ? "⚠️ " : ""}{used}/{cap} ({pct}%)
@@ -402,9 +377,7 @@ export function CrossView({ orgId, initialTeams, initialInitiatives, role }: Pro
             setDragId(null);
           }}
         >
-          {backlog.length === 0 && (
-            <span className="text-xs text-gray-300">Todas las iniciativas están asignadas</span>
-          )}
+          {backlog.length === 0 && <span className="text-xs text-gray-300">Todas las iniciativas están asignadas</span>}
           {backlog.map((ini) => {
             const qd = QUADRANT_META[computeQuadrant(ini.impact_value, ini.effort_sprints)];
             return (
@@ -414,7 +387,6 @@ export function CrossView({ orgId, initialTeams, initialInitiatives, role }: Pro
                 onDragStart={readOnly ? undefined : () => setDragId(ini.id)}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border-[1.5px] select-none hover:shadow-sm transition ${readOnly ? "cursor-default" : "cursor-grab"}`}
                 style={{ background: qd.bg, borderColor: `${qd.color}55`, color: qd.color }}
-                title={readOnly ? undefined : "Arrastrá al Quarter para asignar"}
               >
                 {qd.priority} {ini.name}
                 <span className="opacity-60 text-[10px]"> · {ini.duration_quarters}Q</span>
@@ -427,86 +399,101 @@ export function CrossView({ orgId, initialTeams, initialInitiatives, role }: Pro
       {/* FAB */}
       {!readOnly && (
         <button
-          onClick={() => { setPanelOpen(true); setPanelTab("form"); setEditIni(undefined); }}
+          onClick={() => { setPanelOpen(true); setEditIni(undefined); }}
           className="fixed bottom-7 right-7 z-[200] w-12 h-12 rounded-full bg-brand-orange hover:bg-orange-600 text-white text-2xl flex items-center justify-center shadow-lg transition"
-          title="Panel del programa"
+          title="Nueva iniciativa"
         >
-          ⚙
+          +
         </button>
       )}
 
-      {/* Overlay */}
-      {panelOpen && !readOnly && (
-        <div
-          className="fixed inset-0 z-[250] bg-black/25"
-          onClick={() => setPanelOpen(false)}
-        />
+      {/* Overlay + Panel */}
+      {!readOnly && panelOpen && (
+        <div className="fixed inset-0 z-[250] bg-black/25" onClick={() => setPanelOpen(false)} />
       )}
 
-      {/* Sliding panel */}
-      {!readOnly && <div
-        className={`fixed top-0 right-0 z-[300] h-full w-[380px] bg-white border-l border-gray-100 shadow-2xl flex flex-col transition-transform duration-300 ${panelOpen ? "translate-x-0" : "translate-x-full"}`}
-      >
-        <div className="flex items-center justify-between px-4 py-3.5 bg-orange-50 border-b-2 border-brand-orange">
-          <h3 className="text-sm font-bold text-brand-orange">Panel del programa</h3>
-          <button onClick={() => setPanelOpen(false)} className="text-brand-gray hover:text-brand-black text-xl leading-none">×</button>
-        </div>
+      {!readOnly && (
+        <div className={`fixed top-0 right-0 z-[300] h-full w-[400px] bg-white border-l border-gray-100 shadow-2xl flex flex-col transition-transform duration-300 ${panelOpen ? "translate-x-0" : "translate-x-full"}`}>
+          <div className="flex items-center justify-between px-4 py-3.5 bg-orange-50 border-b-2 border-brand-orange">
+            <h3 className="text-sm font-bold text-brand-orange">Panel del programa</h3>
+            <button onClick={() => setPanelOpen(false)} className="text-brand-gray hover:text-brand-black text-xl leading-none">×</button>
+          </div>
 
-        <div className="flex border-b border-gray-100">
-          {(["form", "teams"] as PanelTab[]).map((t) => (
-            <button
-              key={t}
-              onClick={() => setPanelTab(t)}
-              className={`flex-1 py-2.5 text-xs font-semibold transition border-b-2 ${panelTab === t ? "text-brand-orange border-brand-orange" : "text-brand-gray border-transparent hover:text-brand-black"}`}
+          <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3">
+            {editIni && (
+              <div className="flex items-center gap-2 px-3 py-2 bg-orange-50 border border-orange-100 rounded-lg text-xs text-brand-orange font-semibold">
+                ✏️ Editando: {editIni.name}
+              </div>
+            )}
+            <div className="text-xs font-bold text-brand-gray uppercase tracking-wider">
+              {editIni ? "Editar iniciativa" : "Nueva iniciativa"}
+            </div>
+
+            <form
+              ref={formRef}
+              action={iniFormAction}
+              onSubmit={() => { if (formRef.current) formRef.current.dataset.submitted = "true"; }}
+              className="flex flex-col gap-3"
             >
-              {t === "form" ? "Iniciativas" : "Equipos"}
-            </button>
-          ))}
-        </div>
+              {editIni && <input type="hidden" name="id" value={editIni.id} />}
+              <input type="hidden" name="team_allocations" value={JSON.stringify(teamAllocations)} />
+              <input type="hidden" name="team_ids" value={JSON.stringify(Object.keys(teamAllocations).filter((k) => (teamAllocations[k] ?? 0) > 0))} />
 
-        <div className="flex-1 overflow-y-auto">
-
-          {/* ── TAB: FORMULARIO ── */}
-          {panelTab === "form" && (
-            <div className="p-4 flex flex-col gap-3">
-              {editIni && (
-                <div className="flex items-center gap-2 px-3 py-2 bg-orange-50 border border-orange-100 rounded-lg text-xs text-brand-orange font-semibold">
-                  ✏️ Editando: {editIni.name}
-                </div>
-              )}
-              <div className="text-xs font-bold text-brand-gray uppercase tracking-wider">
-                {editIni ? "Editar iniciativa" : "Nueva iniciativa"}
+              <F label="Nombre *">
+                <input name="name" type="text" required defaultValue={editIni?.name} placeholder="Ej: Transformación Digital" className={inp} />
+              </F>
+              <F label="Stakeholder">
+                <input name="stakeholder" type="text" defaultValue={editIni?.stakeholder ?? ""} placeholder="Ej: Dirección General" className={inp} />
+              </F>
+              <div className="grid grid-cols-2 gap-2">
+                <F label="Impacto ($)">
+                  <input name="impact_value" type="number" min="0" step="any"
+                    defaultValue={editIni?.impact_value ?? ""}
+                    placeholder="0" className={inp}
+                    onChange={(e) => setPrevImp(parseFloat(e.target.value) || 0)} />
+                </F>
+                <F label="Sprints">
+                  <input name="effort_sprints" type="number" min="1" max="24"
+                    defaultValue={editIni?.effort_sprints ?? ""}
+                    placeholder="1–24" className={inp}
+                    onChange={(e) => setPrevSp(parseInt(e.target.value) || 0)} />
+                </F>
               </div>
 
-              <form
-                ref={formRef}
-                action={iniFormAction}
-                onSubmit={() => { if (formRef.current) formRef.current.dataset.submitted = "true"; }}
-                className="flex flex-col gap-3"
-              >
-                {editIni && <input type="hidden" name="id" value={editIni.id} />}
-                <input type="hidden" name="team_ids" id="team_ids_hidden" value={JSON.stringify((editIni?.team_ids ?? []))} />
+              {/* Dates */}
+              <div className="grid grid-cols-2 gap-2">
+                <F label="Fecha inicio">
+                  <input
+                    name="start_date"
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className={inp}
+                  />
+                </F>
+                <F label="Fecha fin">
+                  <input
+                    name="end_date"
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    min={startDate || undefined}
+                    className={inp}
+                  />
+                </F>
+              </div>
 
-                <F label="Nombre *">
-                  <input name="name" type="text" required defaultValue={editIni?.name} placeholder="Ej: Transformación Digital" className={inp} />
-                </F>
-                <F label="Stakeholder">
-                  <input name="stakeholder" type="text" defaultValue={editIni?.stakeholder ?? ""} placeholder="Ej: Dirección General" className={inp} />
-                </F>
-                <div className="grid grid-cols-2 gap-2">
-                  <F label="Impacto ($)">
-                    <input name="impact_value" type="number" min="0" step="any"
-                      defaultValue={editIni?.impact_value ?? ""}
-                      placeholder="0" className={inp}
-                      onChange={(e) => setPrevImp(parseFloat(e.target.value) || 0)} />
-                  </F>
-                  <F label="Sprints">
-                    <input name="effort_sprints" type="number" min="1" max="24"
-                      defaultValue={editIni?.effort_sprints ?? ""}
-                      placeholder="1–24" className={inp}
-                      onChange={(e) => setPrevSp(parseInt(e.target.value) || 0)} />
-                  </F>
+              {/* Auto-calculated quarter/duration */}
+              {startDate && endDate ? (
+                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-50 border border-blue-100">
+                  <span className="text-xs font-bold text-brand-blue">
+                    {Q_LABELS[dateToQuarter(startDate)]} → {Q_LABELS[dateToQuarter(endDate)]}
+                  </span>
+                  <span className="text-xs text-brand-gray">
+                    · {quartersBetween(startDate, endDate)} trimestre{quartersBetween(startDate, endDate) !== 1 ? "s" : ""}
+                  </span>
                 </div>
+              ) : (
                 <F label="Duración">
                   <select name="duration_quarters" defaultValue={editIni?.duration_quarters ?? 1} className={inp}>
                     <option value={1}>1 Quarter</option>
@@ -515,228 +502,161 @@ export function CrossView({ orgId, initialTeams, initialInitiatives, role }: Pro
                     <option value={4}>4 Quarters (año completo)</option>
                   </select>
                 </F>
+              )}
 
-                {/* Team checkboxes */}
-                {teams.length > 0 && (
-                  <F label="Equipos requeridos">
-                    <TeamCheckboxes
-                      teams={teams}
-                      selected={editIni?.team_ids ?? []}
-                      onChange={(ids) => {
-                        const hidden = document.getElementById("team_ids_hidden") as HTMLInputElement;
-                        if (hidden) hidden.value = JSON.stringify(ids);
-                      }}
-                    />
-                  </F>
-                )}
-
-                <F label="Descripción">
-                  <textarea name="description" rows={2} defaultValue={editIni?.description ?? ""} placeholder="Objetivo principal..." className={`${inp} resize-none`} />
+              {/* Team allocation */}
+              {teams.length > 0 && (
+                <F label="Equipos requeridos">
+                  <TeamAllocationInputs
+                    teams={teams}
+                    allocations={teamAllocations}
+                    onChange={setTeamAllocations}
+                  />
                 </F>
+              )}
 
-                {mPrev && (
-                  <div className="px-3 py-2 rounded-lg border text-xs" style={{ background: mPrev.bg, borderColor: `${mPrev.color}44` }}>
-                    <div className="font-bold uppercase tracking-wider text-[10px] text-brand-gray mb-1">Cuadrante asignado</div>
-                    <div className="font-bold" style={{ color: mPrev.color }}>{mPrev.priority} {mPrev.label}</div>
-                  </div>
-                )}
-
-                {iniState.error && (
-                  <p className="text-xs text-red-600 bg-red-50 rounded px-3 py-2">{iniState.error}</p>
-                )}
-
-                <div className="flex gap-2 pt-1">
-                  {editIni && (
-                    <button type="button" onClick={() => setEditIni(undefined)} className="px-4 py-2.5 text-sm text-brand-gray border border-gray-200 rounded-lg hover:text-brand-black transition">
-                      Cancelar
-                    </button>
-                  )}
-                  <SubmitBtn label={editIni ? "Guardar cambios" : "Agregar"} />
+              {/* Inline warnings */}
+              {iniWarnings.length > 0 && (
+                <div className="flex flex-col gap-1">
+                  {iniWarnings.map((w) => (
+                    <div key={w} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-50 border border-red-200 text-xs font-semibold text-red-600">
+                      ⚠ {w}
+                    </div>
+                  ))}
                 </div>
-              </form>
+              )}
 
-              {/* Initiative list */}
-              <div className="text-xs font-bold text-brand-gray uppercase tracking-wider mt-2">
-                Iniciativas cargadas
-              </div>
-              <div className="flex flex-col gap-1.5">
-                {initiatives.filter((i) => i.status === "active").length === 0 && (
-                  <p className="text-xs text-gray-400 text-center py-4">No hay iniciativas.</p>
+              <F label="Descripción">
+                <textarea name="description" rows={2} defaultValue={editIni?.description ?? ""} placeholder="Objetivo principal..." className={`${inp} resize-none`} />
+              </F>
+
+              {mPrev && (
+                <div className="px-3 py-2 rounded-lg border text-xs" style={{ background: mPrev.bg, borderColor: `${mPrev.color}44` }}>
+                  <div className="font-bold uppercase tracking-wider text-[10px] text-brand-gray mb-1">Cuadrante asignado</div>
+                  <div className="font-bold" style={{ color: mPrev.color }}>{mPrev.priority} {mPrev.label}</div>
+                </div>
+              )}
+
+              {iniState.error && (
+                <p className="text-xs text-red-600 bg-red-50 rounded px-3 py-2">{iniState.error}</p>
+              )}
+
+              <div className="flex gap-2 pt-1">
+                {editIni && (
+                  <button type="button" onClick={() => setEditIni(undefined)} className="px-4 py-2.5 text-sm text-brand-gray border border-gray-200 rounded-lg hover:text-brand-black transition">
+                    Cancelar
+                  </button>
                 )}
-                {[...initiatives]
-                  .filter((i) => i.status === "active")
-                  .sort((a, b) => {
-                    const qa = computeQuadrant(a.impact_value, a.effort_sprints);
-                    const qb = computeQuadrant(b.impact_value, b.effort_sprints);
-                    return Number(QUADRANT_META[qa].priority[1]) - Number(QUADRANT_META[qb].priority[1]);
-                  })
-                  .map((ini) => {
-                    const qd = QUADRANT_META[computeQuadrant(ini.impact_value, ini.effort_sprints)];
-                    const isEd = ini.id === editIni?.id;
-                    return (
-                      <div
-                        key={ini.id}
-                        className={`flex items-center gap-2 px-3 py-2.5 rounded-lg border ${isEd ? "border-brand-orange bg-orange-50" : "border-gray-100 bg-gray-50"}`}
-                      >
-                        <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: qd.color }} />
-                        <div className="flex-1 min-w-0">
-                          <div className="text-xs font-semibold text-brand-black truncate">{ini.name}</div>
-                          <div className="text-[10px] text-brand-gray">
-                            {ini.stakeholder} · {ini.duration_quarters}Q ·{" "}
-                            {ini.q_start !== null ? `Q${ini.q_start + 1}` : "Sin asignar"}
-                          </div>
-                        </div>
-                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0" style={{ background: `${qd.color}22`, color: qd.color }}>
-                          {qd.priority}
-                        </span>
-                        <div className="flex gap-1 flex-shrink-0">
-                          <button onClick={() => openEdit(ini)} className="text-[11px] text-gray-400 hover:text-brand-orange px-1 transition" title="Editar">✏️</button>
-                          <button onClick={() => handleDelete(ini.id)} className="text-[11px] text-gray-400 hover:text-red-600 px-1 transition" title="Eliminar">🗑️</button>
+                <SubmitBtn label={editIni ? "Guardar cambios" : "Agregar"} />
+              </div>
+            </form>
+
+            {/* Initiative list */}
+            <div className="text-xs font-bold text-brand-gray uppercase tracking-wider mt-2">Iniciativas cargadas</div>
+            <div className="flex flex-col gap-1.5">
+              {initiatives.filter((i) => i.status === "active").length === 0 && (
+                <p className="text-xs text-gray-400 text-center py-4">No hay iniciativas.</p>
+              )}
+              {[...initiatives]
+                .filter((i) => i.status === "active")
+                .sort((a, b) => {
+                  const qa = computeQuadrant(a.impact_value, a.effort_sprints);
+                  const qb = computeQuadrant(b.impact_value, b.effort_sprints);
+                  return Number(QUADRANT_META[qa].priority[1]) - Number(QUADRANT_META[qb].priority[1]);
+                })
+                .map((ini) => {
+                  const qd = QUADRANT_META[computeQuadrant(ini.impact_value, ini.effort_sprints)];
+                  const isEd = ini.id === editIni?.id;
+                  return (
+                    <div
+                      key={ini.id}
+                      className={`flex items-center gap-2 px-3 py-2.5 rounded-lg border ${isEd ? "border-brand-orange bg-orange-50" : "border-gray-100 bg-gray-50"}`}
+                    >
+                      <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: qd.color }} />
+                      <div className="flex-1 min-w-0">
+                        <div className="text-xs font-semibold text-brand-black truncate">{ini.name}</div>
+                        <div className="text-[10px] text-brand-gray">
+                          {ini.stakeholder} · {ini.duration_quarters}Q ·{" "}
+                          {ini.q_start !== null ? Q_LABELS[ini.q_start] : "Sin asignar"}
                         </div>
                       </div>
-                    );
-                  })}
-              </div>
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0" style={{ background: `${qd.color}22`, color: qd.color }}>
+                        {qd.priority}
+                      </span>
+                      <div className="flex gap-1 flex-shrink-0">
+                        <button onClick={() => openEdit(ini)} className="text-[11px] text-gray-400 hover:text-brand-orange px-1 transition">✏️</button>
+                        <button onClick={() => handleDelete(ini.id)} className="text-[11px] text-gray-400 hover:text-red-600 px-1 transition">🗑️</button>
+                      </div>
+                    </div>
+                  );
+                })}
             </div>
-          )}
-
-          {/* ── TAB: EQUIPOS ── */}
-          {panelTab === "teams" && (
-            <div className="p-4 flex flex-col gap-3">
-              <div className="text-xs font-bold text-brand-gray uppercase tracking-wider">Equipos del programa</div>
-
-              {/* Header */}
-              <div className="grid grid-cols-[1fr_40px_40px_36px_36px_36px_36px_24px] gap-1 px-1">
-                {["Equipo", "Pers.", "P/p", "Q1%", "Q2%", "Q3%", "Q4%", ""].map((h, i) => (
-                  <span key={i} className="text-[9px] text-brand-gray uppercase tracking-wide font-semibold text-center first:text-left">
-                    {h}
-                  </span>
-                ))}
-              </div>
-
-              {teams.map((team) => (
-                <div
-                  key={team.id}
-                  className="grid grid-cols-[1fr_40px_40px_36px_36px_36px_36px_24px] gap-1 items-center px-2 py-2 rounded-lg border border-gray-100 bg-gray-50"
-                >
-                  <input
-                    type="text"
-                    defaultValue={team.name}
-                    onBlur={(e) => handleTeamUpdate(team.id, "name", e.target.value)}
-                    className="text-xs px-1.5 py-1 border border-gray-200 rounded bg-white w-full"
-                  />
-                  {(["personas", "proy_per_persona"] as const).map((f) => (
-                    <input
-                      key={f}
-                      type="number"
-                      min="1"
-                      defaultValue={team[f]}
-                      onBlur={(e) => handleTeamUpdate(team.id, f, parseInt(e.target.value) || 1)}
-                      className="text-xs px-1 py-1 border border-gray-200 rounded bg-white text-center w-full"
-                    />
-                  ))}
-                  {(["q1_pct", "q2_pct", "q3_pct", "q4_pct"] as const).map((f) => (
-                    <input
-                      key={f}
-                      type="number"
-                      min="0"
-                      max="100"
-                      defaultValue={team[f]}
-                      onBlur={(e) => handleTeamUpdate(team.id, f, parseInt(e.target.value) || 0)}
-                      className="text-xs px-1 py-1 border border-gray-200 rounded bg-white text-center w-full"
-                    />
-                  ))}
-                  <button onClick={() => handleTeamDelete(team.id)} className="text-gray-300 hover:text-red-500 text-xs">🗑️</button>
-                </div>
-              ))}
-
-              {/* Add team */}
-              <div className="flex gap-2 mt-1">
-                <input
-                  type="text"
-                  value={newTeamName}
-                  onChange={(e) => setNewTeamName(e.target.value)}
-                  placeholder="Nombre del equipo"
-                  className={`${inp} flex-1`}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && newTeamName.trim()) {
-                      e.preventDefault();
-                      const fd = new FormData();
-                      fd.set("name", newTeamName.trim());
-                      createTeam({ error: null }, fd).then((res) => {
-                        if (!res.error) {
-                          setNewTeamName("");
-                          // Force page refresh to get new team with ID
-                          window.location.reload();
-                        }
-                      });
-                    }
-                  }}
-                />
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (!newTeamName.trim()) return;
-                    const fd = new FormData();
-                    fd.set("name", newTeamName.trim());
-                    createTeam({ error: null }, fd).then((res) => {
-                      if (!res.error) {
-                        setNewTeamName("");
-                        window.location.reload();
-                      }
-                    });
-                  }}
-                  className="px-3 py-2 text-xs font-semibold border border-gray-200 rounded-lg hover:border-brand-orange hover:text-brand-orange transition"
-                >
-                  + Agregar
-                </button>
-              </div>
-            </div>
-          )}
+          </div>
         </div>
-      </div>}
+      )}
     </div>
   );
 }
 
-// Controlled checkboxes for team selection
-function TeamCheckboxes({
+// Team allocation component — checkboxes + inline persona count
+function TeamAllocationInputs({
   teams,
-  selected,
+  allocations,
   onChange,
 }: {
   teams: Team[];
-  selected: string[];
-  onChange: (ids: string[]) => void;
+  allocations: Record<string, number>;
+  onChange: (a: Record<string, number>) => void;
 }) {
-  const [checked, setChecked] = useState<string[]>(selected);
-
-  function toggle(id: string) {
-    const next = checked.includes(id) ? checked.filter((x) => x !== id) : [...checked, id];
-    setChecked(next);
+  function toggle(teamId: string) {
+    const next = { ...allocations };
+    if (next[teamId] !== undefined) {
+      delete next[teamId];
+    } else {
+      next[teamId] = 1;
+    }
     onChange(next);
   }
 
+  function setN(teamId: string, n: number, max: number) {
+    onChange({ ...allocations, [teamId]: Math.max(1, Math.min(max, n)) });
+  }
+
   return (
-    <div className="flex flex-wrap gap-1.5 mt-1">
-      {teams.map((t) => (
-        <label
-          key={t.id}
-          className={`flex items-center gap-1.5 text-[11px] px-2 py-1 rounded-lg border cursor-pointer font-semibold transition ${
-            checked.includes(t.id)
-              ? "bg-brand-orange text-white border-brand-orange"
-              : "bg-white text-brand-gray border-gray-200 hover:border-brand-orange"
-          }`}
-        >
-          <input
-            type="checkbox"
-            className="hidden"
-            checked={checked.includes(t.id)}
-            onChange={() => toggle(t.id)}
-          />
-          {t.name.split(" ")[0]}
-        </label>
-      ))}
+    <div className="flex flex-col gap-1.5 mt-0.5">
+      {teams.map((t) => {
+        const selected = allocations[t.id] !== undefined;
+        const n = allocations[t.id] ?? 1;
+        return (
+          <div
+            key={t.id}
+            className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg border transition ${selected ? "border-brand-orange bg-orange-50" : "border-gray-100 bg-gray-50"}`}
+          >
+            <button
+              type="button"
+              onClick={() => toggle(t.id)}
+              className={`w-4 h-4 rounded border-2 flex-shrink-0 transition flex items-center justify-center ${selected ? "border-brand-orange bg-brand-orange" : "border-gray-300 bg-white"}`}
+            >
+              {selected && <span className="text-white text-[8px] leading-none">✓</span>}
+            </button>
+            <span className="text-xs font-semibold text-brand-black flex-1">{t.name}</span>
+            {selected && (
+              <div className="flex items-center gap-1.5">
+                <input
+                  type="number"
+                  min="1"
+                  max={t.personas}
+                  value={n}
+                  onChange={(e) => setN(t.id, parseInt(e.target.value) || 1, t.personas)}
+                  onClick={(e) => e.stopPropagation()}
+                  className="w-12 text-xs px-1.5 py-0.5 border border-gray-200 rounded bg-white text-center focus:outline-none focus:ring-1 focus:ring-brand-orange"
+                />
+                <span className="text-[10px] text-brand-gray">/ {t.personas}</span>
+              </div>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }

@@ -1,9 +1,9 @@
 import { redirect } from "next/navigation";
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { CrossView } from "./CrossView";
-import { LogoutButton } from "@/components/ui/LogoutButton";
+import { CrossHeaderRight } from "./CrossHeaderRight";
+import Link from "next/link";
 import type { OrganizationMember, Organization, Team, Initiative } from "@/types/database";
 import { type AppRole } from "@/lib/roles";
 
@@ -85,24 +85,7 @@ export default async function CrossPage() {
           </div>
 
           {/* Right */}
-          <div className="flex items-center gap-4">
-            <Link
-              href="/squad"
-              className="text-sm font-bold px-3.5 py-1.5 rounded-lg bg-white text-brand-gray hover:text-brand-orange hover:border-brand-orange transition"
-              style={{ border: "1.5px solid #E5E5E5", borderRadius: 8 }}
-            >
-              👥 Modo Squad →
-            </Link>
-            <Link
-              href="/settings/members"
-              className="text-sm px-3 py-1.5 rounded-lg bg-white text-brand-gray hover:text-brand-black transition"
-              style={{ border: "1.5px solid #E5E5E5", borderRadius: 8 }}
-            >
-              ⚙ Equipo
-            </Link>
-            <span className="text-sm text-brand-gray">{org.name}</span>
-            <LogoutButton />
-          </div>
+          <CrossHeaderRight orgName={org.name} teams={teams} orgId={org.id} />
         </div>
       </header>
 

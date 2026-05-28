@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import type { Team, Initiative } from "@/types/database";
 import { type AppRole, canWrite } from "@/lib/roles";
+import { dateToQuarter, quartersBetween } from "@/lib/squad-logic";
 
 type State = { error: string | null };
 
@@ -66,7 +67,20 @@ export async function deleteTeam(id: string): Promise<void> {
 export async function createInitiative(_prev: State, formData: FormData): Promise<State> {
   const { admin, orgId, role } = await getAuthContext();
   if (!canWrite(role)) return { error: "Sin permisos: solo Líder o Analista pueden crear iniciativas." };
-  const teamIdsRaw = formData.get("team_ids") as string;
+
+  const startDate = (formData.get("start_date") as string) || null;
+  const endDate = (formData.get("end_date") as string) || null;
+  const allocRaw = formData.get("team_allocations") as string;
+  const teamAllocations: Record<string, number> = allocRaw ? JSON.parse(allocRaw) : {};
+  const teamIds = Object.keys(teamAllocations).filter((k) => teamAllocations[k] > 0);
+
+  let qStart: number | null = null;
+  let durationQuarters = parseInt(formData.get("duration_quarters") as string) || 1;
+  if (startDate) {
+    qStart = dateToQuarter(startDate);
+    if (endDate) durationQuarters = quartersBetween(startDate, endDate);
+  }
+
   const payload = {
     organization_id: orgId,
     name: (formData.get("name") as string).trim(),
@@ -74,11 +88,14 @@ export async function createInitiative(_prev: State, formData: FormData): Promis
     impact_value: parseFloat(formData.get("impact_value") as string) || 0,
     impact_metric: ((formData.get("impact_metric") as string) || "revenue") as "revenue" | "customers",
     effort_sprints: parseInt(formData.get("effort_sprints") as string) || 1,
-    duration_quarters: parseInt(formData.get("duration_quarters") as string) || 1,
-    q_start: null as number | null,
-    team_ids: teamIdsRaw ? JSON.parse(teamIdsRaw) : [],
+    duration_quarters: durationQuarters,
+    q_start: qStart,
+    team_ids: teamIds,
+    team_allocations: teamAllocations,
     description: (formData.get("description") as string)?.trim() || null,
     sq_project_ids: [],
+    start_date: startDate,
+    end_date: endDate,
     status: "active" as const,
   };
   if (!payload.name) return { error: "El nombre es requerido." };
@@ -93,17 +110,34 @@ export async function updateInitiative(_prev: State, formData: FormData): Promis
   if (!canWrite(role)) return { error: "Sin permisos: solo Líder o Analista pueden editar iniciativas." };
   const id = formData.get("id") as string;
   if (!id) return { error: "ID requerido." };
-  const teamIdsRaw = formData.get("team_ids") as string;
+
+  const startDate = (formData.get("start_date") as string) || null;
+  const endDate = (formData.get("end_date") as string) || null;
+  const allocRaw = formData.get("team_allocations") as string;
+  const teamAllocations: Record<string, number> = allocRaw ? JSON.parse(allocRaw) : {};
+  const teamIds = Object.keys(teamAllocations).filter((k) => teamAllocations[k] > 0);
+
+  let durationQuarters = parseInt(formData.get("duration_quarters") as string) || 1;
   const patch: Partial<Initiative> = {
     name: (formData.get("name") as string).trim(),
     stakeholder: (formData.get("stakeholder") as string)?.trim() || null,
     impact_value: parseFloat(formData.get("impact_value") as string) || 0,
     impact_metric: ((formData.get("impact_metric") as string) || "revenue") as "revenue" | "customers",
     effort_sprints: parseInt(formData.get("effort_sprints") as string) || 1,
-    duration_quarters: parseInt(formData.get("duration_quarters") as string) || 1,
-    team_ids: teamIdsRaw ? JSON.parse(teamIdsRaw) : [],
+    team_ids: teamIds,
+    team_allocations: teamAllocations,
     description: (formData.get("description") as string)?.trim() || null,
+    start_date: startDate,
+    end_date: endDate,
   };
+
+  if (startDate) {
+    const qStart = dateToQuarter(startDate);
+    if (endDate) durationQuarters = quartersBetween(startDate, endDate);
+    patch.q_start = qStart;
+  }
+  patch.duration_quarters = durationQuarters;
+
   if (!patch.name) return { error: "El nombre es requerido." };
   const { error } = await admin.from("initiatives").update(patch).eq("id", id).eq("organization_id", orgId);
   if (error) return { error: error.message };

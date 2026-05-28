@@ -53,7 +53,7 @@ export function posOut(
   };
 }
 
-// Quarter index (0=Q1…3=Q4) from a production date
+// Quarter index (0=Q1…3=Q4) from a date string
 export function dateToQuarter(date: string | null): number {
   if (!date) return 3;
   const m = new Date(date + "T00:00:00").getMonth();
@@ -61,6 +61,13 @@ export function dateToQuarter(date: string | null): number {
   if (m < 6) return 1;
   if (m < 9) return 2;
   return 3;
+}
+
+// Number of quarters spanned between two dates (1–4)
+export function quartersBetween(startDate: string, endDate: string): number {
+  const qs = dateToQuarter(startDate);
+  const qe = dateToQuarter(endDate);
+  return Math.min(4, Math.max(1, qe - qs + 1));
 }
 
 // Position within a quarter band (used for overlay mode)

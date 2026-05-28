@@ -45,5 +45,5 @@ export async function createOrganization(
 
   if (memberError) return { error: memberError.message };
 
-  redirect("/dashboard");
+  redirect("/onboarding/teams");
 }

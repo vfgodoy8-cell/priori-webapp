@@ -1,9 +1,9 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { LogoutButton } from "@/components/ui/LogoutButton";
-import type { Organization, OrganizationMember } from "@/types/database";
+import { DashboardHeaderRight } from "./DashboardHeaderRight";
+import type { Organization, OrganizationMember, Team } from "@/types/database";
 import { type AppRole, ROLE_LABEL, ROLE_COLOR, ROLE_BG, ROLE_BORDER } from "@/lib/roles";
 
 export default async function DashboardPage() {
@@ -36,8 +36,7 @@ export default async function DashboardPage() {
 
   const role = membership.role as AppRole;
 
-  // Counts for badges
-  const [{ count: projectCount }, { count: initiativeCount }] = await Promise.all([
+  const [{ count: projectCount }, { count: initiativeCount }, { data: teamsData }] = await Promise.all([
     admin
       .from("projects")
       .select("*", { count: "exact", head: true })
@@ -48,7 +47,14 @@ export default async function DashboardPage() {
       .select("*", { count: "exact", head: true })
       .eq("organization_id", org.id)
       .eq("status", "active"),
+    admin
+      .from("teams")
+      .select("*")
+      .eq("organization_id", org.id)
+      .order("sort_order", { ascending: true }),
   ]);
+
+  const teams = (teamsData ?? []) as Team[];
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -78,19 +84,7 @@ export default async function DashboardPage() {
           </div>
 
           {/* Right */}
-          <div className="flex items-center gap-4">
-            <Link
-              href="/settings/members"
-              className="text-sm px-3 py-1.5 rounded-lg bg-white text-brand-gray hover:text-brand-black transition"
-              style={{ border: "1.5px solid #E5E5E5", borderRadius: 8 }}
-            >
-              ⚙ Equipo
-            </Link>
-            <span className="text-sm text-brand-gray">{org.name}</span>
-            <span className="text-xs text-gray-300">|</span>
-            <span className="text-sm text-brand-gray">{user.email}</span>
-            <LogoutButton />
-          </div>
+          <DashboardHeaderRight orgName={org.name} userEmail={user.email ?? ""} teams={teams} orgId={org.id} />
         </div>
       </header>
 

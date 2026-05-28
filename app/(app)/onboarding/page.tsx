@@ -47,6 +47,19 @@ export default function OnboardingPage() {
           </span>
         </div>
 
+        {/* Step indicator */}
+        <div className="flex items-center gap-2 mb-5 justify-center">
+          <div className="flex items-center gap-1.5">
+            <div className="w-6 h-6 rounded-full bg-brand-orange text-white text-xs font-bold flex items-center justify-center">1</div>
+            <span className="text-xs font-medium text-brand-orange">Organización</span>
+          </div>
+          <div className="w-8 h-px bg-gray-200" />
+          <div className="flex items-center gap-1.5">
+            <div className="w-6 h-6 rounded-full bg-gray-100 text-brand-gray text-xs font-bold flex items-center justify-center">2</div>
+            <span className="text-xs text-brand-gray">Equipos</span>
+          </div>
+        </div>
+
         {/* Card */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
           <div className="mb-6">

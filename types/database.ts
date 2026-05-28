@@ -184,8 +184,11 @@ export type Database = {
           duration_quarters: number;
           q_start: number | null;
           team_ids: string[];
+          team_allocations: Record<string, number>;
           description: string | null;
           sq_project_ids: string[];
+          start_date: string | null;
+          end_date: string | null;
           status: "active" | "discarded";
           created_at: string;
           updated_at: string;
@@ -201,8 +204,11 @@ export type Database = {
           duration_quarters?: number;
           q_start?: number | null;
           team_ids?: string[];
+          team_allocations?: Record<string, number>;
           description?: string | null;
           sq_project_ids?: string[];
+          start_date?: string | null;
+          end_date?: string | null;
           status?: "active" | "discarded";
           created_at?: string;
           updated_at?: string;
@@ -216,8 +222,11 @@ export type Database = {
           duration_quarters?: number;
           q_start?: number | null;
           team_ids?: string[];
+          team_allocations?: Record<string, number>;
           description?: string | null;
           sq_project_ids?: string[];
+          start_date?: string | null;
+          end_date?: string | null;
           status?: "active" | "discarded";
           updated_at?: string;
         };

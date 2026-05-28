@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useLayoutEffect, useCallback } from "react";
 import type { Project } from "@/types/database";
 import { computeQuadrant, QUADRANT_META, type Quadrant } from "@/lib/quadrant";
 import {
@@ -645,7 +645,21 @@ function BubbleTooltip({
   iniName?: string;
 }) {
   const TOOLTIP_W = 244;
-  const TOOLTIP_H = 200;
+  const divRef = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState<{ top: number; left: number; visible: boolean }>({
+    top: 0, left: 0, visible: false,
+  });
+
+  useLayoutEffect(() => {
+    const el = divRef.current;
+    if (!el) return;
+    const h = el.offsetHeight;
+    let top = Math.round(ty - h - 8);
+    let left = Math.round(cx - TOOLTIP_W / 2);
+    if (top < 8) top = Math.round(ty + bh + 8);
+    left = Math.max(8, Math.min(window.innerWidth - TOOLTIP_W - 8, left));
+    setPos({ top, left, visible: true });
+  }, [cx, ty, bh]);
 
   const q = computeQuadrant(project.impact_value, project.effort_sprints);
   const m = QUADRANT_META[q];
@@ -654,20 +668,14 @@ function BubbleTooltip({
   const progress = effTotal > 0 ? Math.min(1, effCompleted / effTotal) : 0;
   const urg = urgencyLabel(project.production_date);
 
-  // Position above bubble; flip below if near viewport top; clamp horizontally
-  let left = Math.round(cx - TOOLTIP_W / 2);
-  let top = Math.round(ty - TOOLTIP_H - 10);
-  if (top < 8) top = Math.round(ty + bh + 10);
-  if (typeof window !== "undefined") {
-    left = Math.max(8, Math.min(window.innerWidth - TOOLTIP_W - 8, left));
-  }
-
   return (
     <div
+      ref={divRef}
       style={{
         position: "fixed",
-        left,
-        top,
+        left: pos.left,
+        top: pos.top,
+        opacity: pos.visible ? 1 : 0,
         width: TOOLTIP_W,
         zIndex: 9999,
         background: "#111111",

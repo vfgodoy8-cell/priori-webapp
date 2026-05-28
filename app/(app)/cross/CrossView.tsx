@@ -481,6 +481,7 @@ export function CrossView({ orgId, initialTeams, initialInitiatives, squadProjec
             </div>
 
             <form
+              key={editIni?.id ?? "new"}
               ref={formRef}
               action={iniFormAction}
               onSubmit={() => { if (formRef.current) formRef.current.dataset.submitted = "true"; }}

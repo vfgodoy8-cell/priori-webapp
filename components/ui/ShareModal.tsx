@@ -36,7 +36,7 @@ export function ShareModal({ mode, targetRef, onClose }: Props) {
       const url = `${origin}/share/${result.token}`;
       setPublicToken(result.token);
       navigator.clipboard?.writeText(url).catch(() => {});
-      showToast("âœ… Link generado y copiado al portapapeles");
+      showToast("✓ Link generado y copiado al portapapeles");
     }
     setGeneratingLink(false);
   }
@@ -44,12 +44,12 @@ export function ShareModal({ mode, targetRef, onClose }: Props) {
   function copyPublicLink() {
     if (!publicUrl) return;
     if (navigator.clipboard) {
-      navigator.clipboard.writeText(publicUrl).then(() => showToast("âœ… Enlace copiado al portapapeles"));
+      navigator.clipboard.writeText(publicUrl).then(() => showToast("✓ Enlace copiado al portapapeles"));
     } else {
       const inp = document.querySelector<HTMLInputElement>("#share-public-inp");
       inp?.select();
       document.execCommand("copy");
-      showToast("âœ… Enlace copiado al portapapeles");
+      showToast("✓ Enlace copiado al portapapeles");
     }
   }
 
@@ -79,44 +79,16 @@ export function ShareModal({ mode, targetRef, onClose }: Props) {
   async function exportPDF() {
     setPdfProgress(true);
     try {
-      const [{ default: html2canvas }, { jsPDF }] = await Promise.all([
-        import("html2canvas"),
-        import("jspdf").then((m) => ({ jsPDF: m.jsPDF })),
-      ]);
-
-      const el = targetRef?.current ?? document.getElementById("priori-export-target") ?? document.body;
-      const canvas = await html2canvas(el, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: "#ffffff",
-        logging: false,
-      });
-
-      const imgData = canvas.toDataURL("image/png");
-      const pdf = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
-      const pageW = pdf.internal.pageSize.getWidth();
-      const pageH = pdf.internal.pageSize.getHeight();
-      const margin = 12;
-      const usableW = pageW - margin * 2;
-      const usableH = pageH - margin * 2 - 16;
-
-      pdf.setFillColor(232, 98, 26);
-      pdf.rect(0, 0, pageW, 8, "F");
-      pdf.setTextColor(255, 255, 255);
-      pdf.setFontSize(10);
-      pdf.text(`prioriâ„¢  â€”  ${modeLabel}`, margin, 5.5);
-      const today = new Date().toLocaleDateString("es-AR", { day: "2-digit", month: "short", year: "numeric" });
-      pdf.text(today, pageW - margin, 5.5, { align: "right" });
-
-      const imgRatio = canvas.width / canvas.height;
-      let imgW = usableW;
-      let imgH = imgW / imgRatio;
-      if (imgH > usableH) { imgH = usableH; imgW = imgH * imgRatio; }
-      const imgX = margin + (usableW - imgW) / 2;
-      pdf.addImage(imgData, "PNG", imgX, margin + 10, imgW, imgH);
-
-      pdf.save(`priori-${mode}-${new Date().toISOString().slice(0, 10)}.pdf`);
-      showToast("âœ… PDF descargado");
+      const res = await fetch(`/api/export/pdf?mode=${mode}`);
+      if (!res.ok) throw new Error(await res.text());
+      const blob = await res.blob();
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement("a");
+      a.href     = url;
+      a.download = `priori-${mode}-${new Date().toISOString().slice(0, 10)}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast("PDF descargado");
     } catch (err) {
       console.error(err);
       showToast("Error al generar el PDF");
@@ -135,7 +107,7 @@ export function ShareModal({ mode, targetRef, onClose }: Props) {
           {/* Header */}
           <div className="flex items-center justify-between px-5 py-4 bg-orange-50 border-b border-orange-100">
             <h3 className="text-sm font-bold text-brand-orange">Compartir / Exportar</h3>
-            <button onClick={onClose} className="text-brand-gray hover:text-brand-black text-xl leading-none">Ã—</button>
+            <button onClick={onClose} className="text-brand-gray hover:text-brand-black text-xl leading-none">×</button>
           </div>
 
           <div className="p-5 flex flex-col gap-4">
@@ -174,7 +146,7 @@ export function ShareModal({ mode, targetRef, onClose }: Props) {
                     disabled={generatingLink}
                     className="w-full py-2.5 text-sm font-bold rounded-lg bg-brand-orange hover:bg-orange-600 disabled:opacity-60 text-white transition flex items-center justify-center gap-2"
                   >
-                    {generatingLink ? "Generando…" : "ðŸ”— Generar link público"}
+                    {generatingLink ? "Generando…" : "Generar link público"}
                   </button>
                 </div>
               )}

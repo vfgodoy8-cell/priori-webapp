@@ -85,7 +85,7 @@ export function CrossPDF({ orgName, date, teams, initiatives }: Props) {
   const backlog = initiatives.filter(i => i.q_start === null);
 
   return (
-    <Document title={`priori - Modo Cross - ${orgName}`} author="priori™">
+    <Document title={`priori - Modo Cross - ${orgName}`} author="priori">
       <Page size="A4" orientation="landscape" style={s.page}>
         <View style={s.headerBar}>
           <View style={s.logoRow}>
@@ -193,7 +193,7 @@ export function CrossPDF({ orgName, date, teams, initiatives }: Props) {
         </View>
 
         <View style={s.footer} fixed>
-          <Text style={s.footerTxt}>priori™ — La claridad de priorizar bien.</Text>
+          <Text style={s.footerTxt}>priori — La claridad de priorizar bien.</Text>
           <Text style={s.footerTxt} render={({ pageNumber, totalPages }) => `${pageNumber} / ${totalPages}`} />
         </View>
       </Page>

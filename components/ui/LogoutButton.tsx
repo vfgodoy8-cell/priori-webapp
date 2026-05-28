@@ -12,8 +12,7 @@ export function LogoutButton() {
   return (
     <button
       onClick={handleLogout}
-      className="flex items-center gap-1.5 text-sm font-semibold text-brand-gray hover:text-brand-black transition"
-      style={{ border: "1.5px solid #E5E5E5", borderRadius: 8, padding: "5px 12px" }}
+      className="flex items-center gap-1.5 text-sm font-semibold px-3.5 py-1.5 rounded-lg bg-white text-brand-gray hover:text-brand-black transition" style={{ border: "1.5px solid #E5E5E5", borderRadius: 8 }}
     >
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />

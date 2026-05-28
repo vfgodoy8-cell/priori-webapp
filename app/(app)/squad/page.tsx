@@ -105,14 +105,14 @@ export default async function SquadPage({ searchParams }: { searchParams?: { ini
           <div className="flex items-center gap-4">
             <Link
               href="/cross"
-              className="text-sm font-bold px-3.5 py-1.5 rounded-lg bg-white text-brand-gray hover:text-brand-orange hover:border-brand-orange transition"
+              className="flex items-center gap-1.5 text-sm font-semibold px-3.5 py-1.5 rounded-lg bg-white text-brand-gray hover:text-brand-orange hover:border-brand-orange transition"
               style={{ border: "1.5px solid #E5E5E5", borderRadius: 8 }}
             >
               <IconCalendarEvent size={14} strokeWidth={2} /> Modo Cross →
             </Link>
             <Link
               href="/settings/members"
-              className="text-sm px-3 py-1.5 rounded-lg bg-white text-brand-gray hover:text-brand-black transition"
+              className="flex items-center gap-1.5 text-sm font-semibold px-3.5 py-1.5 rounded-lg bg-white text-brand-gray hover:text-brand-black transition"
               style={{ border: "1.5px solid #E5E5E5", borderRadius: 8 }}
             >
               <IconSettings size={14} strokeWidth={2} /> Equipo

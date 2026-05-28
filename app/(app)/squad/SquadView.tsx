@@ -7,6 +7,7 @@ import { ProjectList } from "./ProjectList";
 import { SquadCanvas } from "./SquadCanvas";
 import { AnalystPanel } from "./AnalystPanel";
 import { ShareModal } from "@/components/ui/ShareModal";
+import { OnboardingTour } from "@/components/ui/OnboardingTour";
 import { loadConfig, DEFAULT_CONFIG, type SquadConfig } from "@/lib/squad-logic";
 import { type AppRole, ROLE_LABEL, ROLE_COLOR, ROLE_BG, ROLE_BORDER } from "@/lib/roles";
 
@@ -19,13 +20,14 @@ type Props = {
   allActive: Project[];
   orgId: string;
   role: AppRole;
+  currentUserId: string;
   crossLinkedIds?: Set<string>;
   highlightIds?: Set<string> | null;
   filterInitiative?: { id: string; name: string } | null;
   projectIniMap?: Record<string, string>;
 };
 
-export function SquadView({ projects, discarded, p0Projects, allActive, orgId, role, crossLinkedIds, highlightIds, filterInitiative, projectIniMap }: Props) {
+export function SquadView({ projects, discarded, p0Projects, allActive, orgId, role, currentUserId, crossLinkedIds, highlightIds, filterInitiative, projectIniMap }: Props) {
   const router = useRouter();
   const [view, setView] = useState<View>("canvas");
   const [quarterOverlay, setQuarterOverlay] = useState(false);
@@ -33,6 +35,7 @@ export function SquadView({ projects, discarded, p0Projects, allActive, orgId, r
   const [forceEdit, setForceEdit] = useState<Project | null>(null);
   const [openRequest, setOpenRequest] = useState(0);
   const [showShare, setShowShare] = useState(false);
+  const [showTour, setShowTour] = useState(false);
 
   useEffect(() => {
     setConfig(loadConfig(orgId));
@@ -65,6 +68,13 @@ export function SquadView({ projects, discarded, p0Projects, allActive, orgId, r
           className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg bg-brand-orange hover:bg-orange-600 text-white transition"
         >
           ↗ Compartir / Exportar
+        </button>
+        <button
+          onClick={() => setShowTour(true)}
+          className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-gray-200 text-brand-gray hover:text-brand-black hover:border-gray-300 transition"
+          title="Ver tour de introducción"
+        >
+          ? Ayuda
         </button>
         <span className="ml-auto">
           <span
@@ -152,6 +162,7 @@ export function SquadView({ projects, discarded, p0Projects, allActive, orgId, r
       )}
 
       {showShare && <ShareModal mode="squad" onClose={() => setShowShare(false)} />}
+      <OnboardingTour forceOpen={showTour} onClose={() => setShowTour(false)} />
 
       {role !== "member" && (
         <AnalystPanel
@@ -162,6 +173,7 @@ export function SquadView({ projects, discarded, p0Projects, allActive, orgId, r
           forceEdit={forceEdit}
           onForceEditConsumed={() => setForceEdit(null)}
           openRequest={openRequest}
+          currentUserId={currentUserId}
         />
       )}
     </>

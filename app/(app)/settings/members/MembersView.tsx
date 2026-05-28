@@ -9,6 +9,7 @@ import { createInvitation, cancelInvitation, updateMemberRole, removeMember } fr
 
 type MemberWithProfile = OrganizationMember & {
   profile: { id: string; full_name: string | null; avatar_url: string | null } | null;
+  email: string | null;
   isCurrentUser: boolean;
 };
 
@@ -63,6 +64,7 @@ export function MembersView({ members, invitations: initialInvitations, currentU
               <MemberRow
                 key={m.id}
                 member={m}
+                email={m.email}
                 canManage={canManage}
                 isCurrentUser={m.isCurrentUser}
               />
@@ -156,7 +158,7 @@ export function MembersView({ members, invitations: initialInvitations, currentU
             )}
             {inviteState.error === null && inviteState.success && (
               <p className="text-xs text-brand-green bg-green-50 rounded px-3 py-2">
-                Invitación creada. El enlace de invitación se puede compartir manualmente.
+                Invitación enviada por email. El destinatario recibirá un enlace para unirse.
               </p>
             )}
           </form>
@@ -168,10 +170,12 @@ export function MembersView({ members, invitations: initialInvitations, currentU
 
 function MemberRow({
   member: m,
+  email,
   canManage,
   isCurrentUser,
 }: {
   member: MemberWithProfile;
+  email: string | null;
   canManage: boolean;
   isCurrentUser: boolean;
 }) {
@@ -200,7 +204,7 @@ function MemberRow({
           </span>
         </div>
       </td>
-      <td className="px-5 py-3 text-brand-gray text-sm">—</td>
+      <td className="px-5 py-3 text-brand-gray text-sm">{email ?? "—"}</td>
       <td className="px-5 py-3">
         <RoleBadge role={m.role as AppRole} />
       </td>

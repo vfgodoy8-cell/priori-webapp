@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useMemo } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 import { useRouter } from "next/navigation";
 import type { Team, Initiative, Project } from "@/types/database";
@@ -14,6 +14,8 @@ import {
   unplaceInitiative,
 } from "./actions";
 import { ShareModal } from "@/components/ui/ShareModal";
+import { CommentsThread } from "@/components/ui/CommentsThread";
+import { ActivityFeed } from "@/components/ui/ActivityFeed";
 import { type AppRole, ROLE_LABEL, ROLE_COLOR, ROLE_BG, ROLE_BORDER } from "@/lib/roles";
 
 const Q_LABELS = ["Q1", "Q2", "Q3", "Q4"];
@@ -66,9 +68,10 @@ type Props = {
   initialInitiatives: Initiative[];
   squadProjects?: SquadProjectMin[];
   role: AppRole;
+  currentUserId: string;
 };
 
-export function CrossView({ orgId, initialTeams, initialInitiatives, squadProjects = [], role }: Props) {
+export function CrossView({ orgId, initialTeams, initialInitiatives, squadProjects = [], role, currentUserId }: Props) {
   const readOnly = role === "member";
   const router = useRouter();
 
@@ -611,6 +614,14 @@ export function CrossView({ orgId, initialTeams, initialInitiatives, squadProjec
               </div>
             </form>
 
+            {/* Comments + Activity — only when editing an existing initiative */}
+            {editIni && (
+              <CrossPanelTabs
+                entityId={editIni.id}
+                currentUserId={currentUserId}
+              />
+            )}
+
             {/* Initiative list */}
             <div className="text-xs font-bold text-brand-gray uppercase tracking-wider mt-2">Iniciativas cargadas</div>
             <div className="flex flex-col gap-1.5">
@@ -655,6 +666,32 @@ export function CrossView({ orgId, initialTeams, initialInitiatives, squadProjec
                 })}
             </div>
           </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CrossPanelTabs({ entityId, currentUserId }: { entityId: string; currentUserId: string }) {
+  const [tab, setTab] = React.useState<"comments" | "history">("comments");
+  return (
+    <div className="mt-2 pt-3 border-t border-gray-100">
+      <div className="flex gap-3 mb-2">
+        {(["comments", "history"] as const).map((t) => (
+          <button
+            key={t}
+            onClick={() => setTab(t)}
+            className={`text-xs font-bold uppercase tracking-wider pb-0.5 border-b-2 transition ${tab === t ? "text-brand-orange border-brand-orange" : "text-brand-gray border-transparent hover:text-brand-black"}`}
+          >
+            {t === "comments" ? "💬 Comentarios" : "📋 Historial"}
+          </button>
+        ))}
+      </div>
+      {tab === "comments" ? (
+        <CommentsThread entityType="initiative" entityId={entityId} currentUserId={currentUserId} />
+      ) : (
+        <div className="max-h-[280px] overflow-y-auto pr-1">
+          <ActivityFeed entityId={entityId} />
         </div>
       )}
     </div>

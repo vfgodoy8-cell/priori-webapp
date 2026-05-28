@@ -53,6 +53,11 @@ export default async function MembersPage() {
 
   const profiles = (profilesRaw ?? []) as { id: string; full_name: string | null; avatar_url: string | null }[];
 
+  // Fetch emails from auth.users via admin API
+  const { data: { users: authUsers } } = await admin.auth.admin.listUsers({ perPage: 1000 });
+  const emailMap: Record<string, string> = {};
+  authUsers.forEach((u) => { if (u.email) emailMap[u.id] = u.email; });
+
   // Fetch pending invitations
   const { data: invitationsRaw } = await admin
     .from("invitations")
@@ -66,6 +71,7 @@ export default async function MembersPage() {
   const membersWithProfiles = members.map((m) => ({
     ...m,
     profile: profiles.find((p) => p.id === m.profile_id) ?? null,
+    email: emailMap[m.profile_id] ?? null,
     isCurrentUser: m.profile_id === user.id,
   }));
 

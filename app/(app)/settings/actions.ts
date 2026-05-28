@@ -1,11 +1,12 @@
-"use server";
+﻿"use server";
 
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { randomBytes } from "crypto";
-import { type AppRole, canManageMembers } from "@/lib/roles";
+import { type AppRole, canManageMembers, ROLE_LABEL } from "@/lib/roles";
+import { sendInvitationEmail } from "@/lib/email";
 
 type State = { error: string | null; success?: boolean };
 
@@ -33,18 +34,10 @@ export async function createInvitation(_prev: State, formData: FormData): Promis
   const invRole = (formData.get("role") as string) || "member";
 
   if (!email) return { error: "El email es requerido." };
-  if (!["owner", "admin", "member"].includes(invRole)) return { error: "Rol inválido." };
+  if (!["admin", "member"].includes(invRole)) return { error: "Rol invÃ¡lido." };
 
   const { data: { user } } = await createClient().auth.getUser();
   if (!user) redirect("/login");
-
-  const { data: existing } = await admin
-    .from("organization_members")
-    .select("id")
-    .eq("organization_id", orgId)
-    .eq("profile_id",
-      (await admin.from("profiles").select("id").eq("id", user.id).single()).data?.id ?? ""
-    );
 
   // Check if already a pending invite for this email+org
   const { data: pendingInv } = await admin
@@ -55,7 +48,7 @@ export async function createInvitation(_prev: State, formData: FormData): Promis
     .is("accepted_at", null)
     .single();
 
-  if (pendingInv) return { error: "Ya hay una invitación pendiente para ese email." };
+  if (pendingInv) return { error: "Ya hay una invitaciÃ³n pendiente para ese email." };
 
   const token = randomBytes(12).toString("base64url").slice(0, 16);
 
@@ -68,6 +61,20 @@ export async function createInvitation(_prev: State, formData: FormData): Promis
   });
 
   if (error) return { error: error.message };
+
+  // Fetch org name + inviter name for the email
+  const [{ data: orgData }, { data: profileData }] = await Promise.all([
+    admin.from("organizations").select("name").eq("id", orgId).single(),
+    admin.from("profiles").select("full_name").eq("id", user.id).single(),
+  ]);
+
+  await sendInvitationEmail({
+    to: email,
+    orgName: (orgData as { name: string } | null)?.name ?? "tu equipo",
+    roleLabel: ROLE_LABEL[invRole as AppRole],
+    token,
+    invitedByName: (profileData as { full_name: string | null } | null)?.full_name ?? undefined,
+  });
 
   revalidatePath("/settings/members");
   return { error: null, success: true };

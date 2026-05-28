@@ -140,6 +140,7 @@ export default async function SquadPage({ searchParams }: { searchParams?: { ini
           allActive={allActive}
           orgId={org.id}
           role={role}
+          currentUserId={user.id}
           crossLinkedIds={crossLinkedIds}
           highlightIds={highlightIds}
           filterInitiative={filterInitiative ? { id: filterInitiative.id, name: filterInitiative.name } : null}

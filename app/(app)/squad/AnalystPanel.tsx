@@ -6,8 +6,10 @@ import { createProject, updateProject, discardProject, deleteProject, restorePro
 import { computeQuadrant, QUADRANT_META } from "@/lib/quadrant";
 import { saveConfig, type SquadConfig } from "@/lib/squad-logic";
 import type { Project } from "@/types/database";
+import { CommentsThread } from "@/components/ui/CommentsThread";
+import { ActivityFeed } from "@/components/ui/ActivityFeed";
 
-type Tab = "form" | "items" | "config";
+type Tab = "form" | "items" | "config" | "comments" | "history";
 
 function SubmitBtn({ label }: { label: string }) {
   const { pending } = useFormStatus();
@@ -30,9 +32,10 @@ type Props = {
   forceEdit?: Project | null;
   onForceEditConsumed?: () => void;
   openRequest?: number;
+  currentUserId: string;
 };
 
-export function AnalystPanel({ projects, orgId, config, onConfigChange, forceEdit, onForceEditConsumed, openRequest }: Props) {
+export function AnalystPanel({ projects, orgId, config, onConfigChange, forceEdit, onForceEditConsumed, openRequest, currentUserId }: Props) {
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState<Tab>("form");
   const [editProject, setEditProject] = useState<Project | undefined>();
@@ -83,7 +86,7 @@ export function AnalystPanel({ projects, orgId, config, onConfigChange, forceEdi
 
   function openEdit(p: Project) {
     setEditProject(p);
-    setTab("form");
+    if (tab === "comments" || tab === "history") setTab("form");
     setOpen(true);
   }
 
@@ -149,9 +152,25 @@ export function AnalystPanel({ projects, orgId, config, onConfigChange, forceEdi
               onClick={() => setTab(t)}
               className={`flex-1 py-2.5 text-[13px] font-semibold transition border-b-2 ${tab === t ? "text-brand-orange border-brand-orange" : "text-brand-gray border-transparent hover:text-brand-black"}`}
             >
-              {t === "form" ? "Formulario" : t === "items" ? "Proyectos" : "Configuración"}
+              {t === "form" ? "Formulario" : t === "items" ? "Proyectos" : "Config"}
             </button>
           ))}
+          {editProject && (
+            <button
+              onClick={() => setTab("comments")}
+              className={`flex-1 py-2.5 text-[13px] font-semibold transition border-b-2 ${tab === "comments" ? "text-brand-orange border-brand-orange" : "text-brand-gray border-transparent hover:text-brand-black"}`}
+            >
+              💬
+            </button>
+          )}
+          {editProject && (
+            <button
+              onClick={() => setTab("history")}
+              className={`flex-1 py-2.5 text-[13px] font-semibold transition border-b-2 ${tab === "history" ? "text-brand-orange border-brand-orange" : "text-brand-gray border-transparent hover:text-brand-black"}`}
+            >
+              📋
+            </button>
+          )}
         </div>
 
         {/* Content */}
@@ -340,6 +359,28 @@ export function AnalystPanel({ projects, orgId, config, onConfigChange, forceEdi
                 }
                 return rows;
               })()}
+            </div>
+          )}
+
+          {/* ── TAB: COMENTARIOS ── */}
+          {tab === "comments" && editProject && (
+            <div className="p-4 flex flex-col gap-2">
+              <div className="text-xs font-bold text-brand-gray uppercase tracking-wider mb-1">
+                {editProject.name}
+              </div>
+              <CommentsThread
+                entityType="project"
+                entityId={editProject.id}
+                currentUserId={currentUserId}
+              />
+            </div>
+          )}
+
+          {/* ── TAB: HISTORIAL ── */}
+          {tab === "history" && editProject && (
+            <div className="p-4">
+              <div className="text-xs font-bold text-brand-gray uppercase tracking-wider mb-3">{editProject.name}</div>
+              <ActivityFeed entityId={editProject.id} />
             </div>
           )}
 

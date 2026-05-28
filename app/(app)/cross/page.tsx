@@ -116,6 +116,7 @@ export default async function CrossPage() {
           initialInitiatives={initiatives}
           squadProjects={squadProjects}
           role={role}
+          currentUserId={user.id}
         />
       </main>
     </div>

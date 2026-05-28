@@ -231,6 +231,54 @@ export type Database = {
           updated_at?: string;
         };
       };
+      activity_log: {
+        Row: {
+          id: string;
+          organization_id: string;
+          actor_id: string | null;
+          entity_type: "initiative" | "project";
+          entity_id: string;
+          entity_name: string;
+          action: string;
+          metadata: Record<string, unknown> | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          actor_id?: string | null;
+          entity_type: "initiative" | "project";
+          entity_id: string;
+          entity_name: string;
+          action: string;
+          metadata?: Record<string, unknown> | null;
+          created_at?: string;
+        };
+        Update: Record<string, never>;
+      };
+      comments: {
+        Row: {
+          id: string;
+          organization_id: string;
+          author_id: string | null;
+          initiative_id: string | null;
+          project_id: string | null;
+          body: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          author_id?: string | null;
+          initiative_id?: string | null;
+          project_id?: string | null;
+          body: string;
+          created_at?: string;
+        };
+        Update: {
+          body?: string;
+        };
+      };
     };
     Views: Record<never, never>;
     Functions: Record<never, never>;
@@ -248,6 +296,17 @@ export type Project = Database["public"]["Tables"]["projects"]["Row"];
 export type MemberRole = Database["public"]["Enums"]["member_role"];
 export type Team = Database["public"]["Tables"]["teams"]["Row"];
 export type Initiative = Database["public"]["Tables"]["initiatives"]["Row"];
+
+export type Comment = {
+  id: string;
+  organization_id: string;
+  author_id: string | null;
+  initiative_id: string | null;
+  project_id: string | null;
+  body: string;
+  created_at: string;
+  author?: { full_name: string | null } | null;
+};
 
 export type Invitation = {
   id: string;

@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import type { Project } from "@/types/database";
 import { type AppRole, canWrite } from "@/lib/roles";
+import { logActivity } from "@/lib/activity";
 
 type State = { error: string | null; success?: boolean };
 
@@ -38,7 +39,6 @@ export async function createProject(
   formData: FormData
 ): Promise<State> {
   const { user, admin, orgId, role } = await getAuthContext();
-  void user;
   if (!canWrite(role)) return { error: "Sin permisos: solo Líder o Analista pueden crear proyectos." };
 
   const payload = {
@@ -57,9 +57,10 @@ export async function createProject(
 
   if (!payload.name) return { error: "El nombre es requerido." };
 
-  const { error } = await admin.from("projects").insert(payload);
+  const { data, error } = await admin.from("projects").insert(payload).select("id").single();
   if (error) return { error: error.message };
 
+  logActivity(admin, orgId, user.id, "project", (data as { id: string }).id, payload.name, "created");
   revalidatePath("/squad");
   return { error: null };
 }
@@ -68,7 +69,7 @@ export async function updateProject(
   _prevState: State,
   formData: FormData
 ): Promise<State> {
-  const { admin, orgId, role } = await getAuthContext();
+  const { user, admin, orgId, role } = await getAuthContext();
   if (!canWrite(role)) return { error: "Sin permisos: solo Líder o Analista pueden editar proyectos." };
 
   const id = formData.get("id") as string;
@@ -95,39 +96,35 @@ export async function updateProject(
 
   if (error) return { error: error.message };
 
+  logActivity(admin, orgId, user.id, "project", id, payload.name ?? id, "updated");
   revalidatePath("/squad");
   return { error: null };
 }
 
 export async function discardProject(id: string): Promise<void> {
-  const { admin, orgId, role } = await getAuthContext();
+  const { user, admin, orgId, role } = await getAuthContext();
   if (!canWrite(role)) return;
-  await admin
-    .from("projects")
-    .update({ status: "discarded" })
-    .eq("id", id)
-    .eq("organization_id", orgId);
+  const { data: p } = await admin.from("projects").select("name").eq("id", id).single();
+  await admin.from("projects").update({ status: "discarded" }).eq("id", id).eq("organization_id", orgId);
+  logActivity(admin, orgId, user.id, "project", id, (p as { name: string } | null)?.name ?? id, "discarded");
   revalidatePath("/squad");
 }
 
 export async function restoreProject(id: string): Promise<void> {
-  const { admin, orgId } = await getAuthContext();
-  await admin
-    .from("projects")
-    .update({ status: "active" })
-    .eq("id", id)
-    .eq("organization_id", orgId);
+  const { user, admin, orgId, role } = await getAuthContext();
+  if (!canWrite(role)) return;
+  const { data: p } = await admin.from("projects").select("name").eq("id", id).single();
+  await admin.from("projects").update({ status: "active" }).eq("id", id).eq("organization_id", orgId);
+  logActivity(admin, orgId, user.id, "project", id, (p as { name: string } | null)?.name ?? id, "restored");
   revalidatePath("/squad");
 }
 
 export async function deleteProject(id: string): Promise<void> {
-  const { admin, orgId, role } = await getAuthContext();
+  const { user, admin, orgId, role } = await getAuthContext();
   if (!canWrite(role)) return;
-  await admin
-    .from("projects")
-    .delete()
-    .eq("id", id)
-    .eq("organization_id", orgId);
+  const { data: p } = await admin.from("projects").select("name").eq("id", id).single();
+  logActivity(admin, orgId, user.id, "project", id, (p as { name: string } | null)?.name ?? id, "deleted");
+  await admin.from("projects").delete().eq("id", id).eq("organization_id", orgId);
   revalidatePath("/squad");
 }
 
@@ -199,9 +196,10 @@ export async function createSlice(
     squad_status: "backlog" as const,
   };
 
-  const { error } = await admin.from("projects").insert(payload);
+  const { data: sliceData, error } = await admin.from("projects").insert(payload).select("id").single();
   if (error) return { error: error.message };
 
+  logActivity(admin, orgId, user.id, "project", (sliceData as { id: string }).id, payload.name, "created");
   revalidatePath("/squad");
   return { error: null, success: true };
 }

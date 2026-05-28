@@ -7,6 +7,7 @@ import { redirect } from "next/navigation";
 import type { Team, Initiative } from "@/types/database";
 import { type AppRole, canWrite } from "@/lib/roles";
 import { dateToQuarter, quartersBetween } from "@/lib/squad-logic";
+import { logActivity } from "@/lib/activity";
 
 type State = { error: string | null };
 
@@ -65,7 +66,7 @@ export async function deleteTeam(id: string): Promise<void> {
 // ── INITIATIVES ───────────────────────────────────────────────────────────
 
 export async function createInitiative(_prev: State, formData: FormData): Promise<State> {
-  const { admin, orgId, role } = await getAuthContext();
+  const { user, admin, orgId, role } = await getAuthContext();
   if (!canWrite(role)) return { error: "Sin permisos: solo Líder o Analista pueden crear iniciativas." };
 
   const startDate = (formData.get("start_date") as string) || null;
@@ -100,14 +101,15 @@ export async function createInitiative(_prev: State, formData: FormData): Promis
     status: "active" as const,
   };
   if (!payload.name) return { error: "El nombre es requerido." };
-  const { error } = await admin.from("initiatives").insert(payload);
+  const { data, error } = await admin.from("initiatives").insert(payload).select("id").single();
   if (error) return { error: error.message };
+  logActivity(admin, orgId, user.id, "initiative", (data as { id: string }).id, payload.name, "created");
   revalidatePath("/cross");
   return { error: null };
 }
 
 export async function updateInitiative(_prev: State, formData: FormData): Promise<State> {
-  const { admin, orgId, role } = await getAuthContext();
+  const { user, admin, orgId, role } = await getAuthContext();
   if (!canWrite(role)) return { error: "Sin permisos: solo Líder o Analista pueden editar iniciativas." };
   const id = formData.get("id") as string;
   if (!id) return { error: "ID requerido." };
@@ -144,27 +146,34 @@ export async function updateInitiative(_prev: State, formData: FormData): Promis
   if (!patch.name) return { error: "El nombre es requerido." };
   const { error } = await admin.from("initiatives").update(patch).eq("id", id).eq("organization_id", orgId);
   if (error) return { error: error.message };
+  logActivity(admin, orgId, user.id, "initiative", id, patch.name ?? id, "updated");
   revalidatePath("/cross");
   return { error: null };
 }
 
 export async function deleteInitiative(id: string): Promise<void> {
-  const { admin, orgId, role } = await getAuthContext();
+  const { user, admin, orgId, role } = await getAuthContext();
   if (!canWrite(role)) return;
+  const { data: ini } = await admin.from("initiatives").select("name").eq("id", id).single();
+  logActivity(admin, orgId, user.id, "initiative", id, (ini as { name: string } | null)?.name ?? id, "deleted");
   await admin.from("initiatives").delete().eq("id", id).eq("organization_id", orgId);
   revalidatePath("/cross");
 }
 
 export async function placeInitiative(id: string, qStart: number): Promise<void> {
-  const { admin, orgId, role } = await getAuthContext();
+  const { user, admin, orgId, role } = await getAuthContext();
   if (!canWrite(role)) return;
+  const { data: ini } = await admin.from("initiatives").select("name").eq("id", id).single();
   await admin.from("initiatives").update({ q_start: qStart }).eq("id", id).eq("organization_id", orgId);
+  logActivity(admin, orgId, user.id, "initiative", id, (ini as { name: string } | null)?.name ?? id, "placed", { q: `Q${qStart + 1}` });
   revalidatePath("/cross");
 }
 
 export async function unplaceInitiative(id: string): Promise<void> {
-  const { admin, orgId, role } = await getAuthContext();
+  const { user, admin, orgId, role } = await getAuthContext();
   if (!canWrite(role)) return;
+  const { data: ini } = await admin.from("initiatives").select("name").eq("id", id).single();
   await admin.from("initiatives").update({ q_start: null }).eq("id", id).eq("organization_id", orgId);
+  logActivity(admin, orgId, user.id, "initiative", id, (ini as { name: string } | null)?.name ?? id, "unplaced");
   revalidatePath("/cross");
 }

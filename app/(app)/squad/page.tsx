@@ -8,7 +8,7 @@ import { LogoutButton } from "@/components/ui/LogoutButton";
 import type { OrganizationMember, Organization, Project } from "@/types/database";
 import { type AppRole } from "@/lib/roles";
 
-export default async function SquadPage() {
+export default async function SquadPage({ searchParams }: { searchParams?: { ini?: string } }) {
   const supabase = createClient();
   const {
     data: { user },
@@ -37,13 +37,28 @@ export default async function SquadPage() {
 
   const role = membership.role as AppRole;
 
-  const { data: projectsData } = await admin
-    .from("projects")
-    .select("*")
-    .eq("organization_id", org.id)
-    .order("created_at", { ascending: false });
+  const [{ data: projectsData }, { data: initiativesData }] = await Promise.all([
+    admin
+      .from("projects")
+      .select("*")
+      .eq("organization_id", org.id)
+      .order("created_at", { ascending: false }),
+    admin
+      .from("initiatives")
+      .select("id, name, sq_project_ids")
+      .eq("organization_id", org.id)
+      .eq("status", "active"),
+  ]);
 
   const all = (projectsData ?? []) as Project[];
+  type IniMin = { id: string; name: string; sq_project_ids: string[] | null };
+  const initiatives = (initiativesData ?? []) as IniMin[];
+
+  // Build cross-linked project IDs and filter initiative from ?ini= param
+  const crossLinkedIds = new Set(initiatives.flatMap((i) => (i.sq_project_ids ?? [])));
+  const iniId = searchParams?.ini;
+  const filterInitiative = iniId ? initiatives.find((i) => i.id === iniId) ?? null : null;
+  const highlightIds = filterInitiative ? new Set(filterInitiative.sq_project_ids ?? []) : null;
   const allActive = all.filter((p) => p.status === "active");
   const discarded = all.filter((p) => p.status === "discarded");
 
@@ -117,6 +132,9 @@ export default async function SquadPage() {
           allActive={allActive}
           orgId={org.id}
           role={role}
+          crossLinkedIds={crossLinkedIds}
+          highlightIds={highlightIds}
+          filterInitiative={filterInitiative ? { id: filterInitiative.id, name: filterInitiative.name } : null}
         />
       </main>
     </div>

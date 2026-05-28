@@ -4,7 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { CrossView } from "./CrossView";
 import { CrossHeaderRight } from "./CrossHeaderRight";
 import Link from "next/link";
-import type { OrganizationMember, Organization, Team, Initiative } from "@/types/database";
+import type { OrganizationMember, Organization, Team, Initiative, Project } from "@/types/database";
 import { type AppRole } from "@/lib/roles";
 
 export default async function CrossPage() {
@@ -36,7 +36,7 @@ export default async function CrossPage() {
 
   const role = membership.role as AppRole;
 
-  const [{ data: teamsData }, { data: initiativesData }] = await Promise.all([
+  const [{ data: teamsData }, { data: initiativesData }, { data: projectsData }] = await Promise.all([
     admin
       .from("teams")
       .select("*")
@@ -48,10 +48,17 @@ export default async function CrossPage() {
       .eq("organization_id", org.id)
       .eq("status", "active")
       .order("created_at", { ascending: false }),
+    admin
+      .from("projects")
+      .select("id, name, effort_sprints, impact_value, status, squad_status")
+      .eq("organization_id", org.id)
+      .eq("status", "active")
+      .order("name", { ascending: true }),
   ]);
 
   const teams = (teamsData ?? []) as Team[];
   const initiatives = (initiativesData ?? []) as Initiative[];
+  const squadProjects = (projectsData ?? []) as Pick<Project, "id" | "name" | "effort_sprints" | "impact_value" | "status" | "squad_status">[];
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -107,6 +114,7 @@ export default async function CrossPage() {
           orgId={org.id}
           initialTeams={teams}
           initialInitiatives={initiatives}
+          squadProjects={squadProjects}
           role={role}
         />
       </main>

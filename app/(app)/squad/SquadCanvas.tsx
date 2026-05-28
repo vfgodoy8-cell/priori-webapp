@@ -103,9 +103,11 @@ type Props = {
   onEdit: (p: Project) => void;
   quarterOverlay?: boolean;
   readOnly?: boolean;
+  crossLinkedIds?: Set<string>;
+  highlightIds?: Set<string> | null;
 };
 
-export function SquadCanvas({ projects, discarded, p0Projects, config, onEdit, quarterOverlay = false, readOnly = false }: Props) {
+export function SquadCanvas({ projects, discarded, p0Projects, config, onEdit, quarterOverlay = false, readOnly = false, crossLinkedIds, highlightIds }: Props) {
   const CANVAS_H = 650;
   const canvasRef = useRef<HTMLDivElement>(null);
   const posRef = useRef<Map<string, Pos>>(new Map());
@@ -485,7 +487,9 @@ export function SquadCanvas({ projects, discarded, p0Projects, config, onEdit, q
           const urgencyColor = dlStatus ? DL_COLOR[dlStatus] : DL_COLOR.ok;
           const isBacklog = (statusOverrides.get(project.id) ?? project.squad_status) === "backlog";
           const noDate = !project.production_date;
-          const bubbleOpacity = quarterOverlay && isBacklog && noDate ? 0.5 : 1;
+          const dimmedByHighlight = highlightIds !== null && highlightIds !== undefined && !highlightIds.has(project.id);
+          const baseOpacity = quarterOverlay && isBacklog && noDate ? 0.5 : 1;
+          const bubbleOpacity = dimmedByHighlight ? Math.min(baseOpacity, 0.25) : baseOpacity;
           const bubbleTransition = quarterOverlay && !isDragging
             ? "left 0.5s ease, top 0.5s ease, opacity 0.3s"
             : undefined;
@@ -504,6 +508,7 @@ export function SquadCanvas({ projects, discarded, p0Projects, config, onEdit, q
                 onMouseEnter={(e) => handleBubbleMouseEnter(project.id, e)}
                 onMouseLeave={handleBubbleMouseLeave}
                 readOnly={readOnly}
+                crossLinked={crossLinkedIds?.has(project.id) ?? false}
               />
               {/* Sin fecha badge in overlay mode */}
               {quarterOverlay && isBacklog && noDate && (

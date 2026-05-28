@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 import { useRouter } from "next/navigation";
-import type { Team, Initiative } from "@/types/database";
+import type { Team, Initiative, Project } from "@/types/database";
 import { computeQuadrant, QUADRANT_META } from "@/lib/quadrant";
 import { dateToQuarter, quartersBetween } from "@/lib/squad-logic";
 import {
@@ -58,14 +58,17 @@ function SubmitBtn({ label }: { label: string }) {
   );
 }
 
+type SquadProjectMin = Pick<Project, "id" | "name" | "effort_sprints" | "impact_value" | "status" | "squad_status">;
+
 type Props = {
   orgId: string;
   initialTeams: Team[];
   initialInitiatives: Initiative[];
+  squadProjects?: SquadProjectMin[];
   role: AppRole;
 };
 
-export function CrossView({ orgId, initialTeams, initialInitiatives, role }: Props) {
+export function CrossView({ orgId, initialTeams, initialInitiatives, squadProjects = [], role }: Props) {
   const readOnly = role === "member";
   const router = useRouter();
 
@@ -93,6 +96,7 @@ export function CrossView({ orgId, initialTeams, initialInitiatives, role }: Pro
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [teamAllocations, setTeamAllocations] = useState<Record<string, number>>({});
+  const [sqProjectIds, setSqProjectIds] = useState<string[]>([]);
 
   useEffect(() => {
     setPrevImp(editIni?.impact_value ?? 0);
@@ -100,6 +104,7 @@ export function CrossView({ orgId, initialTeams, initialInitiatives, role }: Pro
     setStartDate(editIni?.start_date ?? "");
     setEndDate(editIni?.end_date ?? "");
     setTeamAllocations((editIni?.team_allocations as Record<string, number>) ?? {});
+    setSqProjectIds((editIni?.sq_project_ids as string[]) ?? []);
   }, [editIni]);
 
   const calcQStart = startDate ? dateToQuarter(startDate) : null;
@@ -145,6 +150,7 @@ export function CrossView({ orgId, initialTeams, initialInitiatives, role }: Pro
       setPrevImp(0); setPrevSp(0);
       setStartDate(""); setEndDate("");
       setTeamAllocations({});
+      setSqProjectIds([]);
       router.refresh();
     }
   }, [iniState, router]);
@@ -318,12 +324,21 @@ export function CrossView({ orgId, initialTeams, initialInitiatives, role }: Pro
                         </div>
                       )}
                     </div>
-                    {/* Right — multi-quarter badge + actions */}
+                    {/* Right — multi-quarter badge + squad link + actions */}
                     <div className="flex flex-col items-end gap-1.5 flex-shrink-0 pl-1">
                       {span > 1 && (
                         <span className="text-[10px] font-bold whitespace-nowrap" style={{ color: qd.color }}>
                           ↔ {span}Q
                         </span>
+                      )}
+                      {Array.isArray(ini.sq_project_ids) && ini.sq_project_ids.length > 0 && (
+                        <a
+                          href={`/squad?ini=${ini.id}`}
+                          className="flex items-center gap-0.5 text-[10px] font-semibold text-brand-blue hover:underline whitespace-nowrap"
+                          title={`Ver ${ini.sq_project_ids.length} proyecto${ini.sq_project_ids.length !== 1 ? "s" : ""} en Squad`}
+                        >
+                          👥 {ini.sq_project_ids.length}
+                        </a>
                       )}
                       {!readOnly && (
                         <div className="flex gap-0.5 mt-auto">
@@ -474,6 +489,7 @@ export function CrossView({ orgId, initialTeams, initialInitiatives, role }: Pro
               {editIni && <input type="hidden" name="id" value={editIni.id} />}
               <input type="hidden" name="team_allocations" value={JSON.stringify(teamAllocations)} />
               <input type="hidden" name="team_ids" value={JSON.stringify(Object.keys(teamAllocations).filter((k) => (teamAllocations[k] ?? 0) > 0))} />
+              <input type="hidden" name="sq_project_ids" value={JSON.stringify(sqProjectIds)} />
 
               <F label="Nombre *">
                 <input name="name" type="text" required defaultValue={editIni?.name} placeholder="Ej: Transformación Digital" className={inp} />
@@ -552,6 +568,16 @@ export function CrossView({ orgId, initialTeams, initialInitiatives, role }: Pro
                 </F>
               )}
 
+              {squadProjects.length > 0 && (
+                <F label="Proyectos Squad vinculados">
+                  <SquadProjectSelect
+                    projects={squadProjects}
+                    selected={sqProjectIds}
+                    onChange={setSqProjectIds}
+                  />
+                </F>
+              )}
+
               <F label="Descripción">
                 <textarea name="description" rows={2} defaultValue={editIni?.description ?? ""} placeholder="Objetivo principal..." className={`${inp} resize-none`} />
               </F>
@@ -609,6 +635,9 @@ export function CrossView({ orgId, initialTeams, initialInitiatives, role }: Pro
                       <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0" style={{ background: `${qd.color}22`, color: qd.color }}>
                         {qd.priority}
                       </span>
+                      {Array.isArray(ini.sq_project_ids) && ini.sq_project_ids.length > 0 && (
+                        <span className="text-[10px] font-semibold text-brand-blue flex-shrink-0">👥{ini.sq_project_ids.length}</span>
+                      )}
                       <div className="flex gap-1 flex-shrink-0">
                         <button onClick={() => openEdit(ini)} className="text-[11px] text-gray-400 hover:text-brand-orange px-1 transition">✏️</button>
                         <button onClick={() => handleDelete(ini.id)} className="text-[11px] text-gray-400 hover:text-red-600 px-1 transition">🗑️</button>
@@ -694,6 +723,43 @@ function TeamAllocationInputs({
               </div>
             )}
           </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function SquadProjectSelect({
+  projects,
+  selected,
+  onChange,
+}: {
+  projects: SquadProjectMin[];
+  selected: string[];
+  onChange: (ids: string[]) => void;
+}) {
+  function toggle(id: string) {
+    onChange(selected.includes(id) ? selected.filter((x) => x !== id) : [...selected, id]);
+  }
+
+  return (
+    <div className="flex flex-col gap-1 mt-0.5 max-h-40 overflow-y-auto pr-0.5">
+      {projects.map((p) => {
+        const checked = selected.includes(p.id);
+        const qd = QUADRANT_META[computeQuadrant(p.impact_value, p.effort_sprints)];
+        return (
+          <button
+            key={p.id}
+            type="button"
+            onClick={() => toggle(p.id)}
+            className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg border text-left transition ${checked ? "border-brand-blue bg-blue-50" : "border-gray-100 bg-gray-50 hover:border-gray-200"}`}
+          >
+            <div className={`w-3.5 h-3.5 rounded border-2 flex-shrink-0 flex items-center justify-center transition ${checked ? "border-brand-blue bg-brand-blue" : "border-gray-300 bg-white"}`}>
+              {checked && <span className="text-white text-[7px] leading-none">✓</span>}
+            </div>
+            <span className="text-[10px] font-semibold text-brand-black flex-1 truncate">{p.name}</span>
+            <span className="text-[9px] px-1 py-0.5 rounded flex-shrink-0" style={{ background: `${qd.color}22`, color: qd.color }}>{qd.priority}</span>
+          </button>
         );
       })}
     </div>

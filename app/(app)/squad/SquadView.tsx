@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import type { Project } from "@/types/database";
 import { ProjectList } from "./ProjectList";
 import { SquadCanvas } from "./SquadCanvas";
@@ -18,9 +19,13 @@ type Props = {
   allActive: Project[];
   orgId: string;
   role: AppRole;
+  crossLinkedIds?: Set<string>;
+  highlightIds?: Set<string> | null;
+  filterInitiative?: { id: string; name: string } | null;
 };
 
-export function SquadView({ projects, discarded, p0Projects, allActive, orgId, role }: Props) {
+export function SquadView({ projects, discarded, p0Projects, allActive, orgId, role, crossLinkedIds, highlightIds, filterInitiative }: Props) {
+  const router = useRouter();
   const [view, setView] = useState<View>("canvas");
   const [quarterOverlay, setQuarterOverlay] = useState(false);
   const [config, setConfig] = useState<SquadConfig>(DEFAULT_CONFIG);
@@ -34,6 +39,23 @@ export function SquadView({ projects, discarded, p0Projects, allActive, orgId, r
 
   return (
     <>
+      {/* Cross drill-down filter banner */}
+      {filterInitiative && (
+        <div className="flex items-center gap-3 px-4 py-2.5 mb-3 bg-blue-50 border border-blue-100 rounded-lg text-xs">
+          <span className="text-brand-blue font-semibold">
+            Mostrando proyectos de: <strong>{filterInitiative.name}</strong>
+          </span>
+          <a href="/cross" className="text-brand-blue underline hover:text-blue-700 ml-auto flex-shrink-0">← Ver en Cross</a>
+          <button
+            onClick={() => router.push("/squad")}
+            className="text-gray-400 hover:text-brand-black flex-shrink-0"
+            title="Limpiar filtro"
+          >
+            ✕ Limpiar
+          </button>
+        </div>
+      )}
+
       {/* Share bar */}
       <div className="flex items-center gap-3 pb-3 mb-3 border-b border-gray-100">
         <span className="text-xs font-bold text-brand-gray uppercase tracking-wide">Compartir vista</span>
@@ -114,6 +136,8 @@ export function SquadView({ projects, discarded, p0Projects, allActive, orgId, r
           onEdit={(p) => setForceEdit(p)}
           quarterOverlay={quarterOverlay}
           readOnly={role === "member"}
+          crossLinkedIds={crossLinkedIds}
+          highlightIds={highlightIds}
         />
       ) : (
         <ProjectList

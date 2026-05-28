@@ -72,9 +72,10 @@ type Props = {
   hasSlices?: boolean;
   aggregate?: Aggregate;
   readOnly?: boolean;
+  crossLinked?: boolean;
 };
 
-export function BubbleCard({ project, onEdit, style, onMouseDown, onMouseEnter, onMouseLeave, urgencyColor: urgencyColorProp, isSlice, hasSlices, aggregate, readOnly }: Props) {
+export function BubbleCard({ project, onEdit, style, onMouseDown, onMouseEnter, onMouseLeave, urgencyColor: urgencyColorProp, isSlice, hasSlices, aggregate, readOnly, crossLinked }: Props) {
   const quadrant = useMemo(
     () => computeQuadrant(project.impact_value, project.effort_sprints),
     [project.impact_value, project.effort_sprints]
@@ -234,6 +235,11 @@ export function BubbleCard({ project, onEdit, style, onMouseDown, onMouseEnter, 
           >
             {project.slice_label}
           </text>
+        )}
+
+        {/* Blue cross-link dot at 6 o'clock — indicates this project is linked to a Cross initiative */}
+        {crossLinked && (
+          <circle cx={cx} cy={cy + r} r={dotR} fill="#1E6FC5" />
         )}
 
         {/* ⑂ icon (top-right) for parents that have slices */}

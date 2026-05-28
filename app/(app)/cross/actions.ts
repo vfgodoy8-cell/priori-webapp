@@ -93,7 +93,7 @@ export async function createInitiative(_prev: State, formData: FormData): Promis
     team_ids: teamIds,
     team_allocations: teamAllocations,
     description: (formData.get("description") as string)?.trim() || null,
-    sq_project_ids: [],
+    sq_project_ids: JSON.parse((formData.get("sq_project_ids") as string) || "[]"),
     start_date: startDate,
     end_date: endDate,
     status: "active" as const,
@@ -127,6 +127,7 @@ export async function updateInitiative(_prev: State, formData: FormData): Promis
     team_ids: teamIds,
     team_allocations: teamAllocations,
     description: (formData.get("description") as string)?.trim() || null,
+    sq_project_ids: JSON.parse((formData.get("sq_project_ids") as string) || "[]"),
     start_date: startDate,
     end_date: endDate,
   };

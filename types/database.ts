@@ -330,7 +330,7 @@ export type SharedView = {
   created_at: string;
 };
 
-export type AiProvider = "anthropic" | "openai" | "azure";
+export type AiProvider = "anthropic" | "openai" | "azure" | "google";
 
 export type AiSettingsRow = {
   id: string;

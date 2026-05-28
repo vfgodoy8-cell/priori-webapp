@@ -1,6 +1,7 @@
 import { createAnthropic } from "@ai-sdk/anthropic";
 import { createOpenAI }    from "@ai-sdk/openai";
 import { createAzure }     from "@ai-sdk/azure";
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import type { LanguageModel } from "ai";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { AiProvider, AiSettingsRow } from "@/types/database";
@@ -9,6 +10,7 @@ const DEFAULT_MODELS: Record<AiProvider, string> = {
   anthropic: "claude-sonnet-4-6",
   openai:    "gpt-4o",
   azure:     "gpt-4o",
+  google:    "gemini-1.5-flash",
 };
 
 export type { AiProvider };
@@ -33,6 +35,8 @@ export function buildLanguageModel(s: AiSettingsRow): LanguageModel {
       return createOpenAI({ apiKey: s.api_key })(modelId);
     case "azure":
       return createAzure({ apiKey: s.api_key, baseURL: s.azure_endpoint ?? undefined })(modelId);
+    case "google":
+      return createGoogleGenerativeAI({ apiKey: s.api_key })(modelId);
     default:
       throw new Error("Unknown AI provider: " + s.provider);
   }

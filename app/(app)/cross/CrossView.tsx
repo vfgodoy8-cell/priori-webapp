@@ -95,6 +95,7 @@ export function CrossView({ orgId, initialTeams, initialInitiatives, squadProjec
   const [prevSp, setPrevSp] = useState(0);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [duration, setDuration] = useState(1);
   const [teamAllocations, setTeamAllocations] = useState<Record<string, number>>({});
   const [sqProjectIds, setSqProjectIds] = useState<string[]>([]);
 
@@ -103,6 +104,7 @@ export function CrossView({ orgId, initialTeams, initialInitiatives, squadProjec
     setPrevSp(editIni?.effort_sprints ?? 0);
     setStartDate(editIni?.start_date ?? "");
     setEndDate(editIni?.end_date ?? "");
+    setDuration(Number(editIni?.duration_quarters ?? 1));
     setTeamAllocations((editIni?.team_allocations as Record<string, number>) ?? {});
     setSqProjectIds((editIni?.sq_project_ids as string[]) ?? []);
   }, [editIni]);
@@ -149,6 +151,7 @@ export function CrossView({ orgId, initialTeams, initialInitiatives, squadProjec
       formRef.current.reset();
       setPrevImp(0); setPrevSp(0);
       setStartDate(""); setEndDate("");
+      setDuration(1);
       setTeamAllocations({});
       setSqProjectIds([]);
       router.refresh();
@@ -548,7 +551,12 @@ export function CrossView({ orgId, initialTeams, initialInitiatives, squadProjec
                 </div>
               ) : (
                 <F label="Duración">
-                  <select name="duration_quarters" defaultValue={editIni?.duration_quarters ?? 1} className={inp}>
+                  <select
+                    name="duration_quarters"
+                    value={duration}
+                    onChange={(e) => setDuration(Number(e.target.value))}
+                    className={inp}
+                  >
                     <option value={1}>1 Quarter</option>
                     <option value={2}>2 Quarters</option>
                     <option value={3}>3 Quarters</option>

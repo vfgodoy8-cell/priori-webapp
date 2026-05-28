@@ -17,6 +17,10 @@ import { ShareModal } from "@/components/ui/ShareModal";
 import { CommentsThread } from "@/components/ui/CommentsThread";
 import { ActivityFeed } from "@/components/ui/ActivityFeed";
 import { type AppRole, ROLE_LABEL, ROLE_COLOR, ROLE_BG, ROLE_BORDER } from "@/lib/roles";
+import { AIChatPanel } from "@/components/ai/AIChatPanel";
+import { AIInterviewModal } from "@/components/ai/AIInterviewModal";
+import { buildCrossContext } from "@/lib/ai-context";
+import { IconSparkles } from "@tabler/icons-react";
 
 const Q_LABELS = ["Q1", "Q2", "Q3", "Q4"];
 const Q_SUB = ["Ene – Mar", "Abr – Jun", "Jul – Sep", "Oct – Dic"];
@@ -83,6 +87,8 @@ export function CrossView({ orgId, initialTeams, initialInitiatives, squadProjec
   const [panelOpen, setPanelOpen] = useState(false);
   const [editIni, setEditIni] = useState<Initiative | undefined>();
   const [showShare, setShowShare] = useState(false);
+  const [aiOpen, setAiOpen] = useState(false);
+  const [interviewOpen, setInterviewOpen] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
   const gridRef = useRef<HTMLDivElement>(null);
 
@@ -220,6 +226,7 @@ export function CrossView({ orgId, initialTeams, initialInitiatives, squadProjec
   }
 
   const backlog = initiatives.filter((i) => i.q_start === null && i.status === "active");
+  const aiContext = useMemo(() => buildCrossContext(teams, initiatives), [teams, initiatives]);
   void orgId;
 
   return (
@@ -233,6 +240,12 @@ export function CrossView({ orgId, initialTeams, initialInitiatives, squadProjec
         >
           ↗ Compartir / Exportar
         </button>
+        <button
+          onClick={() => setAiOpen(true)}
+          className="flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-orange-200 bg-orange-50 text-brand-orange hover:bg-orange-100 transition"
+        >
+          <IconSparkles size={13} /> Priori AI
+        </button>
         <span className="ml-auto">
           <span
             className="text-xs font-bold px-2.5 py-1 rounded-full"
@@ -244,6 +257,17 @@ export function CrossView({ orgId, initialTeams, initialInitiatives, squadProjec
       </div>
 
       {showShare && <ShareModal mode="cross" onClose={() => setShowShare(false)} />}
+      <AIChatPanel open={aiOpen} onClose={() => setAiOpen(false)} context={aiContext} />
+      {interviewOpen && (
+        <AIInterviewModal
+          mode="cross"
+          onClose={() => setInterviewOpen(false)}
+          onConfirm={(data) => {
+            setInterviewOpen(false);
+            setPanelOpen(true);
+          }}
+        />
+      )}
 
       {/* Timeline */}
       <div className="border border-gray-200 rounded-xl overflow-hidden">
@@ -462,13 +486,22 @@ export function CrossView({ orgId, initialTeams, initialInitiatives, squadProjec
 
       {/* FAB */}
       {!readOnly && (
-        <button
-          onClick={() => { setPanelOpen(true); setEditIni(undefined); }}
-          className="fixed bottom-7 right-7 z-[200] w-12 h-12 rounded-full bg-brand-orange hover:bg-orange-600 text-white text-2xl flex items-center justify-center shadow-lg transition"
-          title="Nueva iniciativa"
-        >
-          +
-        </button>
+        <div className="fixed bottom-7 right-7 z-[200] flex flex-col items-center gap-2">
+          <button
+            onClick={() => setInterviewOpen(true)}
+            className="w-10 h-10 rounded-full bg-white border-2 border-brand-orange text-brand-orange flex items-center justify-center shadow-md hover:bg-orange-50 transition"
+            title="Cargar con IA"
+          >
+            <IconSparkles size={16} />
+          </button>
+          <button
+            onClick={() => { setPanelOpen(true); setEditIni(undefined); }}
+            className="w-12 h-12 rounded-full bg-brand-orange hover:bg-orange-600 text-white text-2xl flex items-center justify-center shadow-lg transition"
+            title="Nueva iniciativa"
+          >
+            +
+          </button>
+        </div>
       )}
 
       {/* Overlay + Panel */}

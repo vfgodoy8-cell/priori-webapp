@@ -9,10 +9,15 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@ai-sdk/anthropic": "^3.0.81",
+    "@ai-sdk/azure": "^3.0.67",
+    "@ai-sdk/openai": "^3.0.66",
+    "@ai-sdk/react": "^3.0.194",
     "@react-pdf/renderer": "^4.5.1",
     "@supabase/ssr": "^0.10.3",
     "@supabase/supabase-js": "^2.106.2",
     "@tabler/icons-react": "^3.44.0",
+    "ai": "^6.0.192",
     "geist": "^1.7.1",
     "html2canvas": "^1.4.1",
     "jspdf": "^4.2.1",

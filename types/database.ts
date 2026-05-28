@@ -329,3 +329,16 @@ export type SharedView = {
   expires_at: string | null;
   created_at: string;
 };
+
+export type AiProvider = "anthropic" | "openai" | "azure";
+
+export type AiSettingsRow = {
+  id: string;
+  organization_id: string;
+  provider: AiProvider;
+  api_key: string;
+  model_id: string | null;
+  azure_endpoint: string | null;
+  created_at: string;
+  updated_at: string;
+};

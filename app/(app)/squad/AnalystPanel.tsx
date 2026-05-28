@@ -7,6 +7,9 @@ import { computeQuadrant, QUADRANT_META } from "@/lib/quadrant";
 import { saveConfig, type SquadConfig } from "@/lib/squad-logic";
 import type { Project } from "@/types/database";
 import { CommentsThread } from "@/components/ui/CommentsThread";
+import { AIInterviewModal } from "@/components/ai/AIInterviewModal";
+import { IconSparkles } from "@tabler/icons-react";
+import { useRouter } from "next/navigation";
 import { ActivityFeed } from "@/components/ui/ActivityFeed";
 
 type Tab = "form" | "items" | "config" | "comments" | "history";
@@ -40,6 +43,8 @@ export function AnalystPanel({ projects, orgId, config, onConfigChange, forceEdi
   const [tab, setTab] = useState<Tab>("form");
   const [editProject, setEditProject] = useState<Project | undefined>();
   const [sliceParent, setSliceParent] = useState<Project | null>(null);
+  const [aiInterview, setAiInterview] = useState(false);
+  const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
   const sliceFormRef = useRef<HTMLFormElement>(null);
 
@@ -220,6 +225,15 @@ export function AnalystPanel({ projects, orgId, config, onConfigChange, forceEdi
               {/* Main create / edit form */}
               {!sliceParent && (
                 <>
+                  {!editProject && (
+                    <button
+                      type="button"
+                      onClick={() => setAiInterview(true)}
+                      className="flex items-center justify-center gap-2 w-full py-2 text-[13px] font-semibold text-brand-orange border border-orange-200 rounded-lg hover:bg-orange-50 bg-orange-50/50 transition mb-1"
+                    >
+                      <IconSparkles size={14} /> Cargar con IA
+                    </button>
+                  )}
                   {editProject && (
                     <div className="flex items-center gap-2 px-3 py-2 bg-orange-50 border border-orange-100 rounded-lg text-xs text-brand-orange font-semibold">
                       ✏️ <span>Editando: {editProject.name}</span>
@@ -466,6 +480,18 @@ export function AnalystPanel({ projects, orgId, config, onConfigChange, forceEdi
           )}
         </div>
       </div>
+    <>
+      {aiInterview && (
+        <AIInterviewModal
+          mode="squad"
+          onClose={() => setAiInterview(false)}
+          onConfirm={(data) => {
+            setAiInterview(false);
+            router.refresh();
+          }}
+        />
+      )}
+    </>
     </>
   );
 }

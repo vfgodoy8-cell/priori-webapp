@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import type { Project } from "@/types/database";
 import { ProjectList } from "./ProjectList";
@@ -10,6 +10,9 @@ import { ShareModal } from "@/components/ui/ShareModal";
 import { OnboardingTour } from "@/components/ui/OnboardingTour";
 import { loadConfig, DEFAULT_CONFIG, type SquadConfig } from "@/lib/squad-logic";
 import { type AppRole, ROLE_LABEL, ROLE_COLOR, ROLE_BG, ROLE_BORDER } from "@/lib/roles";
+import { AIChatPanel } from "@/components/ai/AIChatPanel";
+import { buildSquadContext } from "@/lib/ai-context";
+import { IconSparkles } from "@tabler/icons-react";
 
 type View = "canvas" | "list";
 
@@ -36,10 +39,13 @@ export function SquadView({ projects, discarded, p0Projects, allActive, orgId, r
   const [openRequest, setOpenRequest] = useState(0);
   const [showShare, setShowShare] = useState(false);
   const [showTour, setShowTour] = useState(false);
+  const [aiOpen, setAiOpen] = useState(false);
 
   useEffect(() => {
     setConfig(loadConfig(orgId));
   }, [orgId]);
+
+  const aiContext = useMemo(() => buildSquadContext(allActive, config), [allActive, config]);
 
   return (
     <>
@@ -75,6 +81,12 @@ export function SquadView({ projects, discarded, p0Projects, allActive, orgId, r
           title="Ver tour de introducción"
         >
           ? Ayuda
+        </button>
+        <button
+          onClick={() => setAiOpen(true)}
+          className="flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-orange-200 bg-orange-50 text-brand-orange hover:bg-orange-100 transition"
+        >
+          <IconSparkles size={13} /> Priori AI
         </button>
         <span className="ml-auto">
           <span
@@ -163,6 +175,7 @@ export function SquadView({ projects, discarded, p0Projects, allActive, orgId, r
 
       {showShare && <ShareModal mode="squad" onClose={() => setShowShare(false)} />}
       <OnboardingTour forceOpen={showTour} onClose={() => setShowTour(false)} />
+      <AIChatPanel open={aiOpen} onClose={() => setAiOpen(false)} context={aiContext} />
 
       {role !== "member" && (
         <AnalystPanel

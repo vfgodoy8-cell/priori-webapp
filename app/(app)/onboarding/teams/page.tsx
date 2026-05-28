@@ -142,12 +142,13 @@ export default function OnboardingTeamsPage() {
                     />
                   </div>
                   <div className="flex flex-col gap-1">
-                    <label className="text-[10px] font-bold text-brand-gray uppercase tracking-wider">Proy/persona</label>
+                    <label className="text-[10px] font-bold text-brand-gray uppercase tracking-wider">Proy/persona <span className="font-normal normal-case text-gray-400">(1-3)</span></label>
                     <input
                       type="number"
                       min="1"
+                      max="3"
                       value={draft.proy_per_persona}
-                      onChange={(e) => setField(idx, "proy_per_persona", parseInt(e.target.value) || 1)}
+                      onChange={(e) => setField(idx, "proy_per_persona", Math.min(3, parseInt(e.target.value) || 1))}
                       className={inp}
                     />
                   </div>

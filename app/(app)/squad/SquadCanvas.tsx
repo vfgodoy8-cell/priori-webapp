@@ -11,10 +11,12 @@ import {
   posInBand,
   dateToQuarter,
   deadlineStatus,
+  separateBubbles,
   DL_COLOR,
   CAP_COLOR,
   ZONE_R,
   type SquadConfig,
+  type BubbleItem,
 } from "@/lib/squad-logic";
 import { BubbleCard } from "./BubbleCard";
 import { ImpactModal } from "./ImpactModal";
@@ -67,12 +69,19 @@ function computePositions(
   if (quarterOverlay) {
     const byQ: Project[][] = [[], [], [], []];
     inBacklog.forEach(p => byQ[dateToQuarter(p.production_date)].push(p));
+
+    const items: BubbleItem[] = [];
     byQ.forEach((qProjects, bandIndex) => {
+      const bandW = W / 4;
       qProjects.forEach((p, i) => {
         const r = bubbleRadius(p.effort_sprints);
-        map.set(p.id, posInBand(i, qProjects.length, r, W, H, bandIndex));
+        const pos = posInBand(i, qProjects.length, r, W, H, bandIndex);
+        items.push({ id: p.id, x: pos.x, y: pos.y, r, bandLeft: bandIndex * bandW, bandRight: (bandIndex + 1) * bandW });
       });
     });
+
+    const separated = separateBubbles(items, H);
+    separated.forEach(s => map.set(s.id, { x: s.x, y: s.y }));
   } else {
     inBacklog.forEach((p, i) => {
       const r = bubbleRadius(p.effort_sprints);

@@ -147,8 +147,8 @@ export function TeamPanel({ teams: initialTeams, open, onClose }: Props) {
                   <input type="number" min="1" value={form.personas} onChange={(e) => setField("personas", parseInt(e.target.value) || 1)} className={inp} />
                 </div>
                 <div className="flex flex-col gap-1">
-                  <label className="text-[10px] font-bold text-brand-gray uppercase tracking-wider">Proy/persona</label>
-                  <input type="number" min="1" value={form.proy_per_persona} onChange={(e) => setField("proy_per_persona", parseInt(e.target.value) || 1)} className={inp} />
+                  <label className="text-[10px] font-bold text-brand-gray uppercase tracking-wider">Proy/persona <span className="font-normal normal-case text-gray-400">(1-3)</span></label>
+                  <input type="number" min="1" max="3" value={form.proy_per_persona} onChange={(e) => setField("proy_per_persona", Math.min(3, parseInt(e.target.value) || 1))} className={inp} />
                 </div>
               </div>
 

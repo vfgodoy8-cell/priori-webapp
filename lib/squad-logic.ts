@@ -92,6 +92,56 @@ export function posInBand(
   };
 }
 
+// Collision separation for quarter overlay mode
+export type BubbleItem = {
+  id: string;
+  x: number;
+  y: number;
+  r: number;
+  bandLeft: number;
+  bandRight: number;
+};
+
+export function separateBubbles(items: BubbleItem[], H: number, iterations = 40): BubbleItem[] {
+  if (items.length === 0) return items;
+  const GAP = 5;
+  // Work with centers
+  const cs = items.map(it => ({ id: it.id, cx: it.x + it.r, cy: it.y + it.r, r: it.r, bandLeft: it.bandLeft, bandRight: it.bandRight }));
+
+  for (let iter = 0; iter < iterations; iter++) {
+    let moved = false;
+    for (let i = 0; i < cs.length; i++) {
+      for (let j = i + 1; j < cs.length; j++) {
+        const a = cs[i];
+        const b = cs[j];
+        const dx = b.cx - a.cx;
+        const dy = b.cy - a.cy;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        const minDist = a.r + b.r + GAP;
+        if (dist < minDist) {
+          const overlap = (minDist - dist) / 2;
+          // Avoid divide-by-zero when bubbles perfectly overlap
+          const nx = dist > 0.001 ? dx / dist : 0;
+          const ny = dist > 0.001 ? dy / dist : 1;
+          a.cx -= nx * overlap;
+          a.cy -= ny * overlap;
+          b.cx += nx * overlap;
+          b.cy += ny * overlap;
+          moved = true;
+        }
+      }
+    }
+    // Clamp to band and canvas (leave 50px top for band label)
+    for (const c of cs) {
+      c.cx = Math.max(c.bandLeft + c.r + 4, Math.min(c.bandRight - c.r - 4, c.cx));
+      c.cy = Math.max(c.r + 52, Math.min(H - c.r - 4, c.cy));
+    }
+    if (!moved) break;
+  }
+
+  return cs.map(c => ({ id: c.id, x: c.cx - c.r, y: c.cy - c.r, r: c.r, bandLeft: c.bandLeft, bandRight: c.bandRight }));
+}
+
 export function deadlineStatus(date: string | null): DlLevel | null {
   if (!date) return null;
   const diff = Math.round((new Date(date).getTime() - Date.now()) / 86400000);

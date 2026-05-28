@@ -108,15 +108,16 @@ export function CrossView({ orgId, initialTeams, initialInitiatives, role }: Pro
   const qPrev = prevImp > 0 || prevSp > 0 ? computeQuadrant(prevImp, prevSp) : null;
   const mPrev = qPrev ? QUADRANT_META[qPrev] : null;
 
-  // Inline capacity warnings (people-based)
-  const iniWarnings = useMemo(() => {
-    if (calcQStart === null || Object.keys(teamAllocations).length === 0) return [];
+  // Per-team capacity warnings (people-based) — maps teamId → overloaded quarter labels
+  const teamWarnings = useMemo<Record<string, string[]>>(() => {
+    const result: Record<string, string[]> = {};
+    if (calcQStart === null) return result;
     const dur = calcDuration ?? 1;
-    const warns: string[] = [];
     Object.entries(teamAllocations).forEach(([teamId, n]) => {
       if (!n) return;
       const team = teams.find((t) => t.id === teamId);
       if (!team) return;
+      const overQ: string[] = [];
       for (let d = 0; d < dur; d++) {
         const q = calcQStart + d;
         if (q > 3) continue;
@@ -128,12 +129,11 @@ export function CrossView({ orgId, initialTeams, initialInitiatives, role }: Pro
             const alloc = i.team_allocations as Record<string, number> | null;
             return sum + (alloc?.[teamId] ?? 0);
           }, 0);
-        if (used + n > avail) {
-          warns.push(`${team.name} supera capacidad en Q${q + 1}`);
-        }
+        if (used + n > avail) overQ.push(`Q${q + 1}`);
       }
+      if (overQ.length > 0) result[teamId] = overQ;
     });
-    return Array.from(new Set(warns));
+    return result;
   }, [teamAllocations, calcQStart, calcDuration, teams, initiatives, editIni]);
 
   // Reset form on successful save + refresh data
@@ -510,20 +510,10 @@ export function CrossView({ orgId, initialTeams, initialInitiatives, role }: Pro
                   <TeamAllocationInputs
                     teams={teams}
                     allocations={teamAllocations}
+                    warnings={teamWarnings}
                     onChange={setTeamAllocations}
                   />
                 </F>
-              )}
-
-              {/* Inline warnings */}
-              {iniWarnings.length > 0 && (
-                <div className="flex flex-col gap-1">
-                  {iniWarnings.map((w) => (
-                    <div key={w} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-50 border border-red-200 text-xs font-semibold text-red-600">
-                      ⚠ {w}
-                    </div>
-                  ))}
-                </div>
               )}
 
               <F label="Descripción">
@@ -598,14 +588,16 @@ export function CrossView({ orgId, initialTeams, initialInitiatives, role }: Pro
   );
 }
 
-// Team allocation component — checkboxes + inline persona count
+// Team allocation component — checkbox + stacked persona count + inline warnings
 function TeamAllocationInputs({
   teams,
   allocations,
+  warnings = {},
   onChange,
 }: {
   teams: Team[];
   allocations: Record<string, number>;
+  warnings?: Record<string, string[]>;
   onChange: (a: Record<string, number>) => void;
 }) {
   function toggle(teamId: string) {
@@ -627,31 +619,42 @@ function TeamAllocationInputs({
       {teams.map((t) => {
         const selected = allocations[t.id] !== undefined;
         const n = allocations[t.id] ?? 1;
+        const warn = warnings[t.id];
         return (
           <div
             key={t.id}
-            className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg border transition ${selected ? "border-brand-orange bg-orange-50" : "border-gray-100 bg-gray-50"}`}
+            className={`rounded-lg border transition ${selected ? "border-brand-orange bg-orange-50" : "border-gray-100 bg-gray-50"}`}
           >
-            <button
-              type="button"
-              onClick={() => toggle(t.id)}
-              className={`w-4 h-4 rounded border-2 flex-shrink-0 transition flex items-center justify-center ${selected ? "border-brand-orange bg-brand-orange" : "border-gray-300 bg-white"}`}
-            >
-              {selected && <span className="text-white text-[8px] leading-none">✓</span>}
-            </button>
-            <span className="text-xs font-semibold text-brand-black flex-1">{t.name}</span>
+            <div className="flex items-center gap-2 px-2.5 py-1.5">
+              <button
+                type="button"
+                onClick={() => toggle(t.id)}
+                className={`w-4 h-4 rounded border-2 flex-shrink-0 transition flex items-center justify-center ${selected ? "border-brand-orange bg-brand-orange" : "border-gray-300 bg-white"}`}
+              >
+                {selected && <span className="text-white text-[8px] leading-none">✓</span>}
+              </button>
+              <span className="text-xs font-semibold text-brand-black flex-1">{t.name}</span>
+              {!selected && <span className="text-[10px] text-brand-gray">{t.personas} pers.</span>}
+            </div>
             {selected && (
-              <div className="flex items-center gap-1.5">
-                <input
-                  type="number"
-                  min="1"
-                  max={t.personas}
-                  value={n}
-                  onChange={(e) => setN(t.id, parseInt(e.target.value) || 1, t.personas)}
-                  onClick={(e) => e.stopPropagation()}
-                  className="w-12 text-xs px-1.5 py-0.5 border border-gray-200 rounded bg-white text-center focus:outline-none focus:ring-1 focus:ring-brand-orange"
-                />
-                <span className="text-[10px] text-brand-gray">/ {t.personas}</span>
+              <div className="px-2.5 pb-2 pl-8 flex flex-col gap-1">
+                <div className="flex items-center gap-1.5">
+                  <input
+                    type="number"
+                    min="1"
+                    max={t.personas}
+                    value={n}
+                    onChange={(e) => setN(t.id, parseInt(e.target.value) || 1, t.personas)}
+                    onClick={(e) => e.stopPropagation()}
+                    className="w-12 text-xs px-1.5 py-0.5 border border-gray-200 rounded bg-white text-center focus:outline-none focus:ring-1 focus:ring-brand-orange"
+                  />
+                  <span className="text-[10px] text-brand-gray">personas de {t.personas} disponibles</span>
+                </div>
+                {warn && (
+                  <div className="text-[10px] font-semibold text-red-600">
+                    ⚠ Supera capacidad en {warn.join(", ")}
+                  </div>
+                )}
               </div>
             )}
           </div>

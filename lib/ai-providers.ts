@@ -36,7 +36,7 @@ export function buildLanguageModel(s: AiSettingsRow): LanguageModel {
     case "azure":
       return createAzure({ apiKey: s.api_key, baseURL: s.azure_endpoint ?? undefined })(modelId);
     case "google":
-      return createGoogleGenerativeAI({ apiKey: s.api_key })(modelId);
+      return createGoogleGenerativeAI({ apiKey: s.api_key })("gemini-1.5-flash");
     default:
       throw new Error("Unknown AI provider: " + s.provider);
   }

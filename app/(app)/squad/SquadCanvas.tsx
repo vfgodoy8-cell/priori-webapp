@@ -87,15 +87,16 @@ function computePositions(
 }
 
 type Props = {
-  projects: Project[];       // active, non-p0
-  discarded: Project[];      // status='discarded'
-  p0Projects: Project[];     // computed quadrant = p0 but active
+  projects: Project[];
+  discarded: Project[];
+  p0Projects: Project[];
   config: SquadConfig;
   onEdit: (p: Project) => void;
   quarterOverlay?: boolean;
+  readOnly?: boolean;
 };
 
-export function SquadCanvas({ projects, discarded, p0Projects, config, onEdit, quarterOverlay = false }: Props) {
+export function SquadCanvas({ projects, discarded, p0Projects, config, onEdit, quarterOverlay = false, readOnly = false }: Props) {
   const CANVAS_H = 650;
   const canvasRef = useRef<HTMLDivElement>(null);
   const posRef = useRef<Map<string, Pos>>(new Map());
@@ -490,9 +491,10 @@ export function SquadCanvas({ projects, discarded, p0Projects, config, onEdit, q
                 hasSlices={parentIds.has(project.id)}
                 aggregate={aggregatesMap.get(project.id)}
                 style={{ left: pos.x, top: pos.y, opacity: bubbleOpacity, transition: bubbleTransition }}
-                onMouseDown={(e) => startDrag(project.id, e)}
+                onMouseDown={readOnly ? undefined : (e) => startDrag(project.id, e)}
                 onMouseEnter={(e) => handleBubbleMouseEnter(project.id, e)}
                 onMouseLeave={handleBubbleMouseLeave}
+                readOnly={readOnly}
               />
               {/* Sin fecha badge in overlay mode */}
               {quarterOverlay && isBacklog && noDate && (

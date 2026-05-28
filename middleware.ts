@@ -35,7 +35,9 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith("/dashboard") ||
     pathname.startsWith("/onboarding") ||
     pathname.startsWith("/squad") ||
-    pathname.startsWith("/cross");
+    pathname.startsWith("/cross") ||
+    pathname.startsWith("/settings");
+  // /invite/[token] is public — no protection needed
 
   if (!user && isProtectedRoute) {
     return NextResponse.redirect(new URL("/login", request.url));

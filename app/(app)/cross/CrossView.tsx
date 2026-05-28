@@ -15,6 +15,7 @@ import {
   deleteTeam,
 } from "./actions";
 import { ShareModal } from "@/components/ui/ShareModal";
+import { type AppRole, ROLE_LABEL, ROLE_COLOR, ROLE_BG, ROLE_BORDER } from "@/lib/roles";
 
 const Q_LABELS = ["Q1", "Q2", "Q3", "Q4"];
 const Q_SUB = ["Ene – Mar", "Abr – Jun", "Jul – Sep", "Oct – Dic"];
@@ -59,9 +60,11 @@ type Props = {
   orgId: string;
   initialTeams: Team[];
   initialInitiatives: Initiative[];
+  role: AppRole;
 };
 
-export function CrossView({ orgId, initialTeams, initialInitiatives }: Props) {
+export function CrossView({ orgId, initialTeams, initialInitiatives, role }: Props) {
+  const readOnly = role === "member";
   const [teams, setTeams] = useState<Team[]>(initialTeams);
   const [initiatives, setInitiatives] = useState<Initiative[]>(initialInitiatives);
   const [dragId, setDragId] = useState<string | null>(null);
@@ -192,6 +195,18 @@ export function CrossView({ orgId, initialTeams, initialInitiatives }: Props) {
         >
           ↗ Compartir / Exportar
         </button>
+        <span className="ml-auto">
+          <span
+            className="text-xs font-bold px-2.5 py-1 rounded-full"
+            style={{
+              background: ROLE_BG[role],
+              color: ROLE_COLOR[role],
+              border: `1px solid ${ROLE_BORDER[role]}`,
+            }}
+          >
+            {ROLE_LABEL[role]}
+          </span>
+        </span>
       </div>
 
       {showShare && <ShareModal mode="cross" onClose={() => setShowShare(false)} />}
@@ -216,9 +231,9 @@ export function CrossView({ orgId, initialTeams, initialInitiatives }: Props) {
           ref={gridRef}
           className="relative min-h-[240px]"
           style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gridAutoFlow: "row", alignContent: "start" }}
-          onDragOver={handleGridDragOver}
-          onDragLeave={(e) => { if (!gridRef.current?.contains(e.relatedTarget as Node)) setDragOverQ(null); }}
-          onDrop={handleGridDrop}
+          onDragOver={readOnly ? undefined : handleGridDragOver}
+          onDragLeave={readOnly ? undefined : (e) => { if (!gridRef.current?.contains(e.relatedTarget as Node)) setDragOverQ(null); }}
+          onDrop={readOnly ? undefined : handleGridDrop}
         >
           {/* Column dividers + drag-hover highlight */}
           {[0, 1, 2, 3].map((q) => (
@@ -255,9 +270,9 @@ export function CrossView({ orgId, initialTeams, initialInitiatives }: Props) {
               return (
                 <div
                   key={ini.id}
-                  draggable
-                  onDragStart={() => setDragId(ini.id)}
-                  className="rounded-lg p-2.5 border-[1.5px] cursor-grab select-none hover:shadow-md transition-shadow m-1.5"
+                  draggable={!readOnly}
+                  onDragStart={readOnly ? undefined : () => setDragId(ini.id)}
+                  className={`rounded-lg p-2.5 border-[1.5px] select-none hover:shadow-md transition-shadow m-1.5 ${readOnly ? "cursor-default" : "cursor-grab"}`}
                   style={{
                     gridColumn: `${ini.q_start! + 1} / span ${span}`,
                     background: qd.bg,
@@ -287,10 +302,12 @@ export function CrossView({ orgId, initialTeams, initialInitiatives }: Props) {
                       ))}
                     </div>
                   )}
-                  <div className="flex gap-1 mt-2">
-                    <button onClick={() => openEdit(ini)} className="text-[10px] text-gray-400 hover:text-brand-orange px-1" title="Editar">✏️</button>
-                    <button onClick={() => handleUnplace(ini)} className="text-[10px] text-gray-400 hover:text-brand-orange px-1" title="Quitar del Quarter">✕</button>
-                  </div>
+                  {!readOnly && (
+                    <div className="flex gap-1 mt-2">
+                      <button onClick={() => openEdit(ini)} className="text-[10px] text-gray-400 hover:text-brand-orange px-1" title="Editar">✏️</button>
+                      <button onClick={() => handleUnplace(ini)} className="text-[10px] text-gray-400 hover:text-brand-orange px-1" title="Quitar del Quarter">✕</button>
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -373,8 +390,8 @@ export function CrossView({ orgId, initialTeams, initialInitiatives }: Props) {
         </div>
         <div
           className="px-4 py-3 flex flex-wrap gap-2 min-h-[52px]"
-          onDragOver={(e) => e.preventDefault()}
-          onDrop={(e) => {
+          onDragOver={readOnly ? undefined : (e) => e.preventDefault()}
+          onDrop={readOnly ? undefined : (e) => {
             e.preventDefault();
             if (!dragId) return;
             const ini = initiatives.find((i) => i.id === dragId);
@@ -393,11 +410,11 @@ export function CrossView({ orgId, initialTeams, initialInitiatives }: Props) {
             return (
               <div
                 key={ini.id}
-                draggable
-                onDragStart={() => setDragId(ini.id)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border-[1.5px] cursor-grab select-none hover:shadow-sm transition"
+                draggable={!readOnly}
+                onDragStart={readOnly ? undefined : () => setDragId(ini.id)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border-[1.5px] select-none hover:shadow-sm transition ${readOnly ? "cursor-default" : "cursor-grab"}`}
                 style={{ background: qd.bg, borderColor: `${qd.color}55`, color: qd.color }}
-                title="Arrastrá al Quarter para asignar"
+                title={readOnly ? undefined : "Arrastrá al Quarter para asignar"}
               >
                 {qd.priority} {ini.name}
                 <span className="opacity-60 text-[10px]"> · {ini.duration_quarters}Q</span>
@@ -408,16 +425,18 @@ export function CrossView({ orgId, initialTeams, initialInitiatives }: Props) {
       </div>
 
       {/* FAB */}
-      <button
-        onClick={() => { setPanelOpen(true); setPanelTab("form"); setEditIni(undefined); }}
-        className="fixed bottom-7 right-7 z-[200] w-12 h-12 rounded-full bg-brand-orange hover:bg-orange-600 text-white text-2xl flex items-center justify-center shadow-lg transition"
-        title="Panel del programa"
-      >
-        ⚙
-      </button>
+      {!readOnly && (
+        <button
+          onClick={() => { setPanelOpen(true); setPanelTab("form"); setEditIni(undefined); }}
+          className="fixed bottom-7 right-7 z-[200] w-12 h-12 rounded-full bg-brand-orange hover:bg-orange-600 text-white text-2xl flex items-center justify-center shadow-lg transition"
+          title="Panel del programa"
+        >
+          ⚙
+        </button>
+      )}
 
       {/* Overlay */}
-      {panelOpen && (
+      {panelOpen && !readOnly && (
         <div
           className="fixed inset-0 z-[250] bg-black/25"
           onClick={() => setPanelOpen(false)}
@@ -425,7 +444,7 @@ export function CrossView({ orgId, initialTeams, initialInitiatives }: Props) {
       )}
 
       {/* Sliding panel */}
-      <div
+      {!readOnly && <div
         className={`fixed top-0 right-0 z-[300] h-full w-[380px] bg-white border-l border-gray-100 shadow-2xl flex flex-col transition-transform duration-300 ${panelOpen ? "translate-x-0" : "translate-x-full"}`}
       >
         <div className="flex items-center justify-between px-4 py-3.5 bg-orange-50 border-b-2 border-brand-orange">
@@ -675,7 +694,7 @@ export function CrossView({ orgId, initialTeams, initialInitiatives }: Props) {
             </div>
           )}
         </div>
-      </div>
+      </div>}
     </div>
   );
 }

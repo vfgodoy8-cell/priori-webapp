@@ -6,6 +6,7 @@ import { SquadView } from "./SquadView";
 import { computeQuadrant } from "@/lib/quadrant";
 import { LogoutButton } from "@/components/ui/LogoutButton";
 import type { OrganizationMember, Organization, Project } from "@/types/database";
+import { type AppRole } from "@/lib/roles";
 
 export default async function SquadPage() {
   const supabase = createClient();
@@ -33,6 +34,8 @@ export default async function SquadPage() {
 
   const org = orgData as Organization | null;
   if (!org) redirect("/onboarding");
+
+  const role = membership.role as AppRole;
 
   const { data: projectsData } = await admin
     .from("projects")
@@ -92,6 +95,13 @@ export default async function SquadPage() {
             >
               📅 Modo Cross →
             </Link>
+            <Link
+              href="/settings/members"
+              className="text-sm px-3 py-1.5 rounded-lg bg-white text-brand-gray hover:text-brand-black transition"
+              style={{ border: "1.5px solid #E5E5E5", borderRadius: 8 }}
+            >
+              ⚙ Equipo
+            </Link>
             <span className="text-sm text-brand-gray">{org.name}</span>
             <LogoutButton />
           </div>
@@ -106,6 +116,7 @@ export default async function SquadPage() {
           p0Projects={p0Projects}
           allActive={allActive}
           orgId={org.id}
+          role={role}
         />
       </main>
     </div>

@@ -3,7 +3,8 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { LogoutButton } from "@/components/ui/LogoutButton";
-import type { Organization, OrganizationMember, MemberRole } from "@/types/database";
+import type { Organization, OrganizationMember } from "@/types/database";
+import { type AppRole, ROLE_LABEL, ROLE_COLOR, ROLE_BG, ROLE_BORDER } from "@/lib/roles";
 
 export default async function DashboardPage() {
   const supabase = createClient();
@@ -33,7 +34,7 @@ export default async function DashboardPage() {
   const org = orgData as Organization | null;
   if (!org) redirect("/onboarding");
 
-  const role = membership.role as MemberRole;
+  const role = membership.role as AppRole;
 
   // Counts for badges
   const [{ count: projectCount }, { count: initiativeCount }] = await Promise.all([
@@ -78,6 +79,13 @@ export default async function DashboardPage() {
 
           {/* Right */}
           <div className="flex items-center gap-4">
+            <Link
+              href="/settings/members"
+              className="text-sm px-3 py-1.5 rounded-lg bg-white text-brand-gray hover:text-brand-black transition"
+              style={{ border: "1.5px solid #E5E5E5", borderRadius: 8 }}
+            >
+              ⚙ Equipo
+            </Link>
             <span className="text-sm text-brand-gray">{org.name}</span>
             <span className="text-xs text-gray-300">|</span>
             <span className="text-sm text-brand-gray">{user.email}</span>
@@ -90,9 +98,18 @@ export default async function DashboardPage() {
       <main className="max-w-7xl mx-auto px-6 py-12">
         <div className="flex flex-col gap-1 mb-10">
           <h1 className="text-2xl font-bold text-brand-black">{org.name}</h1>
-          <p className="text-brand-gray text-sm">
-            Rol:{" "}
-            <span className="font-medium text-brand-black capitalize">{role}</span>
+          <p className="text-brand-gray text-sm flex items-center gap-2">
+            <span>Rol:</span>
+            <span
+              className="text-xs font-bold px-2.5 py-0.5 rounded-full"
+              style={{
+                background: ROLE_BG[role],
+                color: ROLE_COLOR[role],
+                border: `1px solid ${ROLE_BORDER[role]}`,
+              }}
+            >
+              {ROLE_LABEL[role]}
+            </span>
           </p>
         </div>
 

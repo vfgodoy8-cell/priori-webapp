@@ -5,6 +5,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import type { Team, Initiative } from "@/types/database";
+import { type AppRole, canWrite } from "@/lib/roles";
 
 type State = { error: string | null };
 
@@ -21,13 +22,14 @@ async function getAuthContext() {
     .single();
 
   if (!membership) redirect("/onboarding");
-  return { user, admin, orgId: membership.organization_id as string };
+  return { user, admin, orgId: membership.organization_id as string, role: membership.role as AppRole };
 }
 
 // ── TEAMS ─────────────────────────────────────────────────────────────────
 
 export async function createTeam(_prev: State, formData: FormData): Promise<State> {
-  const { admin, orgId } = await getAuthContext();
+  const { admin, orgId, role } = await getAuthContext();
+  if (!canWrite(role)) return { error: "Sin permisos: solo Líder o Analista pueden crear equipos." };
   const payload = {
     organization_id: orgId,
     name: (formData.get("name") as string).trim(),
@@ -46,13 +48,15 @@ export async function createTeam(_prev: State, formData: FormData): Promise<Stat
 }
 
 export async function updateTeam(id: string, patch: Partial<Team>): Promise<void> {
-  const { admin, orgId } = await getAuthContext();
+  const { admin, orgId, role } = await getAuthContext();
+  if (!canWrite(role)) return;
   await admin.from("teams").update(patch).eq("id", id).eq("organization_id", orgId);
   revalidatePath("/cross");
 }
 
 export async function deleteTeam(id: string): Promise<void> {
-  const { admin, orgId } = await getAuthContext();
+  const { admin, orgId, role } = await getAuthContext();
+  if (!canWrite(role)) return;
   await admin.from("teams").delete().eq("id", id).eq("organization_id", orgId);
   revalidatePath("/cross");
 }
@@ -60,7 +64,8 @@ export async function deleteTeam(id: string): Promise<void> {
 // ── INITIATIVES ───────────────────────────────────────────────────────────
 
 export async function createInitiative(_prev: State, formData: FormData): Promise<State> {
-  const { admin, orgId } = await getAuthContext();
+  const { admin, orgId, role } = await getAuthContext();
+  if (!canWrite(role)) return { error: "Sin permisos: solo Líder o Analista pueden crear iniciativas." };
   const teamIdsRaw = formData.get("team_ids") as string;
   const payload = {
     organization_id: orgId,
@@ -84,7 +89,8 @@ export async function createInitiative(_prev: State, formData: FormData): Promis
 }
 
 export async function updateInitiative(_prev: State, formData: FormData): Promise<State> {
-  const { admin, orgId } = await getAuthContext();
+  const { admin, orgId, role } = await getAuthContext();
+  if (!canWrite(role)) return { error: "Sin permisos: solo Líder o Analista pueden editar iniciativas." };
   const id = formData.get("id") as string;
   if (!id) return { error: "ID requerido." };
   const teamIdsRaw = formData.get("team_ids") as string;
@@ -106,19 +112,22 @@ export async function updateInitiative(_prev: State, formData: FormData): Promis
 }
 
 export async function deleteInitiative(id: string): Promise<void> {
-  const { admin, orgId } = await getAuthContext();
+  const { admin, orgId, role } = await getAuthContext();
+  if (!canWrite(role)) return;
   await admin.from("initiatives").delete().eq("id", id).eq("organization_id", orgId);
   revalidatePath("/cross");
 }
 
 export async function placeInitiative(id: string, qStart: number): Promise<void> {
-  const { admin, orgId } = await getAuthContext();
+  const { admin, orgId, role } = await getAuthContext();
+  if (!canWrite(role)) return;
   await admin.from("initiatives").update({ q_start: qStart }).eq("id", id).eq("organization_id", orgId);
   revalidatePath("/cross");
 }
 
 export async function unplaceInitiative(id: string): Promise<void> {
-  const { admin, orgId } = await getAuthContext();
+  const { admin, orgId, role } = await getAuthContext();
+  if (!canWrite(role)) return;
   await admin.from("initiatives").update({ q_start: null }).eq("id", id).eq("organization_id", orgId);
   revalidatePath("/cross");
 }

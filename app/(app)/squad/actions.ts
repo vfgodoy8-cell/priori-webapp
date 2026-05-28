@@ -5,6 +5,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import type { Project } from "@/types/database";
+import { type AppRole, canWrite } from "@/lib/roles";
 
 type State = { error: string | null; success?: boolean };
 
@@ -24,15 +25,21 @@ async function getAuthContext() {
 
   if (!membership) redirect("/onboarding");
 
-  return { user, admin, orgId: membership.organization_id as string };
+  return {
+    user,
+    admin,
+    orgId: membership.organization_id as string,
+    role: membership.role as AppRole,
+  };
 }
 
 export async function createProject(
   _prevState: State,
   formData: FormData
 ): Promise<State> {
-  const { user, admin, orgId } = await getAuthContext();
+  const { user, admin, orgId, role } = await getAuthContext();
   void user;
+  if (!canWrite(role)) return { error: "Sin permisos: solo Líder o Analista pueden crear proyectos." };
 
   const payload = {
     organization_id: orgId,
@@ -61,7 +68,8 @@ export async function updateProject(
   _prevState: State,
   formData: FormData
 ): Promise<State> {
-  const { admin, orgId } = await getAuthContext();
+  const { admin, orgId, role } = await getAuthContext();
+  if (!canWrite(role)) return { error: "Sin permisos: solo Líder o Analista pueden editar proyectos." };
 
   const id = formData.get("id") as string;
   if (!id) return { error: "ID requerido." };
@@ -92,7 +100,8 @@ export async function updateProject(
 }
 
 export async function discardProject(id: string): Promise<void> {
-  const { admin, orgId } = await getAuthContext();
+  const { admin, orgId, role } = await getAuthContext();
+  if (!canWrite(role)) return;
   await admin
     .from("projects")
     .update({ status: "discarded" })
@@ -112,7 +121,8 @@ export async function restoreProject(id: string): Promise<void> {
 }
 
 export async function deleteProject(id: string): Promise<void> {
-  const { admin, orgId } = await getAuthContext();
+  const { admin, orgId, role } = await getAuthContext();
+  if (!canWrite(role)) return;
   await admin
     .from("projects")
     .delete()

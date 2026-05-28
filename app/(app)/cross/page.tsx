@@ -5,6 +5,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { CrossView } from "./CrossView";
 import { LogoutButton } from "@/components/ui/LogoutButton";
 import type { OrganizationMember, Organization, Team, Initiative } from "@/types/database";
+import { type AppRole } from "@/lib/roles";
 
 export default async function CrossPage() {
   const supabase = createClient();
@@ -32,6 +33,8 @@ export default async function CrossPage() {
 
   const org = orgData as Organization | null;
   if (!org) redirect("/onboarding");
+
+  const role = membership.role as AppRole;
 
   const [{ data: teamsData }, { data: initiativesData }] = await Promise.all([
     admin
@@ -90,6 +93,13 @@ export default async function CrossPage() {
             >
               👥 Modo Squad →
             </Link>
+            <Link
+              href="/settings/members"
+              className="text-sm px-3 py-1.5 rounded-lg bg-white text-brand-gray hover:text-brand-black transition"
+              style={{ border: "1.5px solid #E5E5E5", borderRadius: 8 }}
+            >
+              ⚙ Equipo
+            </Link>
             <span className="text-sm text-brand-gray">{org.name}</span>
             <LogoutButton />
           </div>
@@ -114,6 +124,7 @@ export default async function CrossPage() {
           orgId={org.id}
           initialTeams={teams}
           initialInitiatives={initiatives}
+          role={role}
         />
       </main>
     </div>

@@ -7,18 +7,20 @@ import { SquadCanvas } from "./SquadCanvas";
 import { AnalystPanel } from "./AnalystPanel";
 import { ShareModal } from "@/components/ui/ShareModal";
 import { loadConfig, DEFAULT_CONFIG, type SquadConfig } from "@/lib/squad-logic";
+import { type AppRole, ROLE_LABEL, ROLE_COLOR, ROLE_BG, ROLE_BORDER } from "@/lib/roles";
 
 type View = "canvas" | "list";
 
 type Props = {
-  projects: Project[];     // active, non-p0 (for canvas)
-  discarded: Project[];    // status='discarded'
-  p0Projects: Project[];   // active but computed quadrant = p0
-  allActive: Project[];    // all active projects (for AnalystPanel list)
+  projects: Project[];
+  discarded: Project[];
+  p0Projects: Project[];
+  allActive: Project[];
   orgId: string;
+  role: AppRole;
 };
 
-export function SquadView({ projects, discarded, p0Projects, allActive, orgId }: Props) {
+export function SquadView({ projects, discarded, p0Projects, allActive, orgId, role }: Props) {
   const [view, setView] = useState<View>("canvas");
   const [quarterOverlay, setQuarterOverlay] = useState(false);
   const [config, setConfig] = useState<SquadConfig>(DEFAULT_CONFIG);
@@ -41,6 +43,18 @@ export function SquadView({ projects, discarded, p0Projects, allActive, orgId }:
         >
           ↗ Compartir / Exportar
         </button>
+        <span className="ml-auto">
+          <span
+            className="text-xs font-bold px-2.5 py-1 rounded-full"
+            style={{
+              background: ROLE_BG[role],
+              color: ROLE_COLOR[role],
+              border: `1px solid ${ROLE_BORDER[role]}`,
+            }}
+          >
+            {ROLE_LABEL[role]}
+          </span>
+        </span>
       </div>
 
       {/* Title + view toggle */}
@@ -99,6 +113,7 @@ export function SquadView({ projects, discarded, p0Projects, allActive, orgId }:
           config={config}
           onEdit={(p) => setForceEdit(p)}
           quarterOverlay={quarterOverlay}
+          readOnly={role === "member"}
         />
       ) : (
         <ProjectList
@@ -106,20 +121,23 @@ export function SquadView({ projects, discarded, p0Projects, allActive, orgId }:
           discarded={discarded}
           onEdit={(p) => setForceEdit(p)}
           onNew={() => setOpenRequest((n) => n + 1)}
+          readOnly={role === "member"}
         />
       )}
 
       {showShare && <ShareModal mode="squad" onClose={() => setShowShare(false)} />}
 
-      <AnalystPanel
-        projects={allActive}
-        orgId={orgId}
-        config={config}
-        onConfigChange={setConfig}
-        forceEdit={forceEdit}
-        onForceEditConsumed={() => setForceEdit(null)}
-        openRequest={openRequest}
-      />
+      {role !== "member" && (
+        <AnalystPanel
+          projects={allActive}
+          orgId={orgId}
+          config={config}
+          onConfigChange={setConfig}
+          forceEdit={forceEdit}
+          onForceEditConsumed={() => setForceEdit(null)}
+          openRequest={openRequest}
+        />
+      )}
     </>
   );
 }

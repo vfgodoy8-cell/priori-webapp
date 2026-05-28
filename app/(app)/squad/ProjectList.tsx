@@ -9,9 +9,10 @@ type Props = {
   discarded: Project[];
   onEdit: (p: Project) => void;
   onNew: () => void;
+  readOnly?: boolean;
 };
 
-export function ProjectList({ projects, discarded, onEdit, onNew }: Props) {
+export function ProjectList({ projects, discarded, onEdit, onNew, readOnly }: Props) {
   return (
     <div className="flex flex-col gap-8">
       {/* Header */}
@@ -20,21 +21,29 @@ export function ProjectList({ projects, discarded, onEdit, onNew }: Props) {
           {projects.length} proyecto{projects.length !== 1 ? "s" : ""} activo
           {projects.length !== 1 ? "s" : ""}
         </p>
-        <button
-          onClick={onNew}
-          className="bg-brand-orange hover:bg-orange-600 text-white font-semibold rounded-lg px-4 py-2 text-sm transition"
-        >
-          + Nuevo proyecto
-        </button>
+        {!readOnly && (
+          <button
+            onClick={onNew}
+            className="bg-brand-orange hover:bg-orange-600 text-white font-semibold rounded-lg px-4 py-2 text-sm transition"
+          >
+            + Nuevo proyecto
+          </button>
+        )}
       </div>
 
       {projects.length === 0 ? (
-        <EmptyState onAdd={onNew} />
+        readOnly ? (
+          <div className="bg-white rounded-xl border border-dashed border-gray-200 py-16 flex flex-col items-center gap-3">
+            <p className="text-brand-gray text-sm">No hay proyectos todavía.</p>
+          </div>
+        ) : (
+          <EmptyState onAdd={onNew} />
+        )
       ) : (
-        <ProjectTable projects={projects} onEdit={onEdit} />
+        <ProjectTable projects={projects} onEdit={onEdit} readOnly={readOnly} />
       )}
 
-      {discarded.length > 0 && <DiscardedSection discarded={discarded} />}
+      {discarded.length > 0 && <DiscardedSection discarded={discarded} readOnly={readOnly} />}
     </div>
   );
 }
@@ -42,9 +51,11 @@ export function ProjectList({ projects, discarded, onEdit, onNew }: Props) {
 function ProjectTable({
   projects,
   onEdit,
+  readOnly,
 }: {
   projects: Project[];
   onEdit: (p: Project) => void;
+  readOnly?: boolean;
 }) {
   return (
     <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
@@ -63,7 +74,7 @@ function ProjectTable({
         </thead>
         <tbody className="divide-y divide-gray-50">
           {projects.map((p) => (
-            <ProjectRow key={p.id} project={p} onEdit={onEdit} />
+            <ProjectRow key={p.id} project={p} onEdit={onEdit} readOnly={readOnly} />
           ))}
         </tbody>
       </table>
@@ -74,9 +85,11 @@ function ProjectTable({
 function ProjectRow({
   project: p,
   onEdit,
+  readOnly,
 }: {
   project: Project;
   onEdit: (p: Project) => void;
+  readOnly?: boolean;
 }) {
   const q = computeQuadrant(p.impact_value, p.effort_sprints);
   const meta = QUADRANT_META[q];
@@ -120,37 +133,39 @@ function ProjectRow({
             })
           : "—"}
       </td>
-      <td className="px-4 py-3">
-        <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition">
-          <button
-            onClick={() => onEdit(p)}
-            className="text-xs text-brand-gray hover:text-brand-black px-2 py-1 rounded hover:bg-gray-100 transition"
-          >
-            Editar
-          </button>
-          <form action={discardWithId}>
+      {!readOnly && (
+        <td className="px-4 py-3">
+          <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition">
             <button
-              type="submit"
-              className="text-xs text-brand-gray hover:text-brand-orange px-2 py-1 rounded hover:bg-orange-50 transition"
+              onClick={() => onEdit(p)}
+              className="text-xs text-brand-gray hover:text-brand-black px-2 py-1 rounded hover:bg-gray-100 transition"
             >
-              Descartar
+              Editar
             </button>
-          </form>
-          <form action={deleteWithId}>
-            <button
-              type="submit"
-              className="text-xs text-brand-gray hover:text-red-600 px-2 py-1 rounded hover:bg-red-50 transition"
-            >
-              Eliminar
-            </button>
-          </form>
-        </div>
-      </td>
+            <form action={discardWithId}>
+              <button
+                type="submit"
+                className="text-xs text-brand-gray hover:text-brand-orange px-2 py-1 rounded hover:bg-orange-50 transition"
+              >
+                Descartar
+              </button>
+            </form>
+            <form action={deleteWithId}>
+              <button
+                type="submit"
+                className="text-xs text-brand-gray hover:text-red-600 px-2 py-1 rounded hover:bg-red-50 transition"
+              >
+                Eliminar
+              </button>
+            </form>
+          </div>
+        </td>
+      )}
     </tr>
   );
 }
 
-function DiscardedSection({ discarded }: { discarded: Project[] }) {
+function DiscardedSection({ discarded, readOnly }: { discarded: Project[]; readOnly?: boolean }) {
   return (
     <details className="group">
       <summary className="flex items-center gap-2 cursor-pointer text-sm text-brand-gray hover:text-brand-black transition list-none">
@@ -161,7 +176,7 @@ function DiscardedSection({ discarded }: { discarded: Project[] }) {
         <table className="w-full text-sm">
           <tbody className="divide-y divide-gray-50">
             {discarded.map((p) => (
-              <DiscardedRow key={p.id} project={p} />
+              <DiscardedRow key={p.id} project={p} readOnly={readOnly} />
             ))}
           </tbody>
         </table>
@@ -170,7 +185,7 @@ function DiscardedSection({ discarded }: { discarded: Project[] }) {
   );
 }
 
-function DiscardedRow({ project: p }: { project: Project }) {
+function DiscardedRow({ project: p, readOnly }: { project: Project; readOnly?: boolean }) {
   const restoreWithId = restoreProject.bind(null, p.id);
   const deleteWithId = deleteProject.bind(null, p.id);
 
@@ -179,26 +194,28 @@ function DiscardedRow({ project: p }: { project: Project }) {
       <td className="px-4 py-3 font-medium text-brand-black line-through">
         {p.name}
       </td>
-      <td className="px-4 py-3">
-        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition">
-          <form action={restoreWithId}>
-            <button
-              type="submit"
-              className="text-xs text-brand-green hover:underline px-2 py-1 rounded hover:bg-green-50 transition"
-            >
-              Restaurar
-            </button>
-          </form>
-          <form action={deleteWithId}>
-            <button
-              type="submit"
-              className="text-xs text-red-500 hover:underline px-2 py-1 rounded hover:bg-red-50 transition"
-            >
-              Eliminar
-            </button>
-          </form>
-        </div>
-      </td>
+      {!readOnly && (
+        <td className="px-4 py-3">
+          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition">
+            <form action={restoreWithId}>
+              <button
+                type="submit"
+                className="text-xs text-brand-green hover:underline px-2 py-1 rounded hover:bg-green-50 transition"
+              >
+                Restaurar
+              </button>
+            </form>
+            <form action={deleteWithId}>
+              <button
+                type="submit"
+                className="text-xs text-red-500 hover:underline px-2 py-1 rounded hover:bg-red-50 transition"
+              >
+                Eliminar
+              </button>
+            </form>
+          </div>
+        </td>
+      )}
     </tr>
   );
 }

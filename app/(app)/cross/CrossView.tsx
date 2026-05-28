@@ -200,8 +200,17 @@ export function CrossView({ orgId, initialTeams, initialInitiatives, squadProjec
   }
 
   function openEdit(ini: Initiative) {
+    console.log("[CrossView] openEdit:", ini.name, ini);
     setEditIni(ini);
     setPanelOpen(true);
+    // Sync form state immediately (not via useEffect — avoids reference-equality skips)
+    setPrevImp(ini.impact_value);
+    setPrevSp(ini.effort_sprints);
+    setStartDate(ini.start_date ?? "");
+    setEndDate(ini.end_date ?? "");
+    setDuration(Number(ini.duration_quarters));
+    setTeamAllocations((ini.team_allocations as Record<string, number>) ?? {});
+    setSqProjectIds((ini.sq_project_ids as string[]) ?? []);
   }
 
   function handleDelete(id: string) {
@@ -553,15 +562,20 @@ export function CrossView({ orgId, initialTeams, initialInitiatives, squadProjec
                 <F label="Duración">
                   <select
                     name="duration_quarters"
-                    value={duration}
+                    value={String(duration)}
                     onChange={(e) => setDuration(Number(e.target.value))}
                     className={inp}
                   >
-                    <option value={1}>1 Quarter</option>
-                    <option value={2}>2 Quarters</option>
-                    <option value={3}>3 Quarters</option>
-                    <option value={4}>4 Quarters (año completo)</option>
+                    <option value="1">1 Quarter</option>
+                    <option value="2">2 Quarters</option>
+                    <option value="3">3 Quarters</option>
+                    <option value="4">4 Quarters (año completo)</option>
                   </select>
+                  {editIni && (
+                    <span className="text-[10px] text-gray-400 mt-0.5">
+                      DB: duration_quarters={String(editIni.duration_quarters)} · estado={duration}
+                    </span>
+                  )}
                 </F>
               )}
 

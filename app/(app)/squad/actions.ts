@@ -159,7 +159,7 @@ export async function createSlice(
   _prevState: State,
   formData: FormData
 ): Promise<State> {
-  const { admin, orgId } = await getAuthContext();
+  const { user, admin, orgId } = await getAuthContext();
 
   const parentId = formData.get("parent_id") as string;
   if (!parentId) return { error: "parent_id requerido." };

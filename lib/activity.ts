@@ -31,7 +31,6 @@ export type ActivityLog = {
 };
 
 export function logActivity(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   admin: SupabaseClient<any>,
   orgId: string,
   actorId: string,

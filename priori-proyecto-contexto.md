@@ -1,63 +1,423 @@
 # Priori™ — Contexto del proyecto
 
+> Generado el 2026-06-02 desde el código fuente real. Todo dato aquí viene del repositorio,
+> no de documentación externa ni archivos de contexto anteriores.
+
+---
+
 ## Qué es Priori
 
-Priori™ es una herramienta web de transparencia estratégica para equipos de software. Permite clasificar proyectos e iniciativas usando la Matriz de Impacto vs Esfuerzo, simular escenarios de priorización con drag & drop, analizar el impacto de cada decisión antes de tomarla, y planificar la capacidad de equipos a lo largo del año por Quarters.
+Priori™ es una herramienta web de transparencia estratégica para equipos de software.
+Permite clasificar proyectos usando la Matriz de Impacto vs Esfuerzo (Modo Squad) y planificar
+la capacidad de equipos por Quarters (Modo Cross).
 
-**Tagline:** "La claridad de priorizar bien."
+**Tagline / metadata del sitio:** "Transparencia estratégica para equipos de software.
+Matriz de Impacto vs Esfuerzo, planificación por Quarters."
 
----
-
-## Estado actual
-
-- La herramienta existe y funciona como archivo HTML estático (`priori-estimador-v2.html`)
-- Fue validada internamente en Galicia Seguros (compañía de seguros líder en Argentina)
-- Está en proceso de salir al mercado como producto comercial propio
-- Toda la documentación, contratos, caso de éxito y sistema de logo están generados
+**Eslogan en el header:** "Transparencia Estratégica"
 
 ---
 
-## La herramienta — funcionalidades actuales
+## Estado de producción
 
-**Tecnología:** HTML5 + CSS3 + JavaScript vanilla. Sin backend, sin base de datos, sin dependencias externas salvo Tabler Icons (CDN), html2canvas y jsPDF (CDN).
+- App desplegada en Vercel (deploy automático desde `main`).
+- URL de producción: definida por `NEXT_PUBLIC_SITE_URL` (env var en Vercel). No está hardcodeada en el código.
+- Dominio `priori.ar` pendiente de configurar en DNS/Vercel.
 
-**Modo Squad**
-- Canvas de burbujas con drag & drop
-- Clasificación automática por Matriz de Impacto vs Esfuerzo (4 cuadrantes: Quick win P1, Gran proyecto P2, Iniciativa menor P3, Descartada P0)
-- Tamaño de burbuja = sprints estimados (1 a 24)
-- Color de burbuja = cuadrante
-- Punto de urgencia por fecha de salida a producción (verde / amarillo / rojo)
-- Límite de capacidad = developers × proyectos/developer (configurable, default 3)
-- Modal de análisis de impacto al superar el límite (cuadrante, sprints completados, dependencias, stakeholder, fecha de producción)
-- Edición de proyectos con contorno naranja en burbuja activa
-- Franja de proyectos descartados con opción de restaurar
+---
 
-**Modo Cross**
-- Timeline Q1–Q4 (Ene-Mar / Abr-Jun / Jul-Sep / Oct-Dic)
-- Iniciativas drag & drop desde backlog a Quarters
-- Duración 1 a 4 Quarters, cards fantasma en Quarters de continuación
-- Validación de capacidad al asignar (alerta si equipo sobreocupado)
-- Tabla de capacidad: usado/disponible, % ocupación, semáforo verde(<70%) / amarillo(<90%) / rojo(≥90%)
-- Capacidad = personas × proyectos/persona × (% disponibilidad Q / 100)
-- Equipos configurables: nombre, personas, proyectos/persona, Q1%–Q4%
-- Drill-down: botón en cada iniciativa abre Modo Squad en contexto de esa iniciativa, con banner "Volver al Cross"
+## Stack
 
-**Compartir y exportar**
-- Barra visible en todo momento con botón "Compartir / Exportar"
-- Estado serializado en Base64 en URL (?state=...)
-- Canales: Teams, WhatsApp, correo, copiar enlace
-- Exportar PDF: Vista Squad o Cross (html2canvas + jsPDF)
-- Carga automática de estado desde URL al abrir
+| Paquete | Versión | Uso |
+|---|---|---|
+| next | 14.2.35 | Framework (App Router) |
+| react | ^18 | UI |
+| typescript | ^5 | Tipado |
+| tailwindcss | ^3.4.1 | Estilos (con colores `brand-*` custom) |
+| geist | ^1.7.1 | Tipografía (Geist Sans) |
+| @supabase/supabase-js | ^2.106.2 | DB + Auth client |
+| @supabase/ssr | ^0.10.3 | Auth SSR (cookies) |
+| ai | ^6.0.192 | Vercel AI SDK core (streamText, generateText) |
+| @ai-sdk/anthropic | ^3.0.81 | Proveedor Claude |
+| @ai-sdk/openai | ^3.0.66 | Proveedor GPT / Azure |
+| @ai-sdk/azure | ^3.0.67 | Proveedor Azure OpenAI |
+| @ai-sdk/google | ^3.0.80 | Proveedor Gemini |
+| @ai-sdk/groq | ^3.0.39 | Proveedor Groq |
+| @ai-sdk/react | ^3.0.194 | Hooks React del AI SDK |
+| resend | ^6.12.4 | Emails transaccionales |
+| @react-pdf/renderer | ^4.5.1 | PDF server-side |
+| @tabler/icons-react | ^3.44.0 | Iconografía |
+| html2canvas | ^1.4.1 | En package.json (puede ser legacy) |
+| jspdf | ^4.2.1 | En package.json (puede ser legacy) |
 
-**Configuración (panel ⚙)**
-- Métrica de impacto: Ventas ($) o Clientes
-- Umbrales de impacto: alto ≥ $4M, medio ≥ $2M (configurables)
-- Umbrales de esfuerzo: alto ≥ 8sp, medio ≥ 4sp (configurables)
-- Developers y proyectos por developer (Modo Squad)
-- Equipos del programa con disponibilidad por Quarter (Modo Cross)
+---
 
-**Equipos preconfigurados por defecto**
-Software Delivery (8p), Arquitectura (4p), Infraestructura (5p), Seg. Informática (3p), QA (6p), Data & Analytics (3p)
+## Paleta de marca (tailwind.config.ts)
+
+```ts
+brand: {
+  orange: "#E8621A",   // color principal
+  black:  "#111111",
+  gray:   "#6B6B6B",
+  green:  "#1D9E75",
+  blue:   "#1E6FC5",
+}
+```
+
+---
+
+## Estructura de carpetas
+
+```
+priori-webapp/
+app/
+  (auth)/               # Rutas públicas de auth (layout centrado, bg-gray-50)
+    login/              # Login email + password + OAuth Google (supabase.auth.signInWithOAuth)
+    signup/             # Registro
+  (app)/                # Rutas protegidas (layout verifica auth, redirige a /login si no hay user)
+    activity/           # Server actions para activity_log
+    comments/           # Server actions para comments
+    cross/              # Modo Cross: CrossView.tsx, CrossHeaderRight.tsx, actions.ts, page.tsx
+    dashboard/          # Dashboard home: stats Squad+Cross, timeline resumen, actividad reciente
+                        # DashboardHeaderRight.tsx — botones de cabecera del dashboard
+    onboarding/         # Crear org (page.tsx) + equipos default (teams/page.tsx)
+    settings/
+      ai/               # AISettingsView.tsx — configurar proveedor IA (solo owner/admin)
+      members/          # MembersView.tsx — gestión de miembros e invitaciones
+    share/              # Server actions de ShareModal (crear/eliminar shared_views)
+    squad/              # Modo Squad: SquadView.tsx, SquadCanvas.tsx, AnalystPanel.tsx,
+                        # BubbleCard.tsx, ProjectForm.tsx, ProjectList.tsx, ImpactModal.tsx,
+                        # actions.ts, page.tsx
+  api/
+    ai/
+      analyze/          # POST streaming — chat con contexto Squad/Cross (AI SDK streamText)
+      interview/        # POST JSON — entrevista guiada 6 preguntas → generateText → JSON
+    auth/send-email/    # POST — hook Supabase para emails de auth en español (Resend)
+    export/pdf/         # GET — PDF server-side (?mode=squad|cross) con @react-pdf/renderer
+    invite/accept/      # POST — aceptar invitación por token
+  auth/
+    callback/           # OAuth callback (Supabase)
+    logout/             # Logout + redirect a /login
+  invite/[token]/       # Página pública: aceptar invitación (AcceptInviteButton.tsx)
+  share/[token]/        # Página pública: vista de solo lectura (SquadReadOnly.tsx o CrossReadOnly.tsx)
+  icon.tsx              # Favicon dinámico PNG 32x32 (next/og, edge runtime)
+  layout.tsx            # Root layout — metadata, Geist font, lang="es"
+  page.tsx              # Raíz: redirige a /dashboard
+components/
+  ai/
+    AIChatPanel.tsx         # Panel lateral izquierdo, streaming manual, sugerencias iniciales
+    AIInterviewModal.tsx    # Modal 6 preguntas conversacionales → datos para crear proyecto/iniciativa
+  ui/
+    ActivityFeed.tsx        # Feed de actividad por entidad (entityId)
+    CommentsThread.tsx      # Hilo de comentarios con form
+    LogoutButton.tsx        # Botón de cierre de sesión
+    OnboardingTour.tsx      # Tour guiado (localStorage, forceOpen prop)
+    ShareModal.tsx          # Modal compartir/exportar (link público + PDF)
+    TeamPanel.tsx           # Panel modal CRUD de equipos (Cross)
+    TeamPanelTrigger.tsx    # Botón que abre TeamPanel
+lib/
+  supabase/
+    client.ts            # createClient() — browser
+    server.ts            # createClient() — server components + SSR cookies
+    admin.ts             # createAdminClient() — service role, bypassea RLS (server-only)
+  pdf/
+    SquadPDF.tsx          # Componente @react-pdf/renderer para PDF Squad (A4 portrait)
+    CrossPDF.tsx          # Componente @react-pdf/renderer para PDF Cross (A4 landscape)
+  activity.ts            # logActivity(), ACTION_LABEL, ActivityAction type, ActivityLog type
+  ai-context.ts          # buildSquadContext(), buildCrossContext() → SquadAIContext | CrossAIContext
+  ai-providers.ts        # getAiSettings(), buildLanguageModel(), getModelForOrg() — factory multi-proveedor
+  capacity.ts            # computeCapacity(), capacityDotClass(), CapacityStatus, CapacityIndicator
+  email.ts               # sendInvitationEmail() via Resend
+  quadrant.ts            # computeQuadrant(), QUADRANT_META, DEFAULT_IMPACT_HIGH=4_000_000, DEFAULT_EFFORT_HIGH=8
+  roles.ts               # AppRole, ROLE_LABEL, ROLE_COLOR, ROLE_BG, ROLE_BORDER, canWrite(), canManageMembers()
+  squad-logic.ts         # bubbleRadius(), posIn(), posOut(), posInBand(), separateBubbles(),
+                         # deadlineStatus(), DL_COLOR, CAP_COLOR, squadLimit(),
+                         # dateToQuarter(), quartersBetween(),
+                         # loadConfig()/saveConfig()/DEFAULT_CONFIG — SquadConfig en localStorage por orgId
+types/
+  database.ts            # Tipos TypeScript de todas las tablas + alias de conveniencia
+public/
+  favicon.svg            # SVG favicon (3 barras Priori)
+middleware.ts            # Auth: protege /dashboard, /onboarding, /squad, /cross, /settings
+                         # /invite/[token] y /share/[token] son públicas
+next.config.mjs          # Vacío (config default de Next.js)
+tailwind.config.ts       # Colores brand-* custom, font Geist Sans
+```
+
+---
+
+## Rutas de la app
+
+### Públicas (sin autenticación)
+
+| Ruta | Descripción |
+|---|---|
+| `/` | Redirige a `/dashboard` |
+| `/login` | Login con email/password + OAuth Google |
+| `/signup` | Registro |
+| `/auth/callback` | Callback OAuth de Supabase |
+| `/auth/logout` | Logout, redirige a `/login` |
+| `/invite/[token]` | Aceptar invitación a organización |
+| `/share/[token]` | Vista de solo lectura (Squad o Cross) |
+| `POST /api/auth/send-email` | Hook Supabase: envío de emails auth en español |
+| `POST /api/invite/accept` | Aceptar token de invitación |
+
+### Protegidas (requieren auth)
+
+| Ruta | Descripción |
+|---|---|
+| `/dashboard` | Stats Squad + Cross, timeline resumen, actividad reciente |
+| `/squad` | Modo Squad — canvas de proyectos con drag and drop; acepta `?ini=<id>` para filtrar por iniciativa Cross |
+| `/cross` | Modo Cross — timeline Q1-Q4 de iniciativas, también carga proyectos Squad para drill-down |
+| `/onboarding` | Step 1: crear organización |
+| `/onboarding/teams` | Step 2: configurar equipos |
+| `/settings/members` | Miembros, roles e invitaciones |
+| `/settings/ai` | Configurar proveedor IA (solo owner/admin) |
+| `POST /api/ai/analyze` | Chat streaming con contexto Squad o Cross |
+| `POST /api/ai/interview` | Entrevista guiada IA → JSON |
+| `GET /api/export/pdf` | PDF server-side (?mode=squad o cross) |
+
+---
+
+## Modos y vistas (nombres reales del código)
+
+### Modo Squad (`/squad`)
+
+- **Título en UI:** "Modo Squad"
+- **Dos sub-vistas:** "Canvas" y "Lista" (toggle en SquadView)
+- **Toggle:** "Vista Q" — overlay de quarters sobre el canvas
+- **Estados de proyectos:**
+  - `squad_status = "curso"` → proyectos "En curso" (dentro del círculo en el canvas)
+  - `squad_status = "backlog"` → proyectos en "Backlog" (arco exterior)
+  - `status = "discarded"` → descartados (visibles fuera del canvas)
+  - Proyectos P0 activos (cuadrante `p0`) se separan del canvas y no se muestran en él
+- **Panel de edición:** AnalystPanel (deslizante derecha) con tabs: `form`, `items`, `config`, `comments`, `history`
+- **Drill-down desde Cross:** query param `?ini=<id>` filtra y resalta proyectos vinculados a una iniciativa
+- **Botón IA:** "Priori AI" (abre AIChatPanel)
+- **Botón en AnalystPanel:** "Cargar con IA" (abre AIInterviewModal)
+
+### Modo Cross (`/cross`)
+
+- **Título en página:** "Planificación del Programa" / subtítulo "Iniciativas multi-equipo · Capacidad por Quarter · Año 2026"
+- **Timeline:** Q1 (Ene–Mar), Q2 (Abr–Jun), Q3 (Jul–Sep), Q4 (Oct–Dic)
+- **Estados de iniciativas:**
+  - `q_start != null` → en el timeline
+  - `q_start = null` → en "Backlog del Programa"
+- **Panel de edición:** "Panel del programa" (deslizante derecha, en CrossView.tsx)
+  - Incluye tabs "💬 Comentarios" y "📋 Historial" al editar una iniciativa existente
+- **Tabla de capacidad:** por equipo y quarter, semáforo de colores
+- **FAB:** botón "+" (nueva iniciativa) + botón IA secundario (AIInterviewModal)
+- **Botón IA:** "Priori AI" (abre AIChatPanel)
+- **Drill-down a Squad:** `sq_project_ids` en initiatives; desde Cross se puede navegar a `/squad?ini=<id>`
+
+### Cuadrantes de prioridad (lib/quadrant.ts)
+
+Umbrales por defecto (no configurables por usuario aún):
+- `DEFAULT_IMPACT_HIGH = 4_000_000`
+- `DEFAULT_EFFORT_HIGH = 8` sprints
+
+| Cuadrante | Nombre | Color |
+|---|---|---|
+| P1 | Quick Win | verde `#1D9E75` |
+| P2 | Gran Proyecto | azul `#1E6FC5` |
+| P3 | Iniciativa Menor | gris `#6B6B6B` |
+| P0 | Descartada | naranja `#E8621A` |
+
+### Roles (lib/roles.ts)
+
+| Role (DB) | Label en UI | Color bg | Color borde |
+|---|---|---|---|
+| `owner` | Líder | `#FFF4EE` | `#FDDCB5` |
+| `admin` | Analista | `#EAF1FB` | `#BDD5F5` |
+| `member` | Stakeholder | `#F5F5F5` | `#E5E5E5` |
+
+Color de texto: owner `#E8621A` · admin `#1E6FC5` · member `#6B6B6B`
+
+`canWrite()` → owner o admin. `canManageMembers()` → owner o admin.
+`member` tiene vistas en modo `readOnly` (sin drag, sin panel de edición).
+
+---
+
+## Priori AI (Fase 4)
+
+### Proveedores soportados (lib/ai-providers.ts)
+
+| Provider | Modelo por defecto | Modelo efectivo |
+|---|---|---|
+| `anthropic` | `claude-sonnet-4-6` | `model_id` de settings si está seteado, si no el default |
+| `openai` | `gpt-4o` | `model_id` de settings si está seteado, si no el default |
+| `azure` | `gpt-4o` | `model_id` + `azure_endpoint` de settings |
+| `google` | `gemini-2.0-flash` | **Hardcodeado** `"gemini-2.0-flash"`, ignora `model_id` |
+| `groq` | `llama-3.3-70b-versatile` | **Hardcodeado** `"llama-3.3-70b-versatile"`, ignora `model_id` |
+
+### Endpoints
+
+- `POST /api/ai/analyze` — streaming con `streamText()`, sistema contextual Squad o Cross (`runtime = "nodejs"`)
+- `POST /api/ai/interview` — 6 preguntas conversacionales, `generateText()` → JSON estructurado (`runtime = "nodejs"`)
+
+### Preguntas de la entrevista (modo Squad)
+1. Qué es la iniciativa y qué problema resuelve para el negocio
+2. A quién impacta principalmente (clientes, ventas, operaciones internas)
+3. Cuánto valor genera ($ o clientes afectados)
+4. Cuántos sprints lleva (cada sprint = 2 semanas)
+5. Hay fecha crítica de salida a producción
+6. De qué otros proyectos o sistemas depende
+
+### Preguntas de la entrevista (modo Cross)
+1. Qué es y qué problema del negocio resuelve
+2. A qué equipo pertenece o cuál es el equipo principal que la ejecuta
+3. En qué quarter necesita que empiece (Q1 = Ene-Mar … Q4 = Oct-Dic)
+4. Cuántos quarters dura aproximadamente
+5. Tiene dependencias con otras iniciativas del programa
+6. Quién es el stakeholder o responsable
+
+---
+
+## Schema de Supabase
+
+### Tablas core
+
+| Tabla | Columnas clave |
+|---|---|
+| `profiles` | id (→ auth.users), full_name, avatar_url, created_at, updated_at |
+| `organizations` | id, name, slug (UNIQUE), created_at, updated_at |
+| `organization_members` | id, organization_id, profile_id, role (owner/admin/member), created_at |
+
+Enum en DB: `member_role` = `"owner" | "admin" | "member"`
+
+### Modo Squad
+
+| Tabla | Columnas clave |
+|---|---|
+| `projects` | id, organization_id, name, description, impact_value (numeric), impact_metric (revenue/customers), effort_sprints (1–24), sprints_completed, squad_status (backlog/curso), status (active/discarded), stakeholder, production_date, dependencies, canvas_x, canvas_y, parent_id, slice_label, created_at, updated_at |
+
+### Modo Cross
+
+| Tabla | Columnas clave |
+|---|---|
+| `teams` | id, organization_id, name, personas, proy_per_persona, q1_pct–q4_pct (0–100), sort_order, created_at |
+| `initiatives` | id, organization_id, name, description, stakeholder, impact_value, impact_metric, effort_sprints (1–24), duration_quarters (1–4), q_start (0–3 o null=backlog), team_ids (string[]), team_allocations (Record\<uuid, number\>), sq_project_ids (string[]), start_date, end_date, status (active/discarded), created_at, updated_at |
+
+### Colaboración
+
+| Tabla | Columnas clave |
+|---|---|
+| `comments` | id, organization_id, author_id, initiative_id OR project_id (CHECK: exactamente uno), body (max 2000), created_at |
+| `activity_log` | id, organization_id, actor_id, entity_type (initiative/project), entity_id, entity_name, action (created/updated/deleted/placed/unplaced/discarded/restored/commented), metadata (jsonb), created_at — `Update: Record<never, never>` (INSERT-only) |
+
+### Sharing e invitaciones
+
+| Tabla | Columnas clave |
+|---|---|
+| `shared_views` | id, organization_id, created_by, mode (squad/cross), token (UNIQUE), expires_at (null = sin vencimiento), created_at |
+| `invitations` | id, organization_id, invited_by, email, role, token (UNIQUE), expires_at (+7 días), accepted_at (null = pendiente), created_at |
+
+### IA
+
+| Tabla | Columnas clave |
+|---|---|
+| `ai_settings` | id, organization_id (UNIQUE), provider (anthropic/openai/azure/google/groq), api_key, model_id (nullable), azure_endpoint (nullable), created_at, updated_at |
+
+### Funciones SQL helper (SECURITY DEFINER)
+
+Definidas en `20260526000003_rls_consolidado.sql`:
+- `public.my_role_in_org(org_id uuid) → text` — rol del usuario actual en una org dada
+- `public.is_in_same_org(target_profile_id uuid) → boolean` — si dos perfiles comparten alguna org
+
+### Migraciones aplicadas
+
+```
+20260526000000_initial_schema.sql
+20260526000001_fix_rls_recursion.sql
+20260526000002_fix_is_in_same_org.sql
+20260526000003_rls_consolidado.sql
+20260526000004_fix_org_insert_policy.sql
+20260526000005_projects.sql
+20260526000006_add_sprints_completed.sql
+20260526000007_add_canvas_position.sql
+20260526000008_squad_status.sql
+20260526000009_cross_tables.sql
+20260527000010_seed_tls.sql
+20260527000011_project_slices.sql
+20260527000012_shared_views.sql
+20260527000013_invitations.sql
+20260527000014_initiative_dates_and_allocations.sql
+20260527000015_fix_proy_per_persona.sql
+20260528000016_recalculate_duration_quarters.sql
+20260528000017_comments.sql
+20260528000018_activity_log.sql
+20260528000019_ai_settings.sql
+20260528000020_ai_settings_google.sql
+20260528000021_ai_settings_groq.sql
+```
+
+### RLS
+
+- Todas las tablas tienen RLS habilitado.
+- Las server actions usan `createAdminClient()` (service role key, bypassea RLS) — nunca expuesto al cliente.
+- El cliente browser usa `createClient()` con cookies de sesión del usuario.
+
+---
+
+## Variables de entorno
+
+| Variable | Scope | Descripción |
+|---|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | public | URL del proyecto Supabase |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | public | Anon key de Supabase |
+| `SUPABASE_SECRET_KEY` | server | Service role key (bypassea RLS) |
+| `SUPABASE_HOOK_SECRET` | server | Secret para validar el hook de email auth — **pendiente configurar en Vercel** |
+| `RESEND_API_KEY` | server | API key de Resend |
+| `RESEND_FROM_EMAIL` | server | Email remitente (fallback: `noreply@priori.app`) |
+| `NEXT_PUBLIC_SITE_URL` | public | URL base del sitio para links en emails |
+| `VERCEL_URL` | auto | Inyectada por Vercel — fallback si `NEXT_PUBLIC_SITE_URL` no está |
+
+---
+
+## Middleware (middleware.ts)
+
+Rutas **protegidas** (requieren auth): `/dashboard`, `/onboarding`, `/squad`, `/cross`, `/settings`
+
+Rutas **públicas** (sin restricción): `/login`, `/signup`, `/invite/[token]`, `/share/[token]`, assets estáticos
+
+Lógica: sin user en ruta protegida → `/login`. Con user en ruta auth → `/dashboard`.
+
+---
+
+## Lo que está implementado
+
+- Auth completo: signup/login con email + OAuth Google, confirmación por email, middleware de rutas protegidas
+- Multi-tenant: organizaciones, onboarding (crear org + equipos default), membresías con roles
+- **Modo Squad:** canvas con drag and drop, cuadrantes P0-P3, Vista Q (overlay quarters), toggle Canvas/Lista, slicing (proyectos padre/slice con canvas_x/canvas_y), semáforo de capacidad en SquadConfig (localStorage)
+- **Modo Cross:** timeline Q1-Q4 con CSS Grid span, drag desde backlog a quarters, tabla de capacidad con semáforo, equipos configurables (personas, proy_per_persona, % disponibilidad por Q)
+- Drill-down bidireccional Squad ↔ Cross: `sq_project_ids` en initiatives, `?ini=` en /squad, highlight de proyectos vinculados
+- Vista pública `/share/[token]`: solo lectura con token expiable opcional
+- Roles: owner/admin/member — canWrite y canManageMembers en todas las server actions
+- Comentarios por proyecto/iniciativa (tabla `comments` con RLS)
+- Historial de actividad (tabla `activity_log`, logActivity en todas las mutations)
+- CommentsThread + ActivityFeed integrados en AnalystPanel (Squad) y panel de Cross
+- OnboardingTour de 5 pasos (localStorage + botón Ayuda)
+- Invitaciones por email: generación de token, página `/invite/[token]`, email via Resend
+- Email de confirmación de Auth via Supabase Hook → `/api/auth/send-email` → Resend
+- PDF server-side con @react-pdf/renderer: GET `/api/export/pdf?mode=squad|cross`
+- ShareModal con link público + exportar PDF
+- Favicon SVG (3 barras) + favicon PNG dinámico (app/icon.tsx)
+- **Priori AI:**
+  - Tabla `ai_settings` por organización
+  - 5 proveedores: Anthropic, OpenAI, Azure, Google (gemini-2.0-flash hardcoded), Groq (llama-3.3-70b-versatile hardcoded)
+  - `POST /api/ai/analyze` — chat streaming con contexto completo (Squad o Cross)
+  - `POST /api/ai/interview` — entrevista 6 pasos → JSON → prellenar form
+  - AIChatPanel en Squad y Cross
+  - AIInterviewModal en Squad (AnalystPanel) y Cross (FAB secundario)
+
+---
+
+## Pendiente
+
+- **Dominio `priori.ar`:** configurar en Vercel (A en apex, CNAME en www) + Supabase (Site URL + Redirect URLs), reactivar email de confirmación con dominio propio
+- **`SUPABASE_HOOK_SECRET`:** agregar en Vercel → Settings → Environment Variables para activar el hook de email auth
+- **Umbrales configurables por org:** `DEFAULT_IMPACT_HIGH` y `DEFAULT_EFFORT_HIGH` están hardcodeados en `lib/quadrant.ts`; la UI de configuración aún no existe
+- **Fase 5 — Integraciones:** Azure DevOps, Jira, GitHub Issues/Projects, Linear
 
 ---
 
@@ -66,78 +426,23 @@ Software Delivery (8p), Arquitectura (4p), Infraestructura (5p), Seg. Informáti
 | | |
 |---|---|
 | **Nombre** | Priori™ |
-| **Tagline** | La claridad de priorizar bien. |
-| **Color principal** | Naranja #E8621A |
-| **Logo** | 3 barras horizontales (P1 larga, P2 media, P3 corta) en degradé de opacidad |
+| **Tagline en metadata** | Transparencia estratégica para equipos de software |
+| **Eslogan en header** | Transparencia Estratégica |
+| **Color principal** | Naranja `#E8621A` |
+| **Paleta completa** | Negro `#111111` · Gris `#6B6B6B` · Verde `#1D9E75` · Azul `#1E6FC5` |
+| **Logo** | 3 barras horizontales en degradé de opacidad naranja (100% / 65% / 30%) |
 | **Wordmark** | "priori" en minúscula, bold |
-| **Dominio objetivo** | priori.app (verificar disponibilidad en namecheap.com) |
-| **Registro de marca** | INPI Clase 42 — en proceso |
+| **Dominio objetivo** | priori.ar (pendiente apuntar a Vercel) |
 
 ---
 
-## Modelo de negocio
+## Notas para Claude en este proyecto
 
-**Fase 1 (actual):** Licencia anual por empresa
-- Pequeña: USD 3.000–5.000/año (hasta 3 squads)
-- Mediana: USD 8.000–12.000/año (squads ilimitados + Cross)
-- Enterprise: a consultar (on-premise, SSO, personalización)
-
-**Fase 2 (con webapp):** SaaS por equipo
-
----
-
-## Documentación generada
-
-Todos los documentos existen en dos versiones: brand Galicia Seguros (uso interno) y brand Priori puro (clientes externos).
-
-| Documento | Descripción |
-|---|---|
-| `priori-estimador-v2.html` | Herramienta completa (versión Priori, sin logo Galicia) |
-| `priori-documentacion-funcional.docx` | Documentación técnica completa (11 secciones) |
-| `priori-presentacion.pptx` | Presentación del producto (6 slides) |
-| `priori-caso-exito.docx` | Caso de éxito — compañía de seguros líder en Argentina (anónima) |
-| `priori-caso-exito-landing.html` | Landing page lista para publicar |
-| `priori-contrato-licencia-v1.docx` | Contrato de licencia (12 cláusulas, ley argentina, monotributista) |
-| `priori-nota-uso-interno.docx` | Nota de puesta a disposición para Galicia (protección de PI) |
-| `priori-nombre-comercial-plan-accion.docx` | Plan de registro de marca + dominios |
-| `priori-roadmap-tecnico-webapp.docx` | Hoja de ruta técnica webapp (12 semanas) |
-| `priori-logo-*.svg` | Sistema de logo completo (6 variantes SVG) |
-
----
-
-## Roadmap técnico — Webapp v1
-
-**Stack:** Next.js 14 (App Router) + Supabase (DB + Auth) + Vercel
-
-**Fases:**
-- Fase 1 (sem 1–3): Auth, rutas protegidas, DB schema, deploy en Vercel
-- Fase 2 (sem 4–8): Migración del core funcional (Squad + Cross + compartir + PDF) con persistencia en Supabase
-- Fase 3 (sem 9–12): Organizaciones, roles (Analista / Stakeholder / Líder), invitaciones, pulido
-
-**Costo infraestructura:** USD 0/mes hasta los primeros 5–10 clientes (planes gratuitos de Supabase y Vercel)
-
-**Referencia de stack:** mismo que el proyecto Artentino (https://artentino.vercel.app)
-
----
-
-## Contexto legal y de PI
-
-- Desarrollado 100% fuera del horario laboral con recursos propios
-- El autor tiene contrato de dependencia con Galicia Seguros con cláusulas de PI
-- Se entrega a Galicia solo el HTML estático mediante Nota de Puesta a Disposición
-- La nota establece explícitamente que no hay cesión de PI
-- **Pendiente urgente:** registrar el código en la DNDA (dnda.gob.ar) antes de presentar en Galicia
-- **Pendiente:** registrar marca "Priori" en INPI Clase 42
-- **Pendiente:** consulta con abogado laboralista sobre cláusula PI del contrato
-
----
-
-## Instrucciones para Claude en este proyecto
-
-- El archivo de código principal es `priori-estimador-v2.html`. Cualquier modificación funcional se hace sobre ese archivo.
-- Toda la lógica de negocio (matriz, capacidad, análisis de impacto) está en JavaScript vanilla dentro del HTML.
-- El nombre del producto es **Priori™** — siempre con tilde, siempre en minúscula en el wordmark ("priori"), con ™ en contextos formales.
-- La documentación Word se construye con la librería `docx` de npm. Las PPT con `pptxgenjs`.
-- Los documentos existen en dos versiones: `galicia-*` (con logo Galicia) y `priori-*` (brand Priori puro).
-- Cuando se genere código o documentación nueva, respetar la paleta: naranja #E8621A, negro #111111, gris #6B6B6B, verde #1D9E75, azul #1E6FC5.
-- Los campos a completar en documentos legales se marcan entre corchetes: `[CAMPO]`.
+- Para archivos `.ts/.tsx` usar Node.js (`fs.writeFileSync`) — nunca PowerShell `Set-Content` (corrompe UTF-8).
+- Las server actions usan `createAdminClient()` para bypassear RLS.
+- `SquadConfig` (devN, devP, metric, iHigh, iMid, eHigh, eMid) vive en `localStorage` con clave `priori_cfg_<orgId>` — no está en Supabase.
+- Para Google y Groq el `model_id` de `ai_settings` es **ignorado** — el modelo está hardcodeado en `lib/ai-providers.ts`.
+- `html2canvas` y `jspdf` están en `package.json` pero los PDFs se generan server-side con `@react-pdf/renderer`.
+- Los cuadrantes de la Matriz usan umbrales fijos: impacto ≥ `4_000_000` = alto; esfuerzo ≥ `8` sprints = alto.
+- `lib/squad-logic.ts` concentra la lógica de la matriz, capacidad y posicionamiento del canvas del Modo Squad.
+- `activity_log` es INSERT-only: el tipo `Update` en `database.ts` es `Record<never, never>`.

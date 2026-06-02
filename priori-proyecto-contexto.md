@@ -318,6 +318,23 @@ Enum en DB: `member_role` = `"owner" | "admin" | "member"`
 |---|---|
 | `ai_settings` | id, organization_id (UNIQUE), provider (anthropic/openai/azure/google/groq), api_key, model_id (nullable), azure_endpoint (nullable), created_at, updated_at |
 
+### Fase 5 — En desarrollo (tablas planificadas, aún no migradas)
+
+| Tabla | Columnas clave | Fase |
+|---|---|---|
+| `products` | id, organization_id, name, description, color, sort_order, created_at | Roadmap |
+| `roadmap_segments` | id, organization_id, product_id, team_id, name, start_sprint (int), duration_sprints (int), dependencies (uuid[]), status (planned/in_progress/done/blocked), created_at, updated_at | Roadmap |
+| `team_dependencies` | id, organization_id, from_team_id, to_team_id, segment_id, description, created_at | Roadmap |
+| `deviations` | id, organization_id, project_id OR initiative_id (polimórfico, CHECK exactamente uno), date, reason, blocking_dependency (text), affected_dependency (text), status (open/resolved), source (text nullable), external_ref (text nullable), created_at, updated_at | Desvíos |
+| `ideas` | id, organization_id, author_id, title, description, status (raw/refined/promoted/discarded), promoted_to_project_id (nullable), promoted_to_initiative_id (nullable), interview_data (jsonb), created_at, updated_at | Ideas |
+
+**Notas de diseño Fase 5:**
+- `teams` ganará columna `description` (text nullable) para el Modo Roadmap
+- `deviations` sigue el patrón polimórfico de `comments` (exactamente una FK entre project_id/initiative_id)
+- `deviations.source` / `external_ref` preparados para integración con Jira/Azure DevOps (Fase 6)
+- `ideas` reutiliza el patrón de `/api/ai/interview`; la promoción prellenar el form de Squad o Cross existente
+- El Modo Roadmap calcula en sprints y renderiza en vistas mes/semana/sprint con auto-reflow por dependencias
+
 ### Funciones SQL helper (SECURITY DEFINER)
 
 Definidas en `20260526000003_rls_consolidado.sql`:
@@ -417,7 +434,11 @@ Lógica: sin user en ruta protegida → `/login`. Con user en ruta auth → `/da
 - **Dominio `priori.ar`:** configurar en Vercel (A en apex, CNAME en www) + Supabase (Site URL + Redirect URLs), reactivar email de confirmación con dominio propio
 - **`SUPABASE_HOOK_SECRET`:** agregar en Vercel → Settings → Environment Variables para activar el hook de email auth
 - **Umbrales configurables por org:** `DEFAULT_IMPACT_HIGH` y `DEFAULT_EFFORT_HIGH` están hardcodeados en `lib/quadrant.ts`; la UI de configuración aún no existe
-- **Fase 5 — Integraciones:** Azure DevOps, Jira, GitHub Issues/Projects, Linear
+- **Fase 5 — Modo Roadmap, Desvíos e Ideas (en desarrollo):**
+  - **Modo Roadmap:** tercer modo al nivel de Squad y Cross. Gantt por producto (reemplazo de tableros tipo MIRO). Una fila por producto-equipo, con auto-reflow por dependencias y switch manual. Vistas mes/semana/sprint; cálculo en sprints. Capacidad cross-producto. Tablas nuevas: `products`, `roadmap_segments`, `team_dependencies`; `teams` gana campo `description`.
+  - **Agenda de Desvíos:** registro de bloqueos por proyecto o iniciativa (fecha, razón, dependencia que lo produjo y la que podría afectar, estado open/resolved). Tabla nueva: `deviations` (patrón polimórfico idéntico a `comments`). Campos `source`/`external_ref` preparados para integración de Fase 6. Nueva acción en `activity_log`.
+  - **"Tengo una idea":** asistente IA que entrevista a stakeholders para refinar ideas antes de que sean proyecto. Tabla nueva: `ideas` (status: raw/refined/promoted/discarded). Reutiliza el patrón de `/api/ai/interview`. Promoción a proyecto/iniciativa prellenando el form existente.
+- **Fase 6 — Integraciones:** Azure DevOps, Jira, GitHub Issues/Projects, Linear
 
 ---
 

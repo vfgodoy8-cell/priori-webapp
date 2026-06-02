@@ -12,6 +12,7 @@ Si la documentación no coincide con el código, gana el código.
 - No commitear secretos. Variables de entorno en `.env.local` (local) y en Vercel (prod).
   En documentación se listan los **nombres** de las variables, nunca los valores.
 - Campos a completar en documentos legales: entre corchetes `[CAMPO]`.
+- En Modo Roadmap, "producto" (tabla `products`) es una entidad distinta de "iniciativa" (tabla `initiatives`). El vínculo entre ambas es opcional (campo nullable). No los trates como sinónimos.
 
 ## Estado del proyecto
 

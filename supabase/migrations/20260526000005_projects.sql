@@ -74,6 +74,9 @@ create policy "projects: delete"
   using (
     exists (
       select 1 from public.organization_members
+
+
+      
       where organization_id = projects.organization_id
         and profile_id = auth.uid()
     )

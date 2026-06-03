@@ -6,7 +6,7 @@ import { DashboardHeaderRight } from "./DashboardHeaderRight";
 import type { Organization, OrganizationMember, Team, Project, Initiative } from "@/types/database";
 import { type AppRole, ROLE_LABEL, ROLE_COLOR, ROLE_BG, ROLE_BORDER } from "@/lib/roles";
 import { computeQuadrant, QUADRANT_META } from "@/lib/quadrant";
-import { IconLayoutKanban, IconCalendarStats, IconSettings, IconUsers } from "@tabler/icons-react";
+import { IconLayoutKanban, IconCalendarStats, IconTimeline, IconSettings, IconUsers } from "@tabler/icons-react";
 import { getRecentActivity } from "@/app/(app)/activity/actions";
 import type { ActivityLog, ActivityAction } from "@/lib/activity";
 import { ACTION_LABEL } from "@/lib/activity";
@@ -153,6 +153,12 @@ export default async function DashboardPage() {
               className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-lg border border-gray-200 bg-white text-brand-gray hover:text-brand-black hover:border-gray-300 transition"
             >
               <IconCalendarStats size={15} strokeWidth={2} /> Modo Cross
+            </Link>
+            <Link
+              href="/roadmap"
+              className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-lg border border-gray-200 bg-white text-brand-gray hover:text-brand-black hover:border-gray-300 transition"
+            >
+              <IconTimeline size={15} strokeWidth={2} /> Modo Roadmap
             </Link>
           </div>
         </div>
@@ -312,7 +318,7 @@ export default async function DashboardPage() {
         )}
 
         {/* Quick links */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
           <QuickLink
             href="/squad"
             icon={<IconUsers size={22} strokeWidth={1.5} />}
@@ -326,6 +332,13 @@ export default async function DashboardPage() {
             title="Modo Cross"
             description="Timeline Q1—Q4 con capacidad por equipo"
             color="#1E6FC5"
+          />
+          <QuickLink
+            href="/roadmap"
+            icon={<IconTimeline size={22} strokeWidth={1.5} />}
+            title="Modo Roadmap"
+            description="Gantt por producto con reflow automático"
+            color="#9333EA"
           />
           <QuickLink
             href="/settings/members"

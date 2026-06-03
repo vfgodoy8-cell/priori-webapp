@@ -139,6 +139,7 @@ export type Database = {
           id: string;
           organization_id: string;
           name: string;
+          description: string | null;
           personas: number;
           proy_per_persona: number;
           q1_pct: number;
@@ -152,6 +153,7 @@ export type Database = {
           id?: string;
           organization_id: string;
           name: string;
+          description?: string | null;
           personas?: number;
           proy_per_persona?: number;
           q1_pct?: number;
@@ -163,6 +165,7 @@ export type Database = {
         };
         Update: {
           name?: string;
+          description?: string | null;
           personas?: number;
           proy_per_persona?: number;
           q1_pct?: number;
@@ -171,6 +174,102 @@ export type Database = {
           q4_pct?: number;
           sort_order?: number;
         };
+      };
+      products: {
+        Row: {
+          id: string;
+          organization_id: string;
+          name: string;
+          description: string | null;
+          business_area: string | null;
+          initiative_id: string | null;
+          start_date: string;
+          manual_mode: boolean;
+          status: "active" | "discarded";
+          sort_order: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          name: string;
+          description?: string | null;
+          business_area?: string | null;
+          initiative_id?: string | null;
+          start_date?: string;
+          manual_mode?: boolean;
+          status?: "active" | "discarded";
+          sort_order?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          name?: string;
+          description?: string | null;
+          business_area?: string | null;
+          initiative_id?: string | null;
+          start_date?: string;
+          manual_mode?: boolean;
+          status?: "active" | "discarded";
+          sort_order?: number;
+          updated_at?: string;
+        };
+      };
+      roadmap_segments: {
+        Row: {
+          id: string;
+          organization_id: string;
+          product_id: string;
+          team_id: string;
+          label: string;
+          duration_sprints: number;
+          depends_on: string[];
+          manual_start_sprint: number | null;
+          sort_order: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          product_id: string;
+          team_id: string;
+          label?: string;
+          duration_sprints?: number;
+          depends_on?: string[];
+          manual_start_sprint?: number | null;
+          sort_order?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          label?: string;
+          duration_sprints?: number;
+          depends_on?: string[];
+          manual_start_sprint?: number | null;
+          sort_order?: number;
+          updated_at?: string;
+        };
+      };
+      team_dependencies: {
+        Row: {
+          id: string;
+          organization_id: string;
+          team_id: string;
+          depends_on_team_id: string;
+          description: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          team_id: string;
+          depends_on_team_id: string;
+          description?: string | null;
+          created_at?: string;
+        };
+        Update: Record<never, never>;
       };
       initiatives: {
         Row: {
@@ -368,6 +467,13 @@ export type Deviation = {
   updated_at: string;
   reporter?: { full_name: string | null } | null;
 };
+
+export type Product = Database["public"]["Tables"]["products"]["Row"];
+export type ProductStatus = "active" | "discarded";
+
+export type RoadmapSegment = Database["public"]["Tables"]["roadmap_segments"]["Row"];
+
+export type TeamDependency = Database["public"]["Tables"]["team_dependencies"]["Row"];
 
 export type AiProvider = "anthropic" | "openai" | "azure" | "google" | "groq";
 

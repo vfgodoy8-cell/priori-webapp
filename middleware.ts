@@ -36,6 +36,7 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith("/onboarding") ||
     pathname.startsWith("/squad") ||
     pathname.startsWith("/cross") ||
+    pathname.startsWith("/roadmap") ||
     pathname.startsWith("/settings") ||
     pathname.startsWith("/ideas");
   // /invite/[token] is public — no protection needed

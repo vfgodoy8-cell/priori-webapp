@@ -34,57 +34,26 @@ ALTER TABLE public.deviations ENABLE ROW LEVEL SECURITY;
 -- SELECT: cualquier miembro de la org
 CREATE POLICY "deviations: select"
   ON public.deviations FOR SELECT
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.organization_members
-      WHERE organization_id = deviations.organization_id
-        AND profile_id = auth.uid()
-    )
-  );
+  USING (public.my_role_in_org(deviations.organization_id) IS NOT NULL);
 
 -- INSERT: cualquier miembro puede reportar un desvío
 CREATE POLICY "deviations: insert"
   ON public.deviations FOR INSERT
   WITH CHECK (
     reported_by = auth.uid() AND
-    EXISTS (
-      SELECT 1 FROM public.organization_members
-      WHERE organization_id = deviations.organization_id
-        AND profile_id = auth.uid()
-    )
+    public.my_role_in_org(deviations.organization_id) IS NOT NULL
   );
 
 -- UPDATE: solo owner/admin (canWrite)
 CREATE POLICY "deviations: update"
   ON public.deviations FOR UPDATE
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.organization_members
-      WHERE organization_id = deviations.organization_id
-        AND profile_id = auth.uid()
-        AND role IN ('owner', 'admin')
-    )
-  )
-  WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM public.organization_members
-      WHERE organization_id = deviations.organization_id
-        AND profile_id = auth.uid()
-        AND role IN ('owner', 'admin')
-    )
-  );
+  USING  (public.my_role_in_org(deviations.organization_id) IN ('owner', 'admin'))
+  WITH CHECK (public.my_role_in_org(deviations.organization_id) IN ('owner', 'admin'));
 
 -- DELETE: solo owner/admin (canWrite)
 CREATE POLICY "deviations: delete"
   ON public.deviations FOR DELETE
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.organization_members
-      WHERE organization_id = deviations.organization_id
-        AND profile_id = auth.uid()
-        AND role IN ('owner', 'admin')
-    )
-  );
+  USING (public.my_role_in_org(deviations.organization_id) IN ('owner', 'admin'));
 
 -- Agregar acciones 'blocked' y 'unblocked' al CHECK de activity_log
 ALTER TABLE public.activity_log DROP CONSTRAINT IF EXISTS activity_log_action_check;

@@ -27,54 +27,23 @@ ALTER TABLE public.ideas ENABLE ROW LEVEL SECURITY;
 -- SELECT: cualquier miembro de la org puede ver ideas
 CREATE POLICY "ideas: select"
   ON public.ideas FOR SELECT
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.organization_members
-      WHERE organization_id = ideas.organization_id
-        AND profile_id = auth.uid()
-    )
-  );
+  USING (public.my_role_in_org(ideas.organization_id) IS NOT NULL);
 
 -- INSERT: cualquier miembro puede crear ideas (incluyendo role 'member')
 CREATE POLICY "ideas: insert"
   ON public.ideas FOR INSERT
   WITH CHECK (
     created_by = auth.uid() AND
-    EXISTS (
-      SELECT 1 FROM public.organization_members
-      WHERE organization_id = ideas.organization_id
-        AND profile_id = auth.uid()
-    )
+    public.my_role_in_org(ideas.organization_id) IS NOT NULL
   );
 
 -- UPDATE: solo owner/admin (canWrite)
 CREATE POLICY "ideas: update"
   ON public.ideas FOR UPDATE
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.organization_members
-      WHERE organization_id = ideas.organization_id
-        AND profile_id = auth.uid()
-        AND role IN ('owner', 'admin')
-    )
-  )
-  WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM public.organization_members
-      WHERE organization_id = ideas.organization_id
-        AND profile_id = auth.uid()
-        AND role IN ('owner', 'admin')
-    )
-  );
+  USING  (public.my_role_in_org(ideas.organization_id) IN ('owner', 'admin'))
+  WITH CHECK (public.my_role_in_org(ideas.organization_id) IN ('owner', 'admin'));
 
 -- DELETE: solo owner/admin (canWrite)
 CREATE POLICY "ideas: delete"
   ON public.ideas FOR DELETE
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.organization_members
-      WHERE organization_id = ideas.organization_id
-        AND profile_id = auth.uid()
-        AND role IN ('owner', 'admin')
-    )
-  );
+  USING (public.my_role_in_org(ideas.organization_id) IN ('owner', 'admin'));

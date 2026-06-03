@@ -1,6 +1,6 @@
 # Priori™ — Contexto del proyecto
 
-> Generado el 2026-06-02, actualizado el 2026-06-02 desde el código fuente real. Todo dato aquí viene del repositorio,
+> Generado el 2026-06-02, actualizado el 2026-06-03 desde el código fuente real. Todo dato aquí viene del repositorio,
 > no de documentación externa ni archivos de contexto anteriores.
 
 ---
@@ -472,11 +472,39 @@ Lógica: sin user en ruta protegida → `/login`. Con user en ruta auth → `/da
 
 ## Pendiente
 
-- **Dominio `priori.ar`:** configurar en Vercel (A en apex, CNAME en www) + Supabase (Site URL + Redirect URLs), reactivar email de confirmación con dominio propio
+- **Dominio `priori.ar`:** registrado en NIC.ar (25/05/2026) y delegado a ns1/ns2.vercel-dns.com (03/06/2026). Pendiente: confirmar propagación (tilde verde en Vercel → Domains), luego actualizar `NEXT_PUBLIC_SITE_URL=https://priori.ar` en Vercel (+redeploy) y en Supabase (Authentication → URL Configuration): Site URL `https://priori.ar` + agregar `https://priori.ar/auth/callback` a Redirect URLs sin borrar la de `.vercel.app`. Probar login Google + email de invitación.
 - **`SUPABASE_HOOK_SECRET`:** agregar en Vercel → Settings → Environment Variables para activar el hook de email auth
 - **Umbrales configurables por org:** `DEFAULT_IMPACT_HIGH` y `DEFAULT_EFFORT_HIGH` están hardcodeados en `lib/quadrant.ts`; la UI de configuración aún no existe
 - **Fase 5 — Modo Roadmap (UI inicial implementada, deploy fallido):** migración aplicada en Supabase. Ruta `/roadmap` operativa en local. Deploy a Vercel falló — hay que investigar el error en el dashboard de Vercel antes de la próxima sesión. Pendiente además: drag para redimensionar barras, vista cross-producto de capacidad, logActivity para products, team_dependencies UI, mejoras de UX del panel lateral.
 - **Fase 6 — Integraciones:** Azure DevOps, Jira, GitHub Issues/Projects, Linear
+
+---
+
+## Protección legal e IP
+
+**Marca (INPI):**
+- Marca "Priori" DENOMINATIVA presentada en clase 42 (Niza) el 03/06/2026, titular Valentín Godoy (persona física, 100%).
+- 7 términos de servicios seleccionados (núcleo SaaS/desarrollo/mantenimiento/actualización de software + PaaS/hosting/consultoría).
+- Arancel pagado: 100 UMAPI ($38.192, UMAPI a $381,92).
+- Nro de acta: [NRO ACTA INPI] — completar desde el comprobante.
+- Próximo hito: publicación en Boletín de Marcas (~2-3 meses), 30 días de oposiciones. Seguimiento en portaltramites.inpi.gob.ar → MIS TRÁMITES.
+
+**Depósito DNDA (obra inédita software):**
+- Expediente: EX-2026-55249104- -APN-DNDA#MJ, iniciado por TAD el 03/06/2026.
+- Tasa $1.400 pagada (Fondo Cooperador DNDA-CESSI, alias CAMARACESSI).
+- Obra depositada: snapshot del repo en tag git `v-deposito-dnda-2026-06` (zip generado con `git archive`, hash SHA-256 en el manifiesto).
+- Pendrive contiene: zip + MANIFIESTO-DEPOSITO-DNDA.pdf.
+- PENDIENTE: entregar sobre cerrado de papel madera (firmado en cierres, carátulas por fuera) en DNDA, Moreno 1230, CABA, lun-vie 9:30-14:30.
+- Renovación obligatoria a los 3 años (mediados de 2029, ventana de 30 días post-vencimiento, mismo documento de referencia: CUIT del titular). Si no se renueva, la obra se destruye (Decreto 972/2024).
+
+**Dominio priori.ar:**
+- Registrado en NIC.ar el 25/05/2026, vencimiento 24/05/2027 (agendar renovación).
+- Delegado el 03/06/2026 a ns1.vercel-dns.com / ns2.vercel-dns.com.
+- priori.ar conectado a Production en Vercel; www.priori.ar redirige 308 al apex.
+- PENDIENTE: confirmar propagación (tilde verde en Vercel → Domains), luego actualizar `NEXT_PUBLIC_SITE_URL=https://priori.ar` en Vercel (+redeploy) y en Supabase (Authentication → URL Configuration): Site URL `https://priori.ar` y agregar `https://priori.ar/auth/callback` a Redirect URLs sin borrar la de `.vercel.app`. Probar login Google + email de invitación.
+
+**Pendiente legal crítico:**
+- Revisión de la cláusula de PI del contrato de empleo con abogado laboralista ANTES de cualquier presentación interna de Priori en Galicia Seguros.
 
 ---
 
@@ -491,7 +519,7 @@ Lógica: sin user en ruta protegida → `/login`. Con user en ruta auth → `/da
 | **Paleta completa** | Negro `#111111` · Gris `#6B6B6B` · Verde `#1D9E75` · Azul `#1E6FC5` |
 | **Logo** | 3 barras horizontales en degradé de opacidad naranja (100% / 65% / 30%) |
 | **Wordmark** | "priori" en minúscula, bold |
-| **Dominio objetivo** | priori.ar (pendiente apuntar a Vercel) |
+| **Dominio objetivo** | priori.ar (registrado y delegado a Vercel, propagación en curso) |
 
 ---
 

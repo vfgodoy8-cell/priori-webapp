@@ -62,6 +62,7 @@ export async function createProduct(
       business_area: (formData.get("business_area") as string)?.trim() || null,
       initiative_id: (formData.get("initiative_id") as string) || null,
       start_date: (formData.get("start_date") as string) || new Date().toISOString().slice(0, 10),
+      target_launch_date: (formData.get("target_launch_date") as string) || null,
       manual_mode: formData.get("manual_mode") === "true",
     })
     .select("id")
@@ -74,7 +75,7 @@ export async function createProduct(
 
 export async function updateProduct(
   id: string,
-  patch: Partial<Pick<Product, "name" | "description" | "business_area" | "initiative_id" | "start_date" | "manual_mode" | "sort_order">>,
+  patch: Partial<Pick<Product, "name" | "description" | "business_area" | "initiative_id" | "start_date" | "target_launch_date" | "manual_mode" | "sort_order">>,
 ): Promise<{ error?: string }> {
   const { admin, orgId, role } = await getAuthContext();
   if (!canWrite(role)) return { error: "Sin permisos." };

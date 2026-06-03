@@ -9,6 +9,7 @@ import {
   totalDisplaySprints,
   parseProductDate,
   sprintStartDate,
+  dateToSprint,
   type SegmentLayout,
 } from "@/lib/roadmap-logic";
 import {
@@ -19,6 +20,8 @@ import {
   createProduct,
   updateProduct,
 } from "./actions";
+
+// ── Paleta de segmentos ───────────────────────────────────────────────────────
 
 const PALETTE = [
   { bg: "#EAF1FB", border: "#BDD5F5", text: "#1E6FC5" },
@@ -33,10 +36,54 @@ function segmentColor(idx: number) {
   return PALETTE[idx % PALETTE.length];
 }
 
+// ── Paleta de quarters ────────────────────────────────────────────────────────
+
+const QUARTER_COLORS = [
+  { bg: "#EAF1FB", border: "#BDD5F5", text: "#1E6FC5" }, // Q1 – azul marca
+  { bg: "#F0F4F8", border: "#D5DDED", text: "#64748B" }, // Q2 – slate
+  { bg: "#EAF1FB", border: "#BDD5F5", text: "#1E6FC5" }, // Q3 – azul marca
+  { bg: "#F0F4F8", border: "#D5DDED", text: "#64748B" }, // Q4 – slate
+];
+
+type QuarterBand = { label: string; startSprint: number; sprintCount: number; q: number };
+
+// Calcula las bandas de Q visibles dentro del rango [0, totalSprints).
+// Usa sprints no clampeados para capturar quarters que empiezan antes del productStart.
+function buildQuarterBands(productStart: Date, totalSprints: number): QuarterBand[] {
+  const msPerSprint = 14 * 86_400_000;
+  const rawSprint = (d: Date) => (d.getTime() - productStart.getTime()) / msPerSprint;
+  const year = productStart.getFullYear();
+  const bands: QuarterBand[] = [];
+
+  for (let y = year; y <= year + 1; y++) {
+    for (let q = 0; q < 4; q++) {
+      const qStart = new Date(y, q * 3, 1);
+      const qEnd   = new Date(y, q * 3 + 3, 1);
+      const s = rawSprint(qStart);
+      const e = rawSprint(qEnd);
+      if (e <= 0 || s >= totalSprints) continue;
+      const vs = Math.max(0, Math.floor(s));
+      const ve = Math.min(totalSprints, Math.ceil(e));
+      if (ve <= vs) continue;
+      bands.push({ label: `Q${q + 1}`, startSprint: vs, sprintCount: ve - vs, q });
+    }
+  }
+  return bands;
+}
+
+// ── Helpers de formato ────────────────────────────────────────────────────────
+
 const MONTHS_ES = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
 function fmtDate(d: Date): string {
   return `${d.getDate()} ${MONTHS_ES[d.getMonth()]} ${d.getFullYear()}`;
 }
+
+// ── Constantes de layout ──────────────────────────────────────────────────────
+
+const LABEL_W   = 160; // ancho columna equipo (px)
+const SPRINT_PX = 40;  // ancho mínimo por sprint para el scroll horizontal
+
+// ── RoadmapView ───────────────────────────────────────────────────────────────
 
 type Props = {
   orgId: string;
@@ -48,6 +95,27 @@ type Props = {
 
 export function RoadmapView({ orgId, initialProducts, teams, role }: Props) {
   const [products, setProducts] = useState<Product[]>(initialProducts);
+
+  // ── Selector de año ──────────────────────────────────────────────────────────
+  const [selectedYear, setSelectedYear] = useState<number>(() => {
+    const first = initialProducts[0];
+    return first
+      ? parseProductDate(first.start_date).getFullYear()
+      : new Date().getFullYear();
+  });
+
+  const availableYears = useMemo(() => {
+    const set = new Set(products.map((p) => parseProductDate(p.start_date).getFullYear()));
+    set.add(new Date().getFullYear());
+    return Array.from(set).sort((a, b) => a - b);
+  }, [products]);
+
+  const filteredProducts = useMemo(
+    () => products.filter((p) => parseProductDate(p.start_date).getFullYear() === selectedYear),
+    [products, selectedYear],
+  );
+
+  // ── Selección de producto ────────────────────────────────────────────────────
   const [selectedId, setSelectedId] = useState<string | null>(initialProducts[0]?.id ?? null);
   const [segments, setSegments] = useState<RoadmapSegment[]>([]);
   const [loadingSegments, setLoadingSegments] = useState(false);
@@ -55,8 +123,17 @@ export function RoadmapView({ orgId, initialProducts, teams, role }: Props) {
   const [showProductForm, setShowProductForm] = useState(false);
   const [isPending, startTransition] = useTransition();
 
-  const selectedProduct = products.find((p) => p.id === selectedId) ?? null;
+  const selectedProduct = filteredProducts.find((p) => p.id === selectedId) ?? null;
 
+  // Sincronizar selección cuando cambia el año
+  useEffect(() => {
+    if (selectedId && !filteredProducts.find((p) => p.id === selectedId)) {
+      setSelectedId(filteredProducts[0]?.id ?? null);
+      setEditingSegId(null);
+    }
+  }, [selectedYear]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Cargar segmentos al cambiar el producto seleccionado
   useEffect(() => {
     if (!selectedId) { setSegments([]); return; }
     let active = true;
@@ -68,6 +145,8 @@ export function RoadmapView({ orgId, initialProducts, teams, role }: Props) {
     });
     return () => { active = false; };
   }, [selectedId]);
+
+  // ── Layout / memos ───────────────────────────────────────────────────────────
 
   const productStart = useMemo(
     () => (selectedProduct ? parseProductDate(selectedProduct.start_date) : new Date()),
@@ -85,9 +164,15 @@ export function RoadmapView({ orgId, initialProducts, teams, role }: Props) {
     return m;
   }, [reflowResult]);
 
+  // Mínimo de sprints: cubre desde productStart hasta fin del año seleccionado.
+  const minSprintsForYear = useMemo(() => {
+    const nextYearStart = new Date(productStart.getFullYear() + 1, 0, 1);
+    return Math.max(dateToSprint(productStart, nextYearStart) + 2, 13);
+  }, [productStart]);
+
   const totalSprints = useMemo(
-    () => (reflowResult ? totalDisplaySprints(reflowResult.layout) : 13),
-    [reflowResult],
+    () => (reflowResult ? totalDisplaySprints(reflowResult.layout, minSprintsForYear) : minSprintsForYear),
+    [reflowResult, minSprintsForYear],
   );
 
   const monthHeaders = useMemo(
@@ -97,9 +182,15 @@ export function RoadmapView({ orgId, initialProducts, teams, role }: Props) {
 
   const canEdit = canWrite(role);
 
+  // ── Handlers ─────────────────────────────────────────────────────────────────
+
   function handleSelectProduct(id: string) {
     setSelectedId(id);
     setEditingSegId(null);
+  }
+
+  function handleYearChange(year: number) {
+    setSelectedYear(year);
   }
 
   function handleAddSegment(teamId: string) {
@@ -145,7 +236,7 @@ export function RoadmapView({ orgId, initialProducts, teams, role }: Props) {
     });
   }
 
-  const editingSeg = segments.find((s) => s.id === editingSegId) ?? null;
+  const editingSeg  = segments.find((s) => s.id === editingSegId) ?? null;
   const editingTeam = editingSeg ? (teams.find((t) => t.id === editingSeg.team_id) ?? null) : null;
 
   if (products.length === 0 && !showProductForm) {
@@ -156,13 +247,25 @@ export function RoadmapView({ orgId, initialProducts, teams, role }: Props) {
     <div className="space-y-4">
       {/* Toolbar */}
       <div className="flex items-center gap-3 flex-wrap">
-        {products.length > 0 && (
+        {/* Selector de año */}
+        <select
+          value={selectedYear}
+          onChange={(e) => handleYearChange(Number(e.target.value))}
+          className="text-sm font-medium border border-gray-200 rounded-lg px-3 py-1.5 bg-white text-brand-black focus:outline-none focus:ring-2 focus:ring-brand-orange/20"
+        >
+          {availableYears.map((y) => (
+            <option key={y} value={y}>{y}</option>
+          ))}
+        </select>
+
+        {/* Selector de producto (filtrado por año) */}
+        {filteredProducts.length > 0 && (
           <select
             value={selectedId ?? ""}
             onChange={(e) => handleSelectProduct(e.target.value)}
             className="text-sm font-medium border border-gray-200 rounded-lg px-3 py-1.5 bg-white text-brand-black focus:outline-none focus:ring-2 focus:ring-brand-orange/20"
           >
-            {products.map((p) => (
+            {filteredProducts.map((p) => (
               <option key={p.id} value={p.id}>{p.name}</option>
             ))}
           </select>
@@ -177,12 +280,23 @@ export function RoadmapView({ orgId, initialProducts, teams, role }: Props) {
           </button>
         )}
 
-        <div className="ml-auto flex items-center gap-3">
+        <div className="ml-auto flex items-center gap-3 flex-wrap">
+          {/* Badge de salida a producción */}
+          {selectedProduct?.target_launch_date && (
+            <div
+              className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium"
+              style={{ backgroundColor: "#FFF4EE", border: "1px solid #FDDCB5", color: "#E8621A" }}
+            >
+              🚀 Salida: {fmtDate(parseProductDate(selectedProduct.target_launch_date))}
+            </div>
+          )}
+
           {reflowResult?.hasCycle && (
             <span className="text-xs text-red-600 bg-red-50 border border-red-200 px-2 py-1 rounded-full">
               ⚠ Ciclo en dependencias
             </span>
           )}
+
           {canEdit && selectedProduct && (
             <ManualModeToggle
               active={selectedProduct.manual_mode}
@@ -192,12 +306,13 @@ export function RoadmapView({ orgId, initialProducts, teams, role }: Props) {
         </div>
       </div>
 
-      {/* Product form */}
+      {/* Formulario nuevo producto */}
       {showProductForm && (
         <ProductForm
           orgId={orgId}
           onSuccess={(p) => {
             setProducts((prev) => [...prev, p]);
+            setSelectedYear(parseProductDate(p.start_date).getFullYear());
             setSelectedId(p.id);
             setSegments([]);
             setShowProductForm(false);
@@ -206,9 +321,9 @@ export function RoadmapView({ orgId, initialProducts, teams, role }: Props) {
         />
       )}
 
-      {/* Gantt + panel */}
+      {/* Gantt + panel lateral */}
       <div className="flex gap-4 items-start">
-        <div className="flex-1 min-w-0 bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="flex-1 min-w-0 bg-white rounded-xl border border-gray-200 overflow-x-auto">
           {!selectedProduct ? (
             <div className="p-12 text-center text-brand-gray text-sm">Seleccioná un producto.</div>
           ) : loadingSegments ? (
@@ -225,6 +340,7 @@ export function RoadmapView({ orgId, initialProducts, teams, role }: Props) {
               layoutMap={layoutMap}
               monthHeaders={monthHeaders}
               totalSprints={totalSprints}
+              productStart={productStart}
               editingSegId={editingSegId}
               onSegmentClick={setEditingSegId}
               onAddSegment={canEdit ? handleAddSegment : undefined}
@@ -256,14 +372,13 @@ export function RoadmapView({ orgId, initialProducts, teams, role }: Props) {
 
 // ── GanttGrid ─────────────────────────────────────────────────────────────────
 
-const LABEL_W = 160;
-
 function GanttGrid({
   teams,
   segments,
   layoutMap,
   monthHeaders,
   totalSprints,
+  productStart,
   editingSegId,
   onSegmentClick,
   onAddSegment,
@@ -274,20 +389,60 @@ function GanttGrid({
   layoutMap: Map<string, SegmentLayout>;
   monthHeaders: ReturnType<typeof buildMonthHeaders>;
   totalSprints: number;
+  productStart: Date;
   editingSegId: string | null;
   onSegmentClick: (id: string) => void;
   onAddSegment?: (teamId: string) => void;
   isPending: boolean;
 }) {
-  const teamIndexMap = new Map(teams.map((t, i) => [t.id, i]));
+  const teamIndexMap  = new Map(teams.map((t, i) => [t.id, i]));
+  const quarterBands  = buildQuarterBands(productStart, totalSprints);
+  const minW          = LABEL_W + totalSprints * SPRINT_PX;
+
+  // Posición % dentro del track (no incluye LABEL_W)
+  const pct = (sprint: number) => `${(sprint / totalSprints) * 100}%`;
+  const wPct = (sprints: number) => `${(sprints / totalSprints) * 100}%`;
 
   return (
-    <div>
-      {/* Month header */}
+    // min-width fuerza el scroll cuando la pantalla es estrecha
+    <div style={{ minWidth: minW }}>
+
+      {/* ── Fila de Quarters ─────────────────────────────────────────────────── */}
+      <div className="flex" style={{ height: 28, borderBottom: "1px solid #E5E7EB" }}>
+        {/* celda sticky vacía */}
+        <div
+          className="flex-shrink-0 bg-gray-50 border-r border-gray-200"
+          style={{ width: LABEL_W, position: "sticky", left: 0, zIndex: 10 }}
+        />
+        {/* bandas de Q */}
+        <div className="flex-1 relative bg-gray-50">
+          {quarterBands.map((band, i) => {
+            const c = QUARTER_COLORS[band.q];
+            return (
+              <div
+                key={i}
+                className="absolute top-0 bottom-0 flex items-center justify-center"
+                style={{
+                  left: pct(band.startSprint),
+                  width: wPct(band.sprintCount),
+                  backgroundColor: c.bg,
+                  borderRight: `1px solid ${c.border}`,
+                }}
+              >
+                <span className="text-xs font-semibold" style={{ color: c.text }}>
+                  {band.label}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ── Fila de meses ────────────────────────────────────────────────────── */}
       <div className="flex border-b border-gray-200">
         <div
           className="flex-shrink-0 flex items-center px-4 py-2 bg-gray-50 border-r border-gray-200"
-          style={{ width: LABEL_W }}
+          style={{ width: LABEL_W, position: "sticky", left: 0, zIndex: 10 }}
         >
           <span className="text-xs text-brand-gray font-medium uppercase tracking-wide">Equipo</span>
         </div>
@@ -296,10 +451,7 @@ function GanttGrid({
             <div
               key={i}
               className="absolute top-0 bottom-0 flex items-center px-2 border-r border-gray-200"
-              style={{
-                left: `${(h.startSprint / totalSprints) * 100}%`,
-                width: `${(h.sprintCount / totalSprints) * 100}%`,
-              }}
+              style={{ left: pct(h.startSprint), width: wPct(h.sprintCount) }}
             >
               <span className="text-xs font-medium text-brand-gray whitespace-nowrap">{h.label}</span>
             </div>
@@ -307,48 +459,46 @@ function GanttGrid({
         </div>
       </div>
 
-      {/* Team rows */}
+      {/* ── Filas de equipos ─────────────────────────────────────────────────── */}
       {teams.map((team, idx) => {
-        const segment = segments.find((s) => s.team_id === team.id);
-        const layout = segment ? layoutMap.get(segment.id) : null;
-        const color = segmentColor(teamIndexMap.get(team.id) ?? idx);
+        const segment  = segments.find((s) => s.team_id === team.id);
+        const layout   = segment ? layoutMap.get(segment.id) : null;
+        const color    = segmentColor(teamIndexMap.get(team.id) ?? idx);
         const isEditing = !!segment && segment.id === editingSegId;
-        const isEven = idx % 2 === 0;
+        const isEven   = idx % 2 === 0;
+        const rowBg    = isEven ? "bg-white" : "bg-gray-50/40";
 
         return (
           <div
             key={team.id}
-            className={`flex border-b border-gray-100 last:border-b-0 h-14 ${isEven ? "bg-white" : "bg-gray-50/40"}`}
+            className={`flex border-b border-gray-100 last:border-b-0 h-14 ${rowBg}`}
           >
-            {/* Team label */}
+            {/* Columna equipo — sticky */}
             <div
-              className="flex-shrink-0 flex items-center px-4 border-r border-gray-100"
-              style={{ width: LABEL_W }}
+              className={`flex-shrink-0 flex items-center px-4 border-r border-gray-100 ${rowBg}`}
+              style={{ width: LABEL_W, position: "sticky", left: 0, zIndex: 10 }}
             >
               <span className="text-sm font-medium text-brand-black truncate">{team.name}</span>
             </div>
 
             {/* Track */}
             <div className="flex-1 relative overflow-hidden">
-              {/* Month separators (grid lines) */}
+              {/* Separadores de mes */}
               {monthHeaders.map((h, i) => (
                 <div
                   key={i}
                   className="absolute top-0 bottom-0 border-r border-gray-100"
-                  style={{
-                    left: `${(h.startSprint / totalSprints) * 100}%`,
-                    width: `${(h.sprintCount / totalSprints) * 100}%`,
-                  }}
+                  style={{ left: pct(h.startSprint), width: wPct(h.sprintCount) }}
                 />
               ))}
 
-              {/* Segment bar */}
+              {/* Barra del segmento */}
               {segment && layout ? (
                 <button
                   className="absolute top-2 bottom-2 rounded-lg flex items-center px-3 text-xs font-medium transition-all hover:brightness-95 focus:outline-none"
                   style={{
-                    left: `${(layout.start_sprint / totalSprints) * 100}%`,
-                    width: `max(${(segment.duration_sprints / totalSprints) * 100}%, 40px)`,
+                    left: pct(layout.start_sprint),
+                    width: `max(${wPct(segment.duration_sprints)}, 40px)`,
                     backgroundColor: color.bg,
                     border: `1.5px solid ${isEditing ? color.text : color.border}`,
                     color: color.text,
@@ -574,6 +724,8 @@ function SegmentPanel({
   );
 }
 
+// ── StepButton ────────────────────────────────────────────────────────────────
+
 function StepButton({
   onClick,
   disabled,
@@ -608,6 +760,7 @@ function ProductForm({
   const [name, setName] = useState("");
   const [businessArea, setBusinessArea] = useState("");
   const [startDate, setStartDate] = useState(new Date().toISOString().slice(0, 10));
+  const [targetLaunchDate, setTargetLaunchDate] = useState("");
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
@@ -617,6 +770,7 @@ function ProductForm({
     fd.set("name", name);
     fd.set("business_area", businessArea);
     fd.set("start_date", startDate);
+    if (targetLaunchDate) fd.set("target_launch_date", targetLaunchDate);
     startTransition(async () => {
       const result = await createProduct({ error: null }, fd);
       if (result.error) { setError(result.error); return; }
@@ -629,6 +783,7 @@ function ProductForm({
           business_area: businessArea.trim() || null,
           initiative_id: null,
           start_date: startDate,
+          target_launch_date: targetLaunchDate || null,
           manual_mode: false,
           status: "active",
           sort_order: 0,
@@ -663,20 +818,36 @@ function ProductForm({
           required
           autoFocus
         />
+
+        <input
+          className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-orange/20"
+          placeholder="Área de negocio"
+          value={businessArea}
+          onChange={(e) => setBusinessArea(e.target.value)}
+        />
+
         <div className="grid grid-cols-2 gap-2">
-          <input
-            className="text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-orange/20"
-            placeholder="Área de negocio"
-            value={businessArea}
-            onChange={(e) => setBusinessArea(e.target.value)}
-          />
-          <input
-            type="date"
-            className="text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-orange/20"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-          />
+          <div>
+            <label className="text-xs text-brand-gray block mb-1">Inicio *</label>
+            <input
+              type="date"
+              className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-orange/20"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              required
+            />
+          </div>
+          <div>
+            <label className="text-xs text-brand-gray block mb-1">Salida a producción</label>
+            <input
+              type="date"
+              className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-orange/20"
+              value={targetLaunchDate}
+              onChange={(e) => setTargetLaunchDate(e.target.value)}
+            />
+          </div>
         </div>
+
         <div className="flex gap-2">
           <button
             type="submit"

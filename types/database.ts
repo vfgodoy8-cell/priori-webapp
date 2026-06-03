@@ -184,6 +184,7 @@ export type Database = {
           business_area: string | null;
           initiative_id: string | null;
           start_date: string;
+          target_launch_date: string | null;
           manual_mode: boolean;
           status: "active" | "discarded";
           sort_order: number;
@@ -198,6 +199,7 @@ export type Database = {
           business_area?: string | null;
           initiative_id?: string | null;
           start_date?: string;
+          target_launch_date?: string | null;
           manual_mode?: boolean;
           status?: "active" | "discarded";
           sort_order?: number;
@@ -210,6 +212,7 @@ export type Database = {
           business_area?: string | null;
           initiative_id?: string | null;
           start_date?: string;
+          target_launch_date?: string | null;
           manual_mode?: boolean;
           status?: "active" | "discarded";
           sort_order?: number;

@@ -1,6 +1,6 @@
 # Priori™ — Contexto del proyecto
 
-> Generado el 2026-06-02 desde el código fuente real. Todo dato aquí viene del repositorio,
+> Generado el 2026-06-02, actualizado el 2026-06-02 desde el código fuente real. Todo dato aquí viene del repositorio,
 > no de documentación externa ni archivos de contexto anteriores.
 
 ---
@@ -339,7 +339,7 @@ Enum en DB: `member_role` = `"owner" | "admin" | "member"`
 
 **RLS Fase 5:** SELECT para cualquier miembro · INSERT para cualquier miembro (`created_by/reported_by = auth.uid()`) · UPDATE/DELETE solo owner/admin (`canWrite`)
 
-### Fase 5 — Modo Roadmap (migración escrita `20260602000024`, tablas aún no aplicadas en Supabase)
+### Fase 5 — Modo Roadmap (migración `20260602000024` aplicada en Supabase)
 
 | Tabla | Columnas clave |
 |---|---|
@@ -459,6 +459,14 @@ Lógica: sin user en ruta protegida → `/login`. Con user en ruta auth → `/da
   - Tab ⚠️ en AnalystPanel (Squad) — solo cuando hay proyecto en edición
   - Tab ⚠️ en CrossPanelTabs (Cross) — solo cuando hay iniciativa en edición; respeta `canWrite` del rol
   - actions: `createDeviation`, `listDeviations`, `resolveDeviation`, `deleteDeviation`
+- **Fase 5 — Modo Roadmap (UI inicial):**
+  - Migración `20260602000024_roadmap.sql` aplicada en Supabase
+  - Tipos: `Product`, `ProductStatus`, `RoadmapSegment`, `TeamDependency` en `types/database.ts`; `teams` gana `description`
+  - `lib/roadmap-logic.ts`: `parseProductDate`, `sprintStartDate`, `dateToSprint`, `buildMonthHeaders`, `totalDisplaySprints`, `computeLayout` (Kahn + greedy, detección de ciclos, manual_mode)
+  - `app/(app)/roadmap/actions.ts`: CRUD products (`listProducts`, `createProduct`, `updateProduct`, `discardProduct`, `deleteProduct`), segments (`loadProductSegments`, `addSegment`, `updateSegment`, `removeSegment`), teamDeps (`listTeamDependencies`, `createTeamDependency`, `deleteTeamDependency`)
+  - `app/(app)/roadmap/page.tsx` + `RoadmapView.tsx`: Gantt con posicionamiento `%` por sprint, product selector, panel lateral de edición, toggle manual_mode, empty state
+  - `middleware.ts`: `/roadmap` agregado a rutas protegidas
+  - Dashboard: botón "Modo Roadmap" en header + QuickLink (grid 4 columnas)
 
 ---
 
@@ -467,7 +475,7 @@ Lógica: sin user en ruta protegida → `/login`. Con user en ruta auth → `/da
 - **Dominio `priori.ar`:** configurar en Vercel (A en apex, CNAME en www) + Supabase (Site URL + Redirect URLs), reactivar email de confirmación con dominio propio
 - **`SUPABASE_HOOK_SECRET`:** agregar en Vercel → Settings → Environment Variables para activar el hook de email auth
 - **Umbrales configurables por org:** `DEFAULT_IMPACT_HIGH` y `DEFAULT_EFFORT_HIGH` están hardcodeados en `lib/quadrant.ts`; la UI de configuración aún no existe
-- **Fase 5 — Modo Roadmap (en diseño, migración lista):** migración `20260602000024_roadmap.sql` escrita y commiteada pero aún no aplicada en Supabase. Tercer modo `/roadmap` al nivel de Squad y Cross. Gantt por producto (un producto activo a la vez + vista de capacidad cross-producto). Una fila por equipo dentro del producto. Auto-reflow por dependencias (topological sort + greedy, con detección de ciclos); switch `manual_mode` para posicionamiento libre. Eje X en meses, cálculo en sprints (1 sprint = 2 semanas), rango dinámico desde `start_date` del producto. Próximas etapas: tipos + `lib/roadmap-logic.ts` (helpers de tiempo + motor de reflow) → actions → ruta + UI con CSS Grid.
+- **Fase 5 — Modo Roadmap (UI inicial implementada):** migración aplicada en Supabase. Ruta `/roadmap` operativa. Pendiente: drag para redimensionar barras, vista cross-producto de capacidad, logActivity para products, team_dependencies UI, mejoras de UX del panel lateral.
 - **Fase 6 — Integraciones:** Azure DevOps, Jira, GitHub Issues/Projects, Linear
 
 ---

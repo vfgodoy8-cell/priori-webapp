@@ -7,12 +7,13 @@ import { computeQuadrant, QUADRANT_META } from "@/lib/quadrant";
 import { saveConfig, type SquadConfig } from "@/lib/squad-logic";
 import type { Project } from "@/types/database";
 import { CommentsThread } from "@/components/ui/CommentsThread";
+import { DeviationsThread } from "@/components/ui/DeviationsThread";
 import { AIInterviewModal } from "@/components/ai/AIInterviewModal";
 import { IconSparkles } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 import { ActivityFeed } from "@/components/ui/ActivityFeed";
 
-type Tab = "form" | "items" | "config" | "comments" | "history";
+type Tab = "form" | "items" | "config" | "comments" | "history" | "deviations";
 
 function SubmitBtn({ label }: { label: string }) {
   const { pending } = useFormStatus();
@@ -180,6 +181,15 @@ export function AnalystPanel({ projects, orgId, config, onConfigChange, forceEdi
               className={`flex-1 py-2.5 text-[13px] font-semibold transition border-b-2 ${tab === "history" ? "text-brand-orange border-brand-orange" : "text-brand-gray border-transparent hover:text-brand-black"}`}
             >
               📋
+            </button>
+          )}
+          {editProject && (
+            <button
+              onClick={() => setTab("deviations")}
+              className={`flex-1 py-2.5 text-[13px] font-semibold transition border-b-2 ${tab === "deviations" ? "text-brand-orange border-brand-orange" : "text-brand-gray border-transparent hover:text-brand-black"}`}
+              title="Desvíos"
+            >
+              ⚠️
             </button>
           )}
         </div>
@@ -402,6 +412,21 @@ export function AnalystPanel({ projects, orgId, config, onConfigChange, forceEdi
             <div className="p-4">
               <div className="text-xs font-bold text-brand-gray uppercase tracking-wider mb-3">{editProject.name}</div>
               <ActivityFeed entityId={editProject.id} />
+            </div>
+          )}
+
+          {/* ── TAB: DESVÍOS ── */}
+          {tab === "deviations" && editProject && (
+            <div className="p-4 flex flex-col gap-2">
+              <div className="text-xs font-bold text-brand-gray uppercase tracking-wider mb-1">
+                {editProject.name}
+              </div>
+              <DeviationsThread
+                entityType="project"
+                entityId={editProject.id}
+                entityName={editProject.name}
+                canWrite={true}
+              />
             </div>
           )}
 

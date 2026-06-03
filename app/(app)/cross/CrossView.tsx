@@ -15,6 +15,7 @@ import {
 } from "./actions";
 import { ShareModal } from "@/components/ui/ShareModal";
 import { CommentsThread } from "@/components/ui/CommentsThread";
+import { DeviationsThread } from "@/components/ui/DeviationsThread";
 import { ActivityFeed } from "@/components/ui/ActivityFeed";
 import { type AppRole, ROLE_LABEL, ROLE_COLOR, ROLE_BG, ROLE_BORDER } from "@/lib/roles";
 import { AIChatPanel } from "@/components/ai/AIChatPanel";
@@ -647,11 +648,13 @@ export function CrossView({ orgId, initialTeams, initialInitiatives, squadProjec
               </div>
             </form>
 
-            {/* Comments + Activity — only when editing an existing initiative */}
+            {/* Comments + Activity + Desvíos — only when editing an existing initiative */}
             {editIni && (
               <CrossPanelTabs
                 entityId={editIni.id}
+                entityName={editIni.name}
                 currentUserId={currentUserId}
+                canWrite={!readOnly}
               />
             )}
 
@@ -705,27 +708,41 @@ export function CrossView({ orgId, initialTeams, initialInitiatives, squadProjec
   );
 }
 
-function CrossPanelTabs({ entityId, currentUserId }: { entityId: string; currentUserId: string }) {
-  const [tab, setTab] = React.useState<"comments" | "history">("comments");
+function CrossPanelTabs({ entityId, entityName, currentUserId, canWrite }: {
+  entityId: string;
+  entityName: string;
+  currentUserId: string;
+  canWrite: boolean;
+}) {
+  const [tab, setTab] = React.useState<"comments" | "history" | "deviations">("comments");
   return (
     <div className="mt-2 pt-3 border-t border-gray-100">
       <div className="flex gap-3 mb-2">
-        {(["comments", "history"] as const).map((t) => (
+        {(["comments", "history", "deviations"] as const).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
             className={`text-xs font-bold uppercase tracking-wider pb-0.5 border-b-2 transition ${tab === t ? "text-brand-orange border-brand-orange" : "text-brand-gray border-transparent hover:text-brand-black"}`}
           >
-            {t === "comments" ? "💬 Comentarios" : "📋 Historial"}
+            {t === "comments" ? "💬 Comentarios" : t === "history" ? "📋 Historial" : "⚠️ Desvíos"}
           </button>
         ))}
       </div>
-      {tab === "comments" ? (
+      {tab === "comments" && (
         <CommentsThread entityType="initiative" entityId={entityId} currentUserId={currentUserId} />
-      ) : (
+      )}
+      {tab === "history" && (
         <div className="max-h-[280px] overflow-y-auto pr-1">
           <ActivityFeed entityId={entityId} />
         </div>
+      )}
+      {tab === "deviations" && (
+        <DeviationsThread
+          entityType="initiative"
+          entityId={entityId}
+          entityName={entityName}
+          canWrite={canWrite}
+        />
       )}
     </div>
   );

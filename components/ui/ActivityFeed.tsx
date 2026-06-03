@@ -14,6 +14,8 @@ const ACTION_ICON: Record<ActivityAction, string> = {
   discarded: "✗",
   restored:  "↩",
   commented: "💬",
+  blocked:   "⛔",
+  unblocked: "✅",
 };
 
 const ACTION_COLOR: Record<ActivityAction, string> = {
@@ -25,6 +27,8 @@ const ACTION_COLOR: Record<ActivityAction, string> = {
   discarded: "#E24B4A",
   restored:  "#1D9E75",
   commented: "#6B6B6B",
+  blocked:   "#E24B4A",
+  unblocked: "#1D9E75",
 };
 
 type Props = {

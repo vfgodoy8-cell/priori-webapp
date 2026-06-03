@@ -78,12 +78,14 @@ app/
     activity/           # Server actions para activity_log
     comments/           # Server actions para comments
     cross/              # Modo Cross: CrossView.tsx, CrossHeaderRight.tsx, actions.ts, page.tsx
+    deviations/         # Server actions para deviations (Fase 5)
     dashboard/          # Dashboard home: stats Squad+Cross, timeline resumen, actividad reciente
                         # DashboardHeaderRight.tsx — botones de cabecera del dashboard
     onboarding/         # Crear org (page.tsx) + equipos default (teams/page.tsx)
     settings/
       ai/               # AISettingsView.tsx — configurar proveedor IA (solo owner/admin)
       members/          # MembersView.tsx — gestión de miembros e invitaciones
+    ideas/              # Fase 5: IdeasView.tsx, actions.ts, page.tsx — lista de ideas por estado
     share/              # Server actions de ShareModal (crear/eliminar shared_views)
     squad/              # Modo Squad: SquadView.tsx, SquadCanvas.tsx, AnalystPanel.tsx,
                         # BubbleCard.tsx, ProjectForm.tsx, ProjectList.tsx, ImpactModal.tsx,
@@ -92,6 +94,7 @@ app/
     ai/
       analyze/          # POST streaming — chat con contexto Squad/Cross (AI SDK streamText)
       interview/        # POST JSON — entrevista guiada 6 preguntas → generateText → JSON
+      ideas/            # POST JSON — entrevista discovery 5 preguntas → ficha de idea (Fase 5)
     auth/send-email/    # POST — hook Supabase para emails de auth en español (Resend)
     export/pdf/         # GET — PDF server-side (?mode=squad|cross) con @react-pdf/renderer
     invite/accept/      # POST — aceptar invitación por token
@@ -107,9 +110,12 @@ components/
   ai/
     AIChatPanel.tsx         # Panel lateral izquierdo, streaming manual, sugerencias iniciales
     AIInterviewModal.tsx    # Modal 6 preguntas conversacionales → datos para crear proyecto/iniciativa
+    IdeaInterviewModal.tsx  # Modal 5 preguntas discovery → guarda en ideas + opción convertir (Fase 5)
   ui/
     ActivityFeed.tsx        # Feed de actividad por entidad (entityId)
     CommentsThread.tsx      # Hilo de comentarios con form
+    DeviationsThread.tsx    # Lista de desvíos open/resolved + form reportar (Fase 5)
+    IdeaButton.tsx          # Botón "💡 Tengo una idea" con modal state propio (Fase 5, owner only)
     LogoutButton.tsx        # Botón de cierre de sesión
     OnboardingTour.tsx      # Tour guiado (localStorage, forceOpen prop)
     ShareModal.tsx          # Modal compartir/exportar (link público + PDF)
@@ -138,7 +144,7 @@ types/
   database.ts            # Tipos TypeScript de todas las tablas + alias de conveniencia
 public/
   favicon.svg            # SVG favicon (3 barras Priori)
-middleware.ts            # Auth: protege /dashboard, /onboarding, /squad, /cross, /settings
+middleware.ts            # Auth: protege /dashboard, /onboarding, /squad, /cross, /settings, /ideas
                          # /invite/[token] y /share/[token] son públicas
 next.config.mjs          # Vacío (config default de Next.js)
 tailwind.config.ts       # Colores brand-* custom, font Geist Sans
@@ -167,14 +173,16 @@ tailwind.config.ts       # Colores brand-* custom, font Geist Sans
 | Ruta | Descripción |
 |---|---|
 | `/dashboard` | Stats Squad + Cross, timeline resumen, actividad reciente |
-| `/squad` | Modo Squad — canvas de proyectos con drag and drop; acepta `?ini=<id>` para filtrar por iniciativa Cross |
+| `/squad` | Modo Squad — canvas de proyectos con drag and drop; acepta `?ini=<id>` (filtro iniciativa Cross) y `?idea=<id>` (prefill form desde una idea) |
 | `/cross` | Modo Cross — timeline Q1-Q4 de iniciativas, también carga proyectos Squad para drill-down |
+| `/ideas` | Fase 5 — lista de ideas por estado (raw/refined/promoted/discarded); botón "Tengo una idea" (owner) |
 | `/onboarding` | Step 1: crear organización |
 | `/onboarding/teams` | Step 2: configurar equipos |
 | `/settings/members` | Miembros, roles e invitaciones |
 | `/settings/ai` | Configurar proveedor IA (solo owner/admin) |
 | `POST /api/ai/analyze` | Chat streaming con contexto Squad o Cross |
-| `POST /api/ai/interview` | Entrevista guiada IA → JSON |
+| `POST /api/ai/interview` | Entrevista guiada IA → JSON (Squad o Cross) |
+| `POST /api/ai/ideas` | Fase 5 — entrevista discovery 5 preguntas → ficha de idea |
 | `GET /api/export/pdf` | PDF server-side (?mode=squad o cross) |
 
 ---
@@ -191,8 +199,10 @@ tailwind.config.ts       # Colores brand-* custom, font Geist Sans
   - `squad_status = "backlog"` → proyectos en "Backlog" (arco exterior)
   - `status = "discarded"` → descartados (visibles fuera del canvas)
   - Proyectos P0 activos (cuadrante `p0`) se separan del canvas y no se muestran en él
-- **Panel de edición:** AnalystPanel (deslizante derecha) con tabs: `form`, `items`, `config`, `comments`, `history`
+- **Panel de edición:** AnalystPanel (deslizante derecha) con tabs: `form`, `items`, `config`, `comments`, `history`, `deviations` (⚠️)
 - **Drill-down desde Cross:** query param `?ini=<id>` filtra y resalta proyectos vinculados a una iniciativa
+- **Prefill desde Idea:** query param `?idea=<id>` abre AnalystPanel con nombre y descripción precargados desde la idea
+- **Botón 💡:** "Tengo una idea" en el header (solo owner) — abre IdeaInterviewModal
 - **Botón IA:** "Priori AI" (abre AIChatPanel)
 - **Botón en AnalystPanel:** "Cargar con IA" (abre AIInterviewModal)
 
@@ -204,9 +214,10 @@ tailwind.config.ts       # Colores brand-* custom, font Geist Sans
   - `q_start != null` → en el timeline
   - `q_start = null` → en "Backlog del Programa"
 - **Panel de edición:** "Panel del programa" (deslizante derecha, en CrossView.tsx)
-  - Incluye tabs "💬 Comentarios" y "📋 Historial" al editar una iniciativa existente
+  - Incluye tabs "💬 Comentarios", "📋 Historial" y "⚠️ Desvíos" al editar una iniciativa existente
 - **Tabla de capacidad:** por equipo y quarter, semáforo de colores
 - **FAB:** botón "+" (nueva iniciativa) + botón IA secundario (AIInterviewModal)
+- **Botón 💡:** "Tengo una idea" en el header (solo owner) — abre IdeaInterviewModal
 - **Botón IA:** "Priori AI" (abre AIChatPanel)
 - **Drill-down a Squad:** `sq_project_ids` en initiatives; desde Cross se puede navegar a `/squad?ini=<id>`
 
@@ -254,6 +265,7 @@ Color de texto: owner `#E8621A` · admin `#1E6FC5` · member `#6B6B6B`
 
 - `POST /api/ai/analyze` — streaming con `streamText()`, sistema contextual Squad o Cross (`runtime = "nodejs"`)
 - `POST /api/ai/interview` — 6 preguntas conversacionales, `generateText()` → JSON estructurado (`runtime = "nodejs"`)
+- `POST /api/ai/ideas` — 5 preguntas discovery (Fase 5), `generateText()` → ficha de idea (`runtime = "nodejs"`)
 
 ### Preguntas de la entrevista (modo Squad)
 1. Qué es la iniciativa y qué problema resuelve para el negocio
@@ -303,7 +315,7 @@ Enum en DB: `member_role` = `"owner" | "admin" | "member"`
 | Tabla | Columnas clave |
 |---|---|
 | `comments` | id, organization_id, author_id, initiative_id OR project_id (CHECK: exactamente uno), body (max 2000), created_at |
-| `activity_log` | id, organization_id, actor_id, entity_type (initiative/project), entity_id, entity_name, action (created/updated/deleted/placed/unplaced/discarded/restored/commented), metadata (jsonb), created_at — `Update: Record<never, never>` (INSERT-only) |
+| `activity_log` | id, organization_id, actor_id, entity_type (initiative/project), entity_id, entity_name, action (created/updated/deleted/placed/unplaced/discarded/restored/commented/**blocked/unblocked**), metadata (jsonb), created_at — `Update: Record<never, never>` (INSERT-only) |
 
 ### Sharing e invitaciones
 
@@ -318,22 +330,24 @@ Enum en DB: `member_role` = `"owner" | "admin" | "member"`
 |---|---|
 | `ai_settings` | id, organization_id (UNIQUE), provider (anthropic/openai/azure/google/groq), api_key, model_id (nullable), azure_endpoint (nullable), created_at, updated_at |
 
-### Fase 5 — En desarrollo (tablas planificadas, aún no migradas)
+### Fase 5 — Implementadas
 
-| Tabla | Columnas clave | Fase |
-|---|---|---|
-| `products` | id, organization_id, name, description, color, sort_order, created_at | Roadmap |
-| `roadmap_segments` | id, organization_id, product_id, team_id, name, start_sprint (int), duration_sprints (int), dependencies (uuid[]), status (planned/in_progress/done/blocked), created_at, updated_at | Roadmap |
-| `team_dependencies` | id, organization_id, from_team_id, to_team_id, segment_id, description, created_at | Roadmap |
-| `deviations` | id, organization_id, project_id OR initiative_id (polimórfico, CHECK exactamente uno), date, reason, blocking_dependency (text), affected_dependency (text), status (open/resolved), source (text nullable), external_ref (text nullable), created_at, updated_at | Desvíos |
-| `ideas` | id, organization_id, author_id, title, description, status (raw/refined/promoted/discarded), promoted_to_project_id (nullable), promoted_to_initiative_id (nullable), interview_data (jsonb), created_at, updated_at | Ideas |
+| Tabla | Columnas clave |
+|---|---|
+| `ideas` | id, organization_id, created_by (→ profiles, ON DELETE SET NULL), title, problem, current_situation, expected_result, suggested_type (mejora/nuevo_desarrollo/cambio_proceso, nullable), status (raw/refined/promoted/discarded, default raw), raw_transcript (jsonb), created_at, updated_at |
+| `deviations` | id, organization_id, project_id OR initiative_id (polimórfico, CHECK exactamente uno), reported_by (→ profiles, ON DELETE SET NULL), date, reason, blocking_dependency (text nullable), affected_dependency (text nullable), status (open/resolved, default open), source (text nullable), external_ref (text nullable), created_at, updated_at |
 
-**Notas de diseño Fase 5:**
-- `teams` ganará columna `description` (text nullable) para el Modo Roadmap
-- `deviations` sigue el patrón polimórfico de `comments` (exactamente una FK entre project_id/initiative_id)
-- `deviations.source` / `external_ref` preparados para integración con Jira/Azure DevOps (Fase 6)
-- `ideas` reutiliza el patrón de `/api/ai/interview`; la promoción prellenar el form de Squad o Cross existente
-- El Modo Roadmap calcula en sprints y renderiza en vistas mes/semana/sprint con auto-reflow por dependencias
+**RLS Fase 5:** SELECT para cualquier miembro · INSERT para cualquier miembro (`created_by/reported_by = auth.uid()`) · UPDATE/DELETE solo owner/admin (`canWrite`)
+
+### Fase 5 — Pendientes (Modo Roadmap, aún no migradas)
+
+| Tabla | Columnas clave |
+|---|---|
+| `products` | id, organization_id, name, description, color, sort_order, created_at |
+| `roadmap_segments` | id, organization_id, product_id, team_id, name, start_sprint (int), duration_sprints (int), dependencies (uuid[]), status (planned/in_progress/done/blocked), created_at, updated_at |
+| `team_dependencies` | id, organization_id, from_team_id, to_team_id, segment_id, description, created_at |
+
+**Nota:** `teams` ganará columna `description` (text nullable) para el Modo Roadmap.
 
 ### Funciones SQL helper (SECURITY DEFINER)
 
@@ -366,6 +380,8 @@ Definidas en `20260526000003_rls_consolidado.sql`:
 20260528000019_ai_settings.sql
 20260528000020_ai_settings_google.sql
 20260528000021_ai_settings_groq.sql
+20260602000022_ideas.sql
+20260602000023_deviations.sql
 ```
 
 ### RLS
@@ -393,7 +409,7 @@ Definidas en `20260526000003_rls_consolidado.sql`:
 
 ## Middleware (middleware.ts)
 
-Rutas **protegidas** (requieren auth): `/dashboard`, `/onboarding`, `/squad`, `/cross`, `/settings`
+Rutas **protegidas** (requieren auth): `/dashboard`, `/onboarding`, `/squad`, `/cross`, `/settings`, `/ideas`
 
 Rutas **públicas** (sin restricción): `/login`, `/signup`, `/invite/[token]`, `/share/[token]`, assets estáticos
 
@@ -426,6 +442,22 @@ Lógica: sin user en ruta protegida → `/login`. Con user en ruta auth → `/da
   - `POST /api/ai/interview` — entrevista 6 pasos → JSON → prellenar form
   - AIChatPanel en Squad y Cross
   - AIInterviewModal en Squad (AnalystPanel) y Cross (FAB secundario)
+- **Fase 5 — "Tengo una idea":**
+  - Tabla `ideas` con RLS; tipos `Idea`, `IdeaStatus`, `IdeaSuggestedType` en `types/database.ts`
+  - `POST /api/ai/ideas` — entrevista discovery 5 preguntas → síntesis (title, problem, current_situation, expected_result, suggested_type)
+  - `IdeaInterviewModal`: chat → confirmación editable → guarda en DB → éxito con "Convertir en proyecto"
+  - `IdeaButton` (💡): botón reutilizable con modal state propio; aparece en headers de Squad, Cross y Dashboard (solo owner)
+  - `/ideas`: lista de ideas por estado con tabs (raw/refined/promoted/discarded), acciones de refinado y descarte
+  - Conversión idea → proyecto: `/squad?idea=<id>` prellena nombre y descripción en AnalystPanel via `internalPrefill`
+  - actions: `createIdea`, `listIdeas`, `updateIdeaStatus`
+- **Fase 5 — Agenda de Desvíos:**
+  - Tabla `deviations` con RLS y trigger `updated_at`; tipos `Deviation`, `DeviationStatus` en `types/database.ts`
+  - `activity_log.action` ganó `"blocked"` y `"unblocked"` (ALTER sobre el CHECK constraint)
+  - `lib/activity.ts` actualizado con los nuevos tipos y labels
+  - `DeviationsThread`: lista open/resolved + form reportar (fecha, razón, dependencia bloqueante, dependencia afectada); resolve/delete solo canWrite
+  - Tab ⚠️ en AnalystPanel (Squad) — solo cuando hay proyecto en edición
+  - Tab ⚠️ en CrossPanelTabs (Cross) — solo cuando hay iniciativa en edición; respeta `canWrite` del rol
+  - actions: `createDeviation`, `listDeviations`, `resolveDeviation`, `deleteDeviation`
 
 ---
 
@@ -434,10 +466,7 @@ Lógica: sin user en ruta protegida → `/login`. Con user en ruta auth → `/da
 - **Dominio `priori.ar`:** configurar en Vercel (A en apex, CNAME en www) + Supabase (Site URL + Redirect URLs), reactivar email de confirmación con dominio propio
 - **`SUPABASE_HOOK_SECRET`:** agregar en Vercel → Settings → Environment Variables para activar el hook de email auth
 - **Umbrales configurables por org:** `DEFAULT_IMPACT_HIGH` y `DEFAULT_EFFORT_HIGH` están hardcodeados en `lib/quadrant.ts`; la UI de configuración aún no existe
-- **Fase 5 — Modo Roadmap, Desvíos e Ideas (en desarrollo):**
-  - **Modo Roadmap:** tercer modo al nivel de Squad y Cross. Gantt por producto (reemplazo de tableros tipo MIRO). Una fila por producto-equipo, con auto-reflow por dependencias y switch manual. Vistas mes/semana/sprint; cálculo en sprints. Capacidad cross-producto. Tablas nuevas: `products`, `roadmap_segments`, `team_dependencies`; `teams` gana campo `description`.
-  - **Agenda de Desvíos:** registro de bloqueos por proyecto o iniciativa (fecha, razón, dependencia que lo produjo y la que podría afectar, estado open/resolved). Tabla nueva: `deviations` (patrón polimórfico idéntico a `comments`). Campos `source`/`external_ref` preparados para integración de Fase 6. Nueva acción en `activity_log`.
-  - **"Tengo una idea":** asistente IA que entrevista a stakeholders para refinar ideas antes de que sean proyecto. Tabla nueva: `ideas` (status: raw/refined/promoted/discarded). Reutiliza el patrón de `/api/ai/interview`. Promoción a proyecto/iniciativa prellenando el form existente.
+- **Fase 5 — Modo Roadmap (pendiente):** tercer modo al nivel de Squad y Cross. Gantt por producto (reemplazo de tableros tipo MIRO). Una fila por producto-equipo, con auto-reflow por dependencias y switch manual. Vistas mes/semana/sprint; cálculo en sprints. Capacidad cross-producto. Tablas nuevas: `products`, `roadmap_segments`, `team_dependencies`; `teams` gana campo `description`.
 - **Fase 6 — Integraciones:** Azure DevOps, Jira, GitHub Issues/Projects, Linear
 
 ---
@@ -467,3 +496,6 @@ Lógica: sin user en ruta protegida → `/login`. Con user en ruta auth → `/da
 - Los cuadrantes de la Matriz usan umbrales fijos: impacto ≥ `4_000_000` = alto; esfuerzo ≥ `8` sprints = alto.
 - `lib/squad-logic.ts` concentra la lógica de la matriz, capacidad y posicionamiento del canvas del Modo Squad.
 - `activity_log` es INSERT-only: el tipo `Update` en `database.ts` es `Record<never, never>`.
+- `IdeaButton` está gateado a `role === "owner"` en la UI — la política INSERT de `ideas` en DB permite cualquier member, el gate es de la fase de testeo.
+- `deviations.source` y `external_ref` están preparados para la integración con Jira/Azure DevOps (Fase 6) — no tienen lógica aún.
+- La conversión idea → proyecto usa `?idea=<id>` en la URL de Squad; el `AnalystPanel` usa `internalPrefill` (estado interno copiado de `prefillData` al disparar `openRequest`) para evitar el problema de `defaultValue` en inputs no controlados.

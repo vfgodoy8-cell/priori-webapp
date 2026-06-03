@@ -119,7 +119,7 @@ export default async function DashboardPage() {
               <span className="uppercase text-brand-gray leading-none" style={{ fontSize: 10, letterSpacing: "0.08em" }}>Transparencia Estratégica</span>
             </div>
           </div>
-          <DashboardHeaderRight orgName={org.name} userEmail={user.email ?? ""} teams={teams} orgId={org.id} />
+          <DashboardHeaderRight orgName={org.name} userEmail={user.email ?? ""} teams={teams} orgId={org.id} role={role} />
         </div>
       </header>
 

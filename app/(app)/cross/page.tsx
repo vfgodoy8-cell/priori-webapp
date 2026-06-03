@@ -83,7 +83,7 @@ export default async function CrossPage() {
           </div>
 
           {/* Right */}
-          <CrossHeaderRight orgName={org.name} teams={teams} orgId={org.id} />
+          <CrossHeaderRight orgName={org.name} teams={teams} orgId={org.id} role={role} />
         </div>
       </header>
 

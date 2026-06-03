@@ -36,14 +36,17 @@ type Props = {
   onForceEditConsumed?: () => void;
   openRequest?: number;
   currentUserId: string;
+  prefillData?: { name?: string; description?: string } | null;
+  onPrefillConsumed?: () => void;
 };
 
-export function AnalystPanel({ projects, orgId, config, onConfigChange, forceEdit, onForceEditConsumed, openRequest, currentUserId }: Props) {
+export function AnalystPanel({ projects, orgId, config, onConfigChange, forceEdit, onForceEditConsumed, openRequest, currentUserId, prefillData, onPrefillConsumed }: Props) {
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState<Tab>("form");
   const [editProject, setEditProject] = useState<Project | undefined>();
   const [sliceParent, setSliceParent] = useState<Project | null>(null);
   const [aiInterview, setAiInterview] = useState(false);
+  const [internalPrefill, setInternalPrefill] = useState<{ name?: string; description?: string } | null>(null);
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
   const sliceFormRef = useRef<HTMLFormElement>(null);
@@ -60,9 +63,11 @@ export function AnalystPanel({ projects, orgId, config, onConfigChange, forceEdi
 
   useEffect(() => {
     if (openRequest) {
+      setInternalPrefill(prefillData ?? null);
       setEditProject(undefined);
       setTab("form");
       setOpen(true);
+      onPrefillConsumed?.();
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [openRequest]);
@@ -96,6 +101,7 @@ export function AnalystPanel({ projects, orgId, config, onConfigChange, forceEdi
   }
 
   function cancelEdit() {
+    setInternalPrefill(null);
     setEditProject(undefined);
     setSliceParent(null);
     formRef.current?.reset();
@@ -244,6 +250,7 @@ export function AnalystPanel({ projects, orgId, config, onConfigChange, forceEdi
                   </div>
 
                   <form
+                    key={editProject?.id ?? (internalPrefill ? "prefill" : "new")}
                     ref={formRef}
                     action={formAction}
                     onSubmit={() => { if (formRef.current) formRef.current.dataset.submitted = "true"; }}
@@ -252,7 +259,7 @@ export function AnalystPanel({ projects, orgId, config, onConfigChange, forceEdi
                     {editProject && <input type="hidden" name="id" value={editProject.id} />}
 
                     <F label="Nombre *">
-                      <input name="name" type="text" required defaultValue={editProject?.name} placeholder="Ej: Portal clientes" className={inp} />
+                      <input name="name" type="text" required defaultValue={editProject?.name ?? internalPrefill?.name ?? ""} placeholder="Ej: Portal clientes" className={inp} />
                     </F>
                     <F label="Stakeholder">
                       <input name="stakeholder" type="text" defaultValue={editProject?.stakeholder ?? ""} placeholder="Ej: Banco XYZ" className={inp} />
@@ -308,7 +315,7 @@ export function AnalystPanel({ projects, orgId, config, onConfigChange, forceEdi
                       <input name="dependencies" type="text" defaultValue={editProject?.dependencies ?? ""} placeholder="Ej: API pagos" className={inp} />
                     </F>
                     <F label="Descripción">
-                      <textarea name="description" rows={2} defaultValue={editProject?.description ?? ""} placeholder="Objetivo principal..." className={`${inp} resize-none`} />
+                      <textarea name="description" rows={2} defaultValue={editProject?.description ?? internalPrefill?.description ?? ""} placeholder="Objetivo principal..." className={`${inp} resize-none`} />
                     </F>
 
                     {/* Quadrant preview */}
@@ -480,18 +487,16 @@ export function AnalystPanel({ projects, orgId, config, onConfigChange, forceEdi
           )}
         </div>
       </div>
-    <>
       {aiInterview && (
         <AIInterviewModal
           mode="squad"
           onClose={() => setAiInterview(false)}
-          onConfirm={(data) => {
+          onConfirm={() => {
             setAiInterview(false);
             router.refresh();
           }}
         />
       )}
-    </>
     </>
   );
 }

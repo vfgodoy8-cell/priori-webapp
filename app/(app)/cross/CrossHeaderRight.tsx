@@ -4,17 +4,21 @@ import Link from "next/link";
 import { IconLayoutKanban } from "@tabler/icons-react";
 import { LogoutButton } from "@/components/ui/LogoutButton";
 import { TeamPanelTrigger } from "@/components/ui/TeamPanelTrigger";
+import { IdeaButton } from "@/components/ui/IdeaButton";
 import type { Team } from "@/types/database";
+import type { AppRole } from "@/lib/roles";
 
 type Props = {
   orgName: string;
   teams: Team[];
   orgId: string;
+  role: AppRole;
 };
 
-export function CrossHeaderRight({ orgName, teams, orgId }: Props) {
+export function CrossHeaderRight({ orgName, teams, orgId, role }: Props) {
   return (
     <div className="flex items-center gap-4">
+      {role === "owner" && <IdeaButton />}
       <Link
         href="/squad"
         className="flex items-center gap-1.5 text-sm font-semibold px-3.5 py-1.5 rounded-lg bg-white text-brand-gray hover:text-brand-orange hover:border-brand-orange transition"

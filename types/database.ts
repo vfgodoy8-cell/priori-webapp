@@ -330,6 +330,25 @@ export type SharedView = {
   created_at: string;
 };
 
+export type IdeaSuggestedType = "mejora" | "nuevo_desarrollo" | "cambio_proceso";
+export type IdeaStatus = "raw" | "refined" | "promoted" | "discarded";
+
+export type Idea = {
+  id: string;
+  organization_id: string;
+  created_by: string | null;
+  title: string;
+  problem: string;
+  current_situation: string | null;
+  expected_result: string | null;
+  suggested_type: IdeaSuggestedType | null;
+  status: IdeaStatus;
+  raw_transcript: unknown;
+  created_at: string;
+  updated_at: string;
+  author?: { full_name: string | null } | null;
+};
+
 export type AiProvider = "anthropic" | "openai" | "azure" | "google" | "groq";
 
 export type AiSettingsRow = {

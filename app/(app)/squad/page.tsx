@@ -5,11 +5,12 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { SquadView } from "./SquadView";
 import { computeQuadrant } from "@/lib/quadrant";
 import { LogoutButton } from "@/components/ui/LogoutButton";
+import { IdeaButton } from "@/components/ui/IdeaButton";
 import type { OrganizationMember, Organization, Project } from "@/types/database";
 import { type AppRole } from "@/lib/roles";
 import { IconCalendarEvent, IconSettings } from "@tabler/icons-react";
 
-export default async function SquadPage({ searchParams }: { searchParams?: { ini?: string } }) {
+export default async function SquadPage({ searchParams }: { searchParams?: { ini?: string; idea?: string } }) {
   const supabase = createClient();
   const {
     data: { user },
@@ -61,6 +62,19 @@ export default async function SquadPage({ searchParams }: { searchParams?: { ini
   const filterInitiative = iniId ? initiatives.find((i) => i.id === iniId) ?? null : null;
   const highlightIds = filterInitiative ? new Set(filterInitiative.sq_project_ids ?? []) : null;
 
+  // Prefill from ?idea=<id>
+  const ideaId = searchParams?.idea;
+  let ideaPrefill: { title: string; problem: string } | null = null;
+  if (ideaId) {
+    const { data: ideaData } = await admin
+      .from("ideas")
+      .select("title, problem")
+      .eq("id", ideaId)
+      .eq("organization_id", org.id)
+      .single();
+    if (ideaData) ideaPrefill = ideaData as { title: string; problem: string };
+  }
+
   // Map projectId → first initiative name (for tooltip "Parte de: X")
   const projectIniMap: Record<string, string> = {};
   initiatives.forEach((i) => {
@@ -103,6 +117,7 @@ export default async function SquadPage({ searchParams }: { searchParams?: { ini
 
           {/* Right */}
           <div className="flex items-center gap-4">
+            {role === "owner" && <IdeaButton />}
             <Link
               href="/cross"
               className="flex items-center gap-1.5 text-sm font-semibold px-3.5 py-1.5 rounded-lg bg-white text-brand-gray hover:text-brand-orange hover:border-brand-orange transition"
@@ -137,6 +152,7 @@ export default async function SquadPage({ searchParams }: { searchParams?: { ini
           highlightIds={highlightIds}
           filterInitiative={filterInitiative ? { id: filterInitiative.id, name: filterInitiative.name } : null}
           projectIniMap={projectIniMap}
+          ideaPrefill={ideaPrefill}
         />
       </main>
     </div>

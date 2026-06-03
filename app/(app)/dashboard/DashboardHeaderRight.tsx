@@ -3,18 +3,22 @@
 import Link from "next/link";
 import { LogoutButton } from "@/components/ui/LogoutButton";
 import { TeamPanelTrigger } from "@/components/ui/TeamPanelTrigger";
+import { IdeaButton } from "@/components/ui/IdeaButton";
 import type { Team } from "@/types/database";
+import type { AppRole } from "@/lib/roles";
 
 type Props = {
   orgName: string;
   userEmail: string;
   teams: Team[];
   orgId: string;
+  role: AppRole;
 };
 
-export function DashboardHeaderRight({ orgName, userEmail, teams, orgId }: Props) {
+export function DashboardHeaderRight({ orgName, userEmail, teams, orgId, role }: Props) {
   return (
     <div className="flex items-center gap-4">
+      {role === "owner" && <IdeaButton />}
       <TeamPanelTrigger teams={teams} orgId={orgId} />
       <Link
         href="/settings/members"

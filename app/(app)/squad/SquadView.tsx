@@ -28,9 +28,10 @@ type Props = {
   highlightIds?: Set<string> | null;
   filterInitiative?: { id: string; name: string } | null;
   projectIniMap?: Record<string, string>;
+  ideaPrefill?: { title: string; problem: string } | null;
 };
 
-export function SquadView({ projects, discarded, p0Projects, allActive, orgId, role, currentUserId, crossLinkedIds, highlightIds, filterInitiative, projectIniMap }: Props) {
+export function SquadView({ projects, discarded, p0Projects, allActive, orgId, role, currentUserId, crossLinkedIds, highlightIds, filterInitiative, projectIniMap, ideaPrefill }: Props) {
   const router = useRouter();
   const [view, setView] = useState<View>("canvas");
   const [quarterOverlay, setQuarterOverlay] = useState(false);
@@ -40,9 +41,14 @@ export function SquadView({ projects, discarded, p0Projects, allActive, orgId, r
   const [showShare, setShowShare] = useState(false);
   const [showTour, setShowTour] = useState(false);
   const [aiOpen, setAiOpen] = useState(false);
+  const [pendingPrefill, setPendingPrefill] = useState<{ name: string; description: string } | null>(
+    ideaPrefill ? { name: ideaPrefill.title, description: ideaPrefill.problem } : null
+  );
 
   useEffect(() => {
     setConfig(loadConfig(orgId));
+    if (ideaPrefill) setOpenRequest(n => n + 1);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orgId]);
 
   const aiContext = useMemo(() => buildSquadContext(allActive, config), [allActive, config]);
@@ -187,6 +193,8 @@ export function SquadView({ projects, discarded, p0Projects, allActive, orgId, r
           onForceEditConsumed={() => setForceEdit(null)}
           openRequest={openRequest}
           currentUserId={currentUserId}
+          prefillData={pendingPrefill}
+          onPrefillConsumed={() => setPendingPrefill(null)}
         />
       )}
     </>

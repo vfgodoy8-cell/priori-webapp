@@ -475,7 +475,7 @@ Lógica: sin user en ruta protegida → `/login`. Con user en ruta auth → `/da
 - **Dominio `priori.ar`:** configurar en Vercel (A en apex, CNAME en www) + Supabase (Site URL + Redirect URLs), reactivar email de confirmación con dominio propio
 - **`SUPABASE_HOOK_SECRET`:** agregar en Vercel → Settings → Environment Variables para activar el hook de email auth
 - **Umbrales configurables por org:** `DEFAULT_IMPACT_HIGH` y `DEFAULT_EFFORT_HIGH` están hardcodeados en `lib/quadrant.ts`; la UI de configuración aún no existe
-- **Fase 5 — Modo Roadmap (UI inicial implementada):** migración aplicada en Supabase. Ruta `/roadmap` operativa. Pendiente: drag para redimensionar barras, vista cross-producto de capacidad, logActivity para products, team_dependencies UI, mejoras de UX del panel lateral.
+- **Fase 5 — Modo Roadmap (UI inicial implementada, deploy fallido):** migración aplicada en Supabase. Ruta `/roadmap` operativa en local. Deploy a Vercel falló — hay que investigar el error en el dashboard de Vercel antes de la próxima sesión. Pendiente además: drag para redimensionar barras, vista cross-producto de capacidad, logActivity para products, team_dependencies UI, mejoras de UX del panel lateral.
 - **Fase 6 — Integraciones:** Azure DevOps, Jira, GitHub Issues/Projects, Linear
 
 ---

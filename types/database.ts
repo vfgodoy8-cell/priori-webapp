@@ -349,6 +349,26 @@ export type Idea = {
   author?: { full_name: string | null } | null;
 };
 
+export type DeviationStatus = "open" | "resolved";
+
+export type Deviation = {
+  id: string;
+  organization_id: string;
+  project_id: string | null;
+  initiative_id: string | null;
+  reported_by: string | null;
+  date: string;
+  reason: string;
+  blocking_dependency: string | null;
+  affected_dependency: string | null;
+  status: DeviationStatus;
+  source: string | null;
+  external_ref: string | null;
+  created_at: string;
+  updated_at: string;
+  reporter?: { full_name: string | null } | null;
+};
+
 export type AiProvider = "anthropic" | "openai" | "azure" | "google" | "groq";
 
 export type AiSettingsRow = {

@@ -4,7 +4,8 @@ export type ActivityAction =
   | "created" | "updated" | "deleted"
   | "placed" | "unplaced"
   | "discarded" | "restored"
-  | "commented";
+  | "commented"
+  | "blocked" | "unblocked";
 
 export const ACTION_LABEL: Record<ActivityAction, string> = {
   created:   "creó",
@@ -15,6 +16,8 @@ export const ACTION_LABEL: Record<ActivityAction, string> = {
   discarded: "descartó",
   restored:  "restauró",
   commented: "comentó en",
+  blocked:   "registró un desvío en",
+  unblocked: "resolvió un desvío en",
 };
 
 export type ActivityLog = {

@@ -97,18 +97,36 @@ export function totalDisplaySprints(
 
 // Calcula start_sprint / end_sprint para cada segmento.
 //
-// manualMode = true  → usa manual_start_sprint directamente, sin resolver deps.
-// manualMode = false → Kahn topological sort + greedy earliest-start scheduling.
-//                      Solo resuelve deps intra-producto (IDs presentes en el set).
-//                      Segmentos en ciclo se ubican al final como fallback seguro.
+// Precedencia de posición:
+//   1. start_date del segmento (fecha absoluta → sprint relativo al producto)
+//   2. manual_start_sprint (solo en manualMode)
+//   3. reflow automático (Kahn topological sort + greedy earliest-start)
+//
+// Un segmento anclado por start_date ignora sus predecesores para su propio
+// inicio, pero sus sucesores sí refluyen a partir de su posición anclada.
+//
+// productStart es necesario para convertir start_date → sprint; si se omite
+// los start_date de los segmentos son ignorados (backwards-compatible).
 export function computeLayout(
   segments: RoadmapSegment[],
   manualMode: boolean,
+  productStart?: Date,
 ): ReflowResult {
+  // Pre-computar sprints anclados por start_date (relativo al inicio del producto).
+  const anchorSprints = new Map<string, number>();
+  if (productStart) {
+    for (const seg of segments) {
+      if (seg.start_date) {
+        anchorSprints.set(seg.id, dateToSprint(productStart, parseProductDate(seg.start_date)));
+      }
+    }
+  }
+
   if (manualMode) {
     return {
       layout: segments.map((s) => {
-        const start = s.manual_start_sprint ?? 0;
+        const anchor = anchorSprints.get(s.id);
+        const start = anchor !== undefined ? anchor : (s.manual_start_sprint ?? 0);
         return { segment_id: s.id, start_sprint: start, end_sprint: start + s.duration_sprints };
       }),
       hasCycle: false,
@@ -151,7 +169,10 @@ export function computeLayout(
         (startSprints.get(depId) ?? 0) + segMap.get(depId)!.duration_sprints,
       );
     }
-    startSprints.set(id, earliest);
+
+    // start_date anclada tiene prioridad sobre la posición calculada por reflow.
+    const anchor = anchorSprints.get(id);
+    startSprints.set(id, anchor !== undefined ? anchor : earliest);
 
     for (const succId of successors.get(id)!) {
       const next = (inDegree.get(succId) ?? 1) - 1;

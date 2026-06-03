@@ -8,6 +8,7 @@ import {
   buildMonthHeaders,
   totalDisplaySprints,
   parseProductDate,
+  sprintStartDate,
   type SegmentLayout,
 } from "@/lib/roadmap-logic";
 import {
@@ -30,6 +31,11 @@ const PALETTE = [
 
 function segmentColor(idx: number) {
   return PALETTE[idx % PALETTE.length];
+}
+
+const MONTHS_ES = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+function fmtDate(d: Date): string {
+  return `${d.getDate()} ${MONTHS_ES[d.getMonth()]} ${d.getFullYear()}`;
 }
 
 type Props = {
@@ -63,9 +69,14 @@ export function RoadmapView({ orgId, initialProducts, teams, role }: Props) {
     return () => { active = false; };
   }, [selectedId]);
 
+  const productStart = useMemo(
+    () => (selectedProduct ? parseProductDate(selectedProduct.start_date) : new Date()),
+    [selectedProduct],
+  );
+
   const reflowResult = useMemo(
-    () => (selectedProduct ? computeLayout(segments, selectedProduct.manual_mode) : null),
-    [segments, selectedProduct],
+    () => (selectedProduct ? computeLayout(segments, selectedProduct.manual_mode, productStart) : null),
+    [segments, selectedProduct, productStart],
   );
 
   const layoutMap = useMemo(() => {
@@ -73,11 +84,6 @@ export function RoadmapView({ orgId, initialProducts, teams, role }: Props) {
     reflowResult?.layout.forEach((l) => m.set(l.segment_id, l));
     return m;
   }, [reflowResult]);
-
-  const productStart = useMemo(
-    () => (selectedProduct ? parseProductDate(selectedProduct.start_date) : new Date()),
-    [selectedProduct],
-  );
 
   const totalSprints = useMemo(
     () => (reflowResult ? totalDisplaySprints(reflowResult.layout) : 13),
@@ -234,6 +240,8 @@ export function RoadmapView({ orgId, initialProducts, teams, role }: Props) {
             allSegments={segments}
             allTeams={teams}
             manualMode={selectedProduct?.manual_mode ?? false}
+            layoutMap={layoutMap}
+            productStart={productStart}
             canEdit={canEdit}
             onUpdate={handleUpdateSegment}
             onRemove={() => handleRemoveSegment(editingSeg.id)}
@@ -377,6 +385,8 @@ function SegmentPanel({
   allSegments,
   allTeams,
   manualMode,
+  layoutMap,
+  productStart,
   canEdit,
   onUpdate,
   onRemove,
@@ -388,6 +398,8 @@ function SegmentPanel({
   allSegments: RoadmapSegment[];
   allTeams: Team[];
   manualMode: boolean;
+  layoutMap: Map<string, SegmentLayout>;
+  productStart: Date;
   canEdit: boolean;
   onUpdate: (id: string, patch: Parameters<typeof updateSegment>[1]) => void;
   onRemove: () => void;
@@ -398,21 +410,30 @@ function SegmentPanel({
   const [duration, setDuration] = useState(segment.duration_sprints);
   const [manualStart, setManualStart] = useState(segment.manual_start_sprint ?? 0);
   const [dependsOn, setDependsOn] = useState<string[]>(segment.depends_on);
+  const [anchorDate, setAnchorDate] = useState(segment.start_date ?? "");
 
   useEffect(() => {
     setLabel(segment.label);
     setDuration(segment.duration_sprints);
     setManualStart(segment.manual_start_sprint ?? 0);
     setDependsOn(segment.depends_on);
+    setAnchorDate(segment.start_date ?? "");
   }, [segment.id]);
 
   const otherSegments = allSegments.filter((s) => s.id !== segment.id);
+
+  // Fecha de inicio calculada por el layout actual (guardado en DB).
+  const computedStartDate = (() => {
+    const layout = layoutMap.get(segment.id);
+    return layout ? sprintStartDate(productStart, layout.start_sprint) : null;
+  })();
 
   function handleSave() {
     const patch: Parameters<typeof updateSegment>[1] = {
       label,
       duration_sprints: duration,
       depends_on: dependsOn,
+      start_date: anchorDate || null,
     };
     if (manualMode) patch.manual_start_sprint = manualStart;
     onUpdate(segment.id, patch);
@@ -458,6 +479,28 @@ function SegmentPanel({
             </span>
             <StepButton onClick={() => setDuration((d) => Math.min(52, d + 1))} disabled={!canEdit}>+</StepButton>
           </div>
+        </div>
+
+        {/* Anchor date */}
+        <div>
+          <label className="text-xs text-brand-gray block mb-1">Inicio (opcional)</label>
+          <input
+            type="date"
+            className="w-full text-sm border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand-orange/20 disabled:bg-gray-50"
+            value={anchorDate}
+            onChange={(e) => setAnchorDate(e.target.value)}
+            disabled={!canEdit}
+          />
+          {anchorDate ? (
+            <p className="text-xs text-brand-orange mt-1">
+              Posición fija — ignora el reflow automático.
+            </p>
+          ) : computedStartDate ? (
+            <p className="text-xs text-brand-gray mt-1">
+              Inicio calculado:{" "}
+              <span className="font-medium text-brand-black">{fmtDate(computedStartDate)}</span>
+            </p>
+          ) : null}
         </div>
 
         {/* Manual start sprint */}

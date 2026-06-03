@@ -139,7 +139,7 @@ export async function loadProductSegments(
 export async function addSegment(
   productId: string,
   teamId: string,
-  input: { label?: string; duration_sprints?: number; sort_order?: number },
+  input: { label?: string; duration_sprints?: number; sort_order?: number; start_date?: string | null },
 ): Promise<{ error?: string; id?: string }> {
   const { admin, orgId, role } = await getAuthContext();
   if (!canWrite(role)) return { error: "Sin permisos." };
@@ -153,6 +153,7 @@ export async function addSegment(
       label: input.label ?? "",
       duration_sprints: input.duration_sprints ?? 1,
       sort_order: input.sort_order ?? 0,
+      start_date: input.start_date ?? null,
     })
     .select("id")
     .single();
@@ -164,7 +165,7 @@ export async function addSegment(
 
 export async function updateSegment(
   id: string,
-  patch: Partial<Pick<RoadmapSegment, "label" | "duration_sprints" | "depends_on" | "manual_start_sprint" | "sort_order">>,
+  patch: Partial<Pick<RoadmapSegment, "label" | "duration_sprints" | "depends_on" | "manual_start_sprint" | "start_date" | "sort_order">>,
 ): Promise<{ error?: string }> {
   const { admin, orgId, role } = await getAuthContext();
   if (!canWrite(role)) return { error: "Sin permisos." };

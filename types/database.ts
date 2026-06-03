@@ -226,6 +226,7 @@ export type Database = {
           duration_sprints: number;
           depends_on: string[];
           manual_start_sprint: number | null;
+          start_date: string | null;
           sort_order: number;
           created_at: string;
           updated_at: string;
@@ -239,6 +240,7 @@ export type Database = {
           duration_sprints?: number;
           depends_on?: string[];
           manual_start_sprint?: number | null;
+          start_date?: string | null;
           sort_order?: number;
           created_at?: string;
           updated_at?: string;
@@ -248,6 +250,7 @@ export type Database = {
           duration_sprints?: number;
           depends_on?: string[];
           manual_start_sprint?: number | null;
+          start_date?: string | null;
           sort_order?: number;
           updated_at?: string;
         };

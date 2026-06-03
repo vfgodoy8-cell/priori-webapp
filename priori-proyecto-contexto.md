@@ -307,7 +307,7 @@ Enum en DB: `member_role` = `"owner" | "admin" | "member"`
 
 | Tabla | Columnas clave |
 |---|---|
-| `teams` | id, organization_id, name, personas, proy_per_persona, q1_pct–q4_pct (0–100), sort_order, created_at |
+| `teams` | id, organization_id, name, description (text nullable, agregado en Fase 5), personas, proy_per_persona, q1_pct–q4_pct (0–100), sort_order, created_at |
 | `initiatives` | id, organization_id, name, description, stakeholder, impact_value, impact_metric, effort_sprints (1–24), duration_quarters (1–4), q_start (0–3 o null=backlog), team_ids (string[]), team_allocations (Record\<uuid, number\>), sq_project_ids (string[]), start_date, end_date, status (active/discarded), created_at, updated_at |
 
 ### Colaboración
@@ -339,15 +339,15 @@ Enum en DB: `member_role` = `"owner" | "admin" | "member"`
 
 **RLS Fase 5:** SELECT para cualquier miembro · INSERT para cualquier miembro (`created_by/reported_by = auth.uid()`) · UPDATE/DELETE solo owner/admin (`canWrite`)
 
-### Fase 5 — Pendientes (Modo Roadmap, aún no migradas)
+### Fase 5 — Modo Roadmap (migración escrita `20260602000024`, tablas aún no aplicadas en Supabase)
 
 | Tabla | Columnas clave |
 |---|---|
-| `products` | id, organization_id, name, description, color, sort_order, created_at |
-| `roadmap_segments` | id, organization_id, product_id, team_id, name, start_sprint (int), duration_sprints (int), dependencies (uuid[]), status (planned/in_progress/done/blocked), created_at, updated_at |
-| `team_dependencies` | id, organization_id, from_team_id, to_team_id, segment_id, description, created_at |
+| `products` | id, organization_id, name, description, business_area, initiative_id (→ initiatives ON DELETE SET NULL, nullable), start_date (date NOT NULL DEFAULT CURRENT_DATE — sprint 0 relativo al producto), manual_mode (bool default false), status (active/discarded), sort_order, created_at, updated_at |
+| `roadmap_segments` | id, organization_id, product_id (→ products ON DELETE CASCADE), team_id (→ teams ON DELETE CASCADE), label, duration_sprints (1–52), depends_on (uuid[] default '{}' — IDs de otros segmentos, sin FK de array), manual_start_sprint (int nullable — posición fija en manual_mode), sort_order, created_at, updated_at · UNIQUE(product_id, team_id) |
+| `team_dependencies` | id, organization_id, team_id (→ teams), depends_on_team_id (→ teams), description, created_at · CHECK(team_id != depends_on_team_id) · UNIQUE(team_id, depends_on_team_id) |
 
-**Nota:** `teams` ganará columna `description` (text nullable) para el Modo Roadmap.
+**RLS Roadmap:** SELECT `my_role_in_org IS NOT NULL` · INSERT/UPDATE/DELETE `IN ('owner','admin')` · `team_dependencies` sin UPDATE (se borra y recrea)
 
 ### Funciones SQL helper (SECURITY DEFINER)
 
@@ -382,6 +382,7 @@ Definidas en `20260526000003_rls_consolidado.sql`:
 20260528000021_ai_settings_groq.sql
 20260602000022_ideas.sql
 20260602000023_deviations.sql
+20260602000024_roadmap.sql          ← escrita, aún no aplicada en Supabase
 ```
 
 ### RLS
@@ -466,7 +467,7 @@ Lógica: sin user en ruta protegida → `/login`. Con user en ruta auth → `/da
 - **Dominio `priori.ar`:** configurar en Vercel (A en apex, CNAME en www) + Supabase (Site URL + Redirect URLs), reactivar email de confirmación con dominio propio
 - **`SUPABASE_HOOK_SECRET`:** agregar en Vercel → Settings → Environment Variables para activar el hook de email auth
 - **Umbrales configurables por org:** `DEFAULT_IMPACT_HIGH` y `DEFAULT_EFFORT_HIGH` están hardcodeados en `lib/quadrant.ts`; la UI de configuración aún no existe
-- **Fase 5 — Modo Roadmap (pendiente):** tercer modo al nivel de Squad y Cross. Gantt por producto (reemplazo de tableros tipo MIRO). Una fila por producto-equipo, con auto-reflow por dependencias y switch manual. Vistas mes/semana/sprint; cálculo en sprints. Capacidad cross-producto. Tablas nuevas: `products`, `roadmap_segments`, `team_dependencies`; `teams` gana campo `description`.
+- **Fase 5 — Modo Roadmap (en diseño, migración lista):** migración `20260602000024_roadmap.sql` escrita y commiteada pero aún no aplicada en Supabase. Tercer modo `/roadmap` al nivel de Squad y Cross. Gantt por producto (un producto activo a la vez + vista de capacidad cross-producto). Una fila por equipo dentro del producto. Auto-reflow por dependencias (topological sort + greedy, con detección de ciclos); switch `manual_mode` para posicionamiento libre. Eje X en meses, cálculo en sprints (1 sprint = 2 semanas), rango dinámico desde `start_date` del producto. Próximas etapas: tipos + `lib/roadmap-logic.ts` (helpers de tiempo + motor de reflow) → actions → ruta + UI con CSS Grid.
 - **Fase 6 — Integraciones:** Azure DevOps, Jira, GitHub Issues/Projects, Linear
 
 ---

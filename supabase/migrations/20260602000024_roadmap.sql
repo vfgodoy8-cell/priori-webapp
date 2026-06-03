@@ -18,6 +18,7 @@ CREATE TABLE public.products (
   description     text,
   business_area   text,
   initiative_id   uuid REFERENCES public.initiatives(id) ON DELETE SET NULL,
+  start_date      date NOT NULL DEFAULT CURRENT_DATE,
   manual_mode     boolean NOT NULL DEFAULT false,
   status          text NOT NULL DEFAULT 'active'
                     CHECK (status IN ('active', 'discarded')),

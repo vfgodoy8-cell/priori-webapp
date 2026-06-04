@@ -329,6 +329,26 @@ export async function deleteTeamDependency(id: string): Promise<{ error?: string
   return {};
 }
 
+// ── TEAM SORT ORDER ───────────────────────────────────────────────────────────
+
+export async function updateTeamsSortOrder(
+  teams: { id: string; sort_order: number }[],
+): Promise<{ error?: string }> {
+  const { admin, orgId, role } = await getAuthContext();
+  if (!canWrite(role)) return { error: "Sin permisos." };
+
+  await Promise.all(
+    teams.map(({ id, sort_order }) =>
+      admin
+        .from("teams")
+        .update({ sort_order })
+        .eq("id", id)
+        .eq("organization_id", orgId),
+    ),
+  );
+  return {};
+}
+
 // ── ROADMAP BASELINES ─────────────────────────────────────────────────────────
 
 export type BaselineSnapshot = Array<{

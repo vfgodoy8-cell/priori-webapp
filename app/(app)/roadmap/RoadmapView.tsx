@@ -26,6 +26,7 @@ import {
   captureBaseline,
   listBaselines,
   deleteBaseline,
+  updateTeamsSortOrder,
   type BaselineSnapshot,
 } from "./actions";
 import { DeviationsThread } from "@/components/ui/DeviationsThread";
@@ -101,8 +102,9 @@ type Props = {
   role: AppRole;
 };
 
-export function RoadmapView({ orgId, initialProducts, teams, role }: Props) {
+export function RoadmapView({ orgId, initialProducts, teams: initialTeams, role }: Props) {
   const [products, setProducts] = useState<Product[]>(initialProducts);
+  const [localTeams, setLocalTeams] = useState<Team[]>(initialTeams);
   const [channels, setChannels] = useState<Channel[]>([]);
   const [showChannelPanel, setShowChannelPanel] = useState(false);
 
@@ -264,6 +266,11 @@ export function RoadmapView({ orgId, initialProducts, teams, role }: Props) {
     });
   }
 
+  function handleReorderTeams(newOrder: Team[]) {
+    setLocalTeams(newOrder);
+    updateTeamsSortOrder(newOrder.map((t, i) => ({ id: t.id, sort_order: i })));
+  }
+
   async function handleCreateChannel(name: string): Promise<Channel | null> {
     const { channel, error } = await createChannel(name);
     if (error || !channel) return null;
@@ -287,7 +294,7 @@ export function RoadmapView({ orgId, initialProducts, teams, role }: Props) {
   }
 
   const editingSeg  = segments.find((s) => s.id === editingSegId) ?? null;
-  const editingTeam = editingSeg ? (teams.find((t) => t.id === editingSeg.team_id) ?? null) : null;
+  const editingTeam = editingSeg ? (localTeams.find((t) => t.id === editingSeg.team_id) ?? null) : null;
 
   if (products.length === 0 && !showProductForm) {
     return <EmptyState canEdit={canEdit} onAdd={() => setShowProductForm(true)} />;
@@ -414,14 +421,14 @@ export function RoadmapView({ orgId, initialProducts, teams, role }: Props) {
             <div className="p-12 text-center text-brand-gray text-sm">Seleccioná un producto.</div>
           ) : loadingSegments ? (
             <div className="p-12 text-center text-brand-gray text-sm">Cargando...</div>
-          ) : teams.length === 0 ? (
+          ) : localTeams.length === 0 ? (
             <div className="p-12 text-center text-brand-gray text-sm">
               Configurá equipos en{" "}
               <a href="/cross" className="text-brand-orange hover:underline">Modo Cross</a> primero.
             </div>
           ) : (
             <GanttGrid
-              teams={teams}
+              teams={localTeams}
               segments={segments}
               layoutMap={layoutMap}
               monthHeaders={monthHeaders}
@@ -430,6 +437,9 @@ export function RoadmapView({ orgId, initialProducts, teams, role }: Props) {
               editingSegId={editingSegId}
               onSegmentClick={setEditingSegId}
               onAddSegment={canEdit ? handleAddSegment : undefined}
+              onReorderTeams={canEdit ? handleReorderTeams : undefined}
+              manualMode={selectedProduct?.manual_mode ?? false}
+              onUpdateManualSprint={canEdit ? (id, sprint) => handleUpdateSegment(id, { manual_start_sprint: sprint }) : undefined}
               isPending={isPending}
             />
           )}
@@ -440,7 +450,7 @@ export function RoadmapView({ orgId, initialProducts, teams, role }: Props) {
             segment={editingSeg}
             team={editingTeam}
             allSegments={segments}
-            allTeams={teams}
+            allTeams={localTeams}
             manualMode={selectedProduct?.manual_mode ?? false}
             layoutMap={layoutMap}
             productStart={productStart}
@@ -453,7 +463,7 @@ export function RoadmapView({ orgId, initialProducts, teams, role }: Props) {
         ) : selectedProduct ? (
           <ProductPanel
             product={selectedProduct}
-            teams={teams}
+            teams={localTeams}
             segments={segments}
             layoutMap={layoutMap}
             canEdit={canEdit}
@@ -627,6 +637,9 @@ function GanttGrid({
   editingSegId,
   onSegmentClick,
   onAddSegment,
+  onReorderTeams,
+  manualMode,
+  onUpdateManualSprint,
   isPending,
 }: {
   teams: Team[];
@@ -638,14 +651,84 @@ function GanttGrid({
   editingSegId: string | null;
   onSegmentClick: (id: string) => void;
   onAddSegment?: (teamId: string) => void;
+  onReorderTeams?: (newOrder: Team[]) => void;
+  manualMode?: boolean;
+  onUpdateManualSprint?: (segmentId: string, sprint: number) => void;
   isPending: boolean;
 }) {
+  // ── Estado drag de filas (reorder vertical) ──────────────────────────────────
+  const [draggingId, setDraggingId] = useState<string | null>(null);
+  const [dragOverId, setDragOverId] = useState<string | null>(null);
+
+  // ── Estado drag horizontal de barras (modo manual) ───────────────────────────
+  const [dragSprint, setDragSprint] = useState<{ segmentId: string; sprint: number } | null>(null);
+  const manualDragRef = useRef<{
+    segmentId: string;
+    baseSprint: number;
+    duration: number;
+    startX: number;
+  } | null>(null);
+
+  useEffect(() => {
+    function onMouseMove(e: MouseEvent) {
+      const drag = manualDragRef.current;
+      if (!drag) return;
+      const deltaSprints = Math.round((e.clientX - drag.startX) / SPRINT_PX);
+      const newSprint = Math.max(0, Math.min(totalSprints - drag.duration, drag.baseSprint + deltaSprints));
+      setDragSprint({ segmentId: drag.segmentId, sprint: newSprint });
+    }
+    function onMouseUp(e: MouseEvent) {
+      const drag = manualDragRef.current;
+      if (!drag) return;
+      const deltaSprints = Math.round((e.clientX - drag.startX) / SPRINT_PX);
+      const newSprint = Math.max(0, Math.min(totalSprints - drag.duration, drag.baseSprint + deltaSprints));
+      onUpdateManualSprint?.(drag.segmentId, newSprint);
+      manualDragRef.current = null;
+      setDragSprint(null);
+    }
+    document.addEventListener("mousemove", onMouseMove);
+    document.addEventListener("mouseup", onMouseUp);
+    return () => {
+      document.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("mouseup", onMouseUp);
+    };
+  }, [totalSprints, onUpdateManualSprint]);
+
   const teamIndexMap  = new Map(teams.map((t, i) => [t.id, i]));
   const quarterBands  = buildQuarterBands(productStart, totalSprints);
   const minW          = LABEL_W + totalSprints * SPRINT_PX;
 
   const pct  = (sprint: number) => `${(sprint / totalSprints) * 100}%`;
   const wPct = (sprints: number) => `${(sprints / totalSprints) * 100}%`;
+
+  function handleDragStart(e: React.DragEvent, teamId: string) {
+    setDraggingId(teamId);
+    e.dataTransfer.effectAllowed = "move";
+  }
+
+  function handleDragOver(e: React.DragEvent, teamId: string) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    if (teamId !== draggingId) setDragOverId(teamId);
+  }
+
+  function handleDrop(e: React.DragEvent, targetId: string) {
+    e.preventDefault();
+    if (!draggingId || draggingId === targetId || !onReorderTeams) return;
+    const next = [...teams];
+    const fromIdx = next.findIndex((t) => t.id === draggingId);
+    const toIdx   = next.findIndex((t) => t.id === targetId);
+    const [moved] = next.splice(fromIdx, 1);
+    next.splice(toIdx, 0, moved);
+    onReorderTeams(next);
+    setDraggingId(null);
+    setDragOverId(null);
+  }
+
+  function handleDragEnd() {
+    setDraggingId(null);
+    setDragOverId(null);
+  }
 
   return (
     <div style={{ minWidth: minW }}>
@@ -702,22 +785,37 @@ function GanttGrid({
 
       {/* Filas de equipos */}
       {teams.map((team, idx) => {
-        const segment  = segments.find((s) => s.team_id === team.id);
-        const layout   = segment ? layoutMap.get(segment.id) : null;
-        const color    = segmentColor(teamIndexMap.get(team.id) ?? idx);
+        const segment   = segments.find((s) => s.team_id === team.id);
+        const layout    = segment ? layoutMap.get(segment.id) : null;
+        const color     = segmentColor(teamIndexMap.get(team.id) ?? idx);
         const isEditing = !!segment && segment.id === editingSegId;
-        const isEven   = idx % 2 === 0;
-        const rowBg    = isEven ? "bg-white" : "bg-gray-50/40";
+        const isEven    = idx % 2 === 0;
+        const rowBg     = isEven ? "bg-white" : "bg-gray-50/40";
+        const isDragging   = draggingId === team.id;
+        const isDropTarget = dragOverId  === team.id;
+        const isDraggingBar = !!segment && dragSprint?.segmentId === segment.id;
+        const displaySprint = isDraggingBar ? dragSprint!.sprint : (layout?.start_sprint ?? 0);
+        const canDragBar    = manualMode && !!onUpdateManualSprint;
 
         return (
           <div
             key={team.id}
-            className={`flex border-b border-gray-100 last:border-b-0 h-14 ${rowBg}`}
+            draggable={!!onReorderTeams}
+            onDragStart={(e) => handleDragStart(e, team.id)}
+            onDragOver={(e)  => handleDragOver(e, team.id)}
+            onDragLeave={() => setDragOverId(null)}
+            onDrop={(e)      => handleDrop(e, team.id)}
+            onDragEnd={handleDragEnd}
+            className={`flex border-b border-gray-100 last:border-b-0 h-14 transition-opacity ${rowBg} ${isDragging ? "opacity-40" : ""}`}
+            style={isDropTarget ? { boxShadow: "inset 0 2px 0 0 #E8621A" } : undefined}
           >
             <div
-              className={`flex-shrink-0 flex items-center px-4 border-r border-gray-100 ${rowBg}`}
+              className={`flex-shrink-0 flex items-center gap-2 px-4 border-r border-gray-100 ${rowBg} ${onReorderTeams ? "cursor-grab active:cursor-grabbing" : ""}`}
               style={{ width: LABEL_W, position: "sticky", left: 0, zIndex: 10 }}
             >
+              {onReorderTeams && (
+                <span className="text-gray-300 text-xs select-none flex-shrink-0">⠿</span>
+              )}
               <span className="text-sm font-medium text-brand-black truncate">{team.name}</span>
             </div>
 
@@ -732,16 +830,30 @@ function GanttGrid({
 
               {segment && layout ? (
                 <button
-                  className="absolute top-2 bottom-2 rounded-lg flex items-center px-3 text-xs font-medium transition-all hover:brightness-95 focus:outline-none"
+                  draggable={false}
+                  className={`absolute top-2 bottom-2 rounded-lg flex items-center px-3 text-xs font-medium focus:outline-none select-none ${canDragBar ? "cursor-ew-resize" : "transition-all hover:brightness-95"} ${isDraggingBar ? "opacity-90 shadow-lg" : ""}`}
                   style={{
-                    left: pct(layout.start_sprint),
+                    left: pct(displaySprint),
                     width: `max(${wPct(segment.duration_sprints)}, 40px)`,
                     backgroundColor: color.bg,
-                    border: `1.5px solid ${isEditing ? color.text : color.border}`,
+                    border: `1.5px solid ${isEditing || isDraggingBar ? color.text : color.border}`,
                     color: color.text,
-                    boxShadow: isEditing ? `0 0 0 2px ${color.text}26` : undefined,
+                    boxShadow: isEditing || isDraggingBar ? `0 0 0 2px ${color.text}26` : undefined,
+                    transition: isDraggingBar ? "none" : undefined,
+                    zIndex: isDraggingBar ? 20 : undefined,
                   }}
-                  onClick={() => onSegmentClick(segment.id)}
+                  onMouseDown={canDragBar ? (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    manualDragRef.current = {
+                      segmentId: segment.id,
+                      baseSprint: segment.manual_start_sprint ?? layout.start_sprint,
+                      duration: segment.duration_sprints,
+                      startX: e.clientX,
+                    };
+                    setDragSprint({ segmentId: segment.id, sprint: segment.manual_start_sprint ?? layout.start_sprint });
+                  } : undefined}
+                  onClick={isDraggingBar ? undefined : () => onSegmentClick(segment.id)}
                 >
                   <span className="truncate">
                     {segment.label || `${segment.duration_sprints} sp`}
@@ -899,12 +1011,19 @@ function SegmentPanel({
           </div>
         )}
 
-        {!manualMode && otherSegments.length > 0 && (
+        {otherSegments.length > 0 && (
           <div>
-            <label className="text-xs text-brand-gray block mb-2">Depende de</label>
+            <label className="text-xs text-brand-gray block mb-1">Depende de</label>
+            {manualMode && (
+              <p className="text-[10px] text-brand-gray mb-2">
+                Solo informativo en modo manual.
+              </p>
+            )}
             <div className="space-y-1.5">
               {otherSegments.map((s) => {
                 const t = allTeams.find((t) => t.id === s.team_id);
+                const teamName = t?.name ?? "Equipo desconocido";
+                const segLabel = s.label ? ` — ${s.label}` : ` (${s.duration_sprints} sp)`;
                 return (
                   <label
                     key={s.id}
@@ -923,7 +1042,7 @@ function SegmentPanel({
                       disabled={!canEdit}
                       className="accent-brand-orange"
                     />
-                    {t?.name ?? "Equipo desconocido"}
+                    <span>{teamName}<span className="text-brand-gray">{segLabel}</span></span>
                   </label>
                 );
               })}

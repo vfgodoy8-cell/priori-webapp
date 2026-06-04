@@ -46,11 +46,13 @@ export default async function DashboardPage() {
     .single();
   const firstName = (profileData as { full_name: string | null } | null)?.full_name?.split(" ")[0] ?? null;
 
-  const [{ data: projectsData }, { data: initiativesData }, { data: teamsData }, recentActivity] = await Promise.all([
+  const [{ data: projectsData }, { data: initiativesData }, { data: teamsData }, recentActivity, { data: rmProductsData }, { data: rmChannelsData }] = await Promise.all([
     admin.from("projects").select("id, impact_value, effort_sprints, squad_status, status").eq("organization_id", org.id).eq("status", "active"),
     admin.from("initiatives").select("id, q_start, duration_quarters, team_ids, team_allocations, status").eq("organization_id", org.id).eq("status", "active"),
     admin.from("teams").select("*").eq("organization_id", org.id).order("sort_order", { ascending: true }),
     getRecentActivity(10),
+    admin.from("products").select("id, channel_id").eq("organization_id", org.id).eq("status", "active"),
+    admin.from("channels").select("id, name").eq("organization_id", org.id).order("sort_order", { ascending: true }),
   ]);
 
   const projects = (projectsData ?? []) as Pick<Project, "id" | "impact_value" | "effort_sprints" | "squad_status" | "status">[];
@@ -68,6 +70,28 @@ export default async function DashboardPage() {
   const quadrantMax = Math.max(...Object.values(quadrantCounts), 1);
 
   // â”€â”€ Cross stats â”€â”€
+  // ── Roadmap stats ──
+  type RmProduct = { id: string; channel_id: string | null };
+  type RmChannel = { id: string; name: string };
+  const rmProducts = (rmProductsData ?? []) as RmProduct[];
+  const rmChannels = (rmChannelsData ?? []) as RmChannel[];
+
+  const totalRmProducts = rmProducts.length;
+  const channelCountMap = new Map<string | null, number>();
+  for (const p of rmProducts) {
+    const key = p.channel_id ?? null;
+    channelCountMap.set(key, (channelCountMap.get(key) ?? 0) + 1);
+  }
+  const rmByChannel: { name: string; count: number }[] = [];
+  for (const ch of rmChannels) {
+    const count = channelCountMap.get(ch.id) ?? 0;
+    if (count > 0) rmByChannel.push({ name: ch.name, count });
+  }
+  rmByChannel.sort((a, b) => b.count - a.count);
+  const sinCanal = channelCountMap.get(null) ?? 0;
+  if (sinCanal > 0) rmByChannel.push({ name: "Sin canal", count: sinCanal });
+  const rmMax = Math.max(...rmByChannel.map((r) => r.count), 1);
+
   const onTimeline = initiatives.filter((i) => i.q_start !== null).length;
   const inBacklog = initiatives.filter((i) => i.q_start === null).length;
 
@@ -192,7 +216,7 @@ export default async function DashboardPage() {
         </div>
 
         {/* Main panels */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
           {/* Squad â€” cuadrantes */}
           <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
@@ -259,6 +283,39 @@ export default async function DashboardPage() {
                     </div>
                   );
                 })
+              )}
+            </div>
+          </div>
+          {/* Roadmap — productos por canal */}
+          <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+            <div className="px-5 py-3.5 bg-gray-50 border-b border-gray-100 flex items-center justify-between">
+              <span className="text-sm font-bold text-brand-black">Productos del Roadmap</span>
+              <Link href="/roadmap" className="text-xs text-brand-gray hover:text-brand-orange transition">Ver roadmap →</Link>
+            </div>
+            <div className="p-5 flex flex-col gap-3">
+              {totalRmProducts === 0 ? (
+                <EmptyState text="Sin productos en el roadmap aún." cta={{ href: "/roadmap", label: "Crear primer producto →" }} />
+              ) : (
+                <>
+                  {rmByChannel.map(({ name, count }) => {
+                    const pct = Math.round((count / rmMax) * 100);
+                    return (
+                      <div key={name} className="flex items-center gap-3">
+                        <span className="text-xs text-brand-gray truncate w-24 flex-shrink-0">{name}</span>
+                        <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                          <div
+                            className="h-full rounded-full transition-all duration-500"
+                            style={{ width: `${Math.max(4, pct)}%`, background: "#9333EA" }}
+                          />
+                        </div>
+                        <span className="text-xs font-bold text-brand-black w-5 text-right flex-shrink-0">{count}</span>
+                      </div>
+                    );
+                  })}
+                  <p className="text-[11px] text-brand-gray mt-1">
+                    {totalRmProducts} producto{totalRmProducts !== 1 ? "s" : ""} activo{totalRmProducts !== 1 ? "s" : ""}
+                  </p>
+                </>
               )}
             </div>
           </div>

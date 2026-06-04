@@ -12,6 +12,7 @@ import type { ActivityLog, ActivityAction } from "@/lib/activity";
 import { ACTION_LABEL } from "@/lib/activity";
 import { getDeadlineAlerts, SEVERITY_COLOR, SEVERITY_LABEL } from "@/lib/deadlines";
 import type { DeadlineAlert, DeadlineSeverity } from "@/lib/deadlines";
+import { getOrgRoleLabels } from "@/lib/role-labels";
 
 export default async function DashboardPage() {
   const supabase = createClient();
@@ -48,7 +49,7 @@ export default async function DashboardPage() {
     .single();
   const firstName = (profileData as { full_name: string | null } | null)?.full_name?.split(" ")[0] ?? null;
 
-  const [{ data: projectsData }, { data: initiativesData }, { data: teamsData }, recentActivity, { data: rmProductsData }, { data: rmChannelsData }, deadlineAlerts] = await Promise.all([
+  const [{ data: projectsData }, { data: initiativesData }, { data: teamsData }, recentActivity, { data: rmProductsData }, { data: rmChannelsData }, deadlineAlerts, roleLabels] = await Promise.all([
     admin.from("projects").select("id, impact_value, effort_sprints, squad_status, status").eq("organization_id", org.id).eq("status", "active"),
     admin.from("initiatives").select("id, q_start, duration_quarters, team_ids, team_allocations, status").eq("organization_id", org.id).eq("status", "active"),
     admin.from("teams").select("*").eq("organization_id", org.id).order("sort_order", { ascending: true }),
@@ -56,6 +57,7 @@ export default async function DashboardPage() {
     admin.from("products").select("id, channel_id").eq("organization_id", org.id).eq("status", "active"),
     admin.from("channels").select("id, name").eq("organization_id", org.id).order("sort_order", { ascending: true }),
     getDeadlineAlerts(org.id),
+    getOrgRoleLabels(org.id),
   ]);
 
   const projects = (projectsData ?? []) as Pick<Project, "id" | "impact_value" | "effort_sprints" | "squad_status" | "status">[];
@@ -164,7 +166,7 @@ export default async function DashboardPage() {
                 className="text-xs font-bold px-2.5 py-0.5 rounded-full"
                 style={{ background: ROLE_BG[role], color: ROLE_COLOR[role], border: `1px solid ${ROLE_BORDER[role]}` }}
               >
-                {ROLE_LABEL[role]}
+                {roleLabels[role]}
               </span>
             </div>
           </div>

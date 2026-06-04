@@ -2,7 +2,7 @@ import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { ROLE_LABEL } from "@/lib/roles";
+import { getOrgRoleLabels } from "@/lib/role-labels";
 import type { Invitation, Organization } from "@/types/database";
 import { AcceptInviteButton } from "./AcceptInviteButton";
 
@@ -29,6 +29,7 @@ export default async function InvitePage({ params }: { params: { token: string }
     .single();
 
   const org = orgRaw as Pick<Organization, "name"> | null;
+  const roleLabels = await getOrgRoleLabels(invitation.organization_id);
 
   // Check if user is logged in
   const supabase = createClient();
@@ -54,7 +55,7 @@ export default async function InvitePage({ params }: { params: { token: string }
             <span className="font-semibold text-brand-black">{org?.name ?? "un equipo"}</span>
             {" "}como{" "}
             <span className="font-semibold text-brand-black">
-              {ROLE_LABEL[invitation.role as keyof typeof ROLE_LABEL]}
+              {roleLabels[invitation.role as keyof typeof roleLabels]}
             </span>.
           </p>
         </div>

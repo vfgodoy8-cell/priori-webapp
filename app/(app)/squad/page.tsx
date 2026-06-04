@@ -12,6 +12,7 @@ import { IconSettings } from "@tabler/icons-react";
 import { ModoSwitcher } from "@/components/ui/ModoSwitcher";
 import { NotificationBell } from "@/components/ui/NotificationBell";
 import { getDeadlineAlerts } from "@/lib/deadlines";
+import { getOrgRoleLabels } from "@/lib/role-labels";
 
 export default async function SquadPage({ searchParams }: { searchParams?: { ini?: string; idea?: string } }) {
   const supabase = createClient();
@@ -42,7 +43,7 @@ export default async function SquadPage({ searchParams }: { searchParams?: { ini
 
   const role = membership.role as AppRole;
 
-  const [{ data: projectsData }, { data: initiativesData }, alerts] = await Promise.all([
+  const [{ data: projectsData }, { data: initiativesData }, alerts, roleLabels] = await Promise.all([
     admin
       .from("projects")
       .select("*")
@@ -54,6 +55,7 @@ export default async function SquadPage({ searchParams }: { searchParams?: { ini
       .eq("organization_id", org.id)
       .eq("status", "active"),
     getDeadlineAlerts(org.id),
+    getOrgRoleLabels(org.id),
   ]);
 
   const all = (projectsData ?? []) as Project[];
@@ -152,6 +154,7 @@ export default async function SquadPage({ searchParams }: { searchParams?: { ini
           filterInitiative={filterInitiative ? { id: filterInitiative.id, name: filterInitiative.name } : null}
           projectIniMap={projectIniMap}
           ideaPrefill={ideaPrefill}
+          roleLabels={roleLabels}
         />
       </main>
     </div>

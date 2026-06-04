@@ -17,7 +17,7 @@ import { ShareModal } from "@/components/ui/ShareModal";
 import { CommentsThread } from "@/components/ui/CommentsThread";
 import { DeviationsThread } from "@/components/ui/DeviationsThread";
 import { ActivityFeed } from "@/components/ui/ActivityFeed";
-import { type AppRole, ROLE_LABEL, ROLE_COLOR, ROLE_BG, ROLE_BORDER } from "@/lib/roles";
+import { type AppRole, ROLE_COLOR, ROLE_BG, ROLE_BORDER } from "@/lib/roles";
 import { AIChatPanel } from "@/components/ai/AIChatPanel";
 import { AIInterviewModal } from "@/components/ai/AIInterviewModal";
 import { buildCrossContext } from "@/lib/ai-context";
@@ -74,9 +74,10 @@ type Props = {
   squadProjects?: SquadProjectMin[];
   role: AppRole;
   currentUserId: string;
+  roleLabels: Record<AppRole, string>;
 };
 
-export function CrossView({ orgId, initialTeams, initialInitiatives, squadProjects = [], role, currentUserId }: Props) {
+export function CrossView({ orgId, initialTeams, initialInitiatives, squadProjects = [], role, currentUserId, roleLabels }: Props) {
   const readOnly = role === "member";
   const router = useRouter();
 
@@ -252,7 +253,7 @@ export function CrossView({ orgId, initialTeams, initialInitiatives, squadProjec
             className="text-xs font-bold px-2.5 py-1 rounded-full"
             style={{ background: ROLE_BG[role], color: ROLE_COLOR[role], border: `1px solid ${ROLE_BORDER[role]}` }}
           >
-            {ROLE_LABEL[role]}
+            {roleLabels[role]}
           </span>
         </span>
       </div>

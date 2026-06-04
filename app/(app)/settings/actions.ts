@@ -7,6 +7,7 @@ import { redirect } from "next/navigation";
 import { randomBytes } from "crypto";
 import { type AppRole, canManageMembers, ROLE_LABEL } from "@/lib/roles";
 import { sendInvitationEmail } from "@/lib/email";
+import { getOrgRoleLabels } from "@/lib/role-labels";
 
 type State = { error: string | null; success?: boolean };
 
@@ -71,7 +72,7 @@ export async function createInvitation(_prev: State, formData: FormData): Promis
   await sendInvitationEmail({
     to: email,
     orgName: (orgData as { name: string } | null)?.name ?? "tu equipo",
-    roleLabel: ROLE_LABEL[invRole as AppRole],
+    roleLabel: (await getOrgRoleLabels(orgId))[invRole as AppRole],
     token,
     invitedByName: (profileData as { full_name: string | null } | null)?.full_name ?? undefined,
   });
@@ -106,5 +107,34 @@ export async function removeMember(memberId: string): Promise<void> {
     .delete()
     .eq("id", memberId)
     .eq("organization_id", orgId);
+  revalidatePath("/settings/members");
+}
+
+export async function setRoleLabel(role: AppRole, label: string): Promise<{ error?: string }> {
+  const { admin, orgId, role: userRole } = await getAuthContext();
+  if (!canManageMembers(userRole)) return { error: "Sin permisos." };
+
+  const trimmed = label.trim();
+  if (!trimmed || trimmed.length > 40) return { error: "El nombre debe tener entre 1 y 40 caracteres." };
+
+  const { error } = await admin
+    .from("org_role_labels")
+    .upsert({ organization_id: orgId, role, label: trimmed }, { onConflict: "organization_id,role" });
+
+  if (error) return { error: error.message };
+  revalidatePath("/settings/members");
+  return {};
+}
+
+export async function resetRoleLabel(role: AppRole): Promise<void> {
+  const { admin, orgId, role: userRole } = await getAuthContext();
+  if (!canManageMembers(userRole)) return;
+
+  await admin
+    .from("org_role_labels")
+    .delete()
+    .eq("organization_id", orgId)
+    .eq("role", role);
+
   revalidatePath("/settings/members");
 }

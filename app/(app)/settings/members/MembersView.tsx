@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useTransition } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 import type { OrganizationMember } from "@/types/database";
 import type { Invitation } from "@/types/database";
 import { type AppRole, ROLE_LABEL, ROLE_COLOR, ROLE_BG, ROLE_BORDER, canManageMembers } from "@/lib/roles";
-import { createInvitation, cancelInvitation, updateMemberRole, removeMember } from "../actions";
+import { createInvitation, cancelInvitation, updateMemberRole, removeMember, setRoleLabel, resetRoleLabel } from "../actions";
 
 type MemberWithProfile = OrganizationMember & {
   profile: { id: string; full_name: string | null; avatar_url: string | null } | null;
@@ -18,6 +18,7 @@ type Props = {
   invitations: Invitation[];
   currentUserRole: AppRole;
   currentUserId: string;
+  roleLabels: Record<AppRole, string>;
 };
 
 function SubmitBtn({ label }: { label: string }) {
@@ -33,14 +34,25 @@ function SubmitBtn({ label }: { label: string }) {
   );
 }
 
-export function MembersView({ members, invitations: initialInvitations, currentUserRole, currentUserId }: Props) {
+export function MembersView({ members, invitations: initialInvitations, currentUserRole, currentUserId, roleLabels: initialRoleLabels }: Props) {
   const canManage = canManageMembers(currentUserRole);
   const [invitations, setInvitations] = useState(initialInvitations);
+  const [localRoleLabels, setLocalRoleLabels] = useState(initialRoleLabels);
   const [inviteState, inviteAction] = useFormState(createInvitation, { error: null });
 
   async function handleCancelInvitation(id: string) {
     await cancelInvitation(id);
     setInvitations((prev) => prev.filter((i) => i.id !== id));
+  }
+
+  async function handleSetRoleLabel(role: AppRole, label: string) {
+    const res = await setRoleLabel(role, label);
+    if (!res.error) setLocalRoleLabels((prev) => ({ ...prev, [role]: label }));
+  }
+
+  async function handleResetRoleLabel(role: AppRole) {
+    await resetRoleLabel(role);
+    setLocalRoleLabels((prev) => ({ ...prev, [role]: ROLE_LABEL[role] }));
   }
 
   return (
@@ -67,6 +79,7 @@ export function MembersView({ members, invitations: initialInvitations, currentU
                 email={m.email}
                 canManage={canManage}
                 isCurrentUser={m.isCurrentUser}
+                roleLabels={localRoleLabels}
               />
             ))}
           </tbody>
@@ -98,7 +111,7 @@ export function MembersView({ members, invitations: initialInvitations, currentU
                   <tr key={inv.id} className="hover:bg-gray-50 transition group">
                     <td className="px-5 py-3 text-brand-gray">{inv.email}</td>
                     <td className="px-5 py-3">
-                      <RoleBadge role={inv.role as AppRole} />
+                      <RoleBadge role={inv.role as AppRole} roleLabels={localRoleLabels} />
                     </td>
                     <td className="px-5 py-3 text-xs text-brand-gray">
                       {new Date(inv.expires_at).toLocaleDateString("es-AR")}
@@ -146,9 +159,9 @@ export function MembersView({ members, invitations: initialInvitations, currentU
                   defaultValue="member"
                   className="rounded-lg border border-gray-200 px-3 py-2 text-sm text-brand-black bg-white focus:outline-none focus:ring-2 focus:ring-brand-orange"
                 >
-                  <option value="owner">Líder</option>
-                  <option value="admin">Analista</option>
-                  <option value="member">Stakeholder</option>
+                  <option value="owner">{localRoleLabels.owner}</option>
+                  <option value="admin">{localRoleLabels.admin}</option>
+                  <option value="member">{localRoleLabels.member}</option>
                 </select>
               </div>
               <SubmitBtn label="Invitar" />
@@ -164,20 +177,48 @@ export function MembersView({ members, invitations: initialInvitations, currentU
           </form>
         </div>
       )}
+
+      {/* Nombres de roles */}
+      {canManage && (
+        <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+          <div className="px-5 py-3.5 bg-gray-50 border-b border-gray-100">
+            <span className="text-xs font-bold text-brand-gray uppercase tracking-wide">Nombres de roles</span>
+          </div>
+          <div className="px-5 py-4 flex flex-col gap-3">
+            {(["owner", "admin", "member"] as AppRole[]).map((r) => (
+              <RoleLabelRow
+                key={r}
+                role={r}
+                currentLabel={localRoleLabels[r]}
+                defaultLabel={ROLE_LABEL[r]}
+                onSave={(label) => handleSetRoleLabel(r, label)}
+                onReset={() => handleResetRoleLabel(r)}
+              />
+            ))}
+            <p className="text-[10px] text-brand-gray mt-1">
+              Los nombres se muestran en toda la app. Los permisos de cada rol no cambian.
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+
+// ── MemberRow ─────────────────────────────────────────────────────────────────
 
 function MemberRow({
   member: m,
   email,
   canManage,
   isCurrentUser,
+  roleLabels,
 }: {
   member: MemberWithProfile;
   email: string | null;
   canManage: boolean;
   isCurrentUser: boolean;
+  roleLabels: Record<AppRole, string>;
 }) {
   const displayName = m.profile?.full_name ?? "Sin nombre";
   const initials = displayName
@@ -189,7 +230,7 @@ function MemberRow({
   return (
     <tr className="hover:bg-gray-50 transition group">
       <td className="px-5 py-3">
-        <RoleBadge role={m.role as AppRole} />
+        <RoleBadge role={m.role as AppRole} roleLabels={roleLabels} />
       </td>
       <td className="px-5 py-3">
         <div className="flex items-center gap-3">
@@ -211,7 +252,7 @@ function MemberRow({
       {canManage && !isCurrentUser && (
         <td className="px-5 py-3">
           <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition">
-            <RoleSelect memberId={m.id} currentRole={m.role as AppRole} />
+            <RoleSelect memberId={m.id} currentRole={m.role as AppRole} roleLabels={roleLabels} />
             <form action={removeMember.bind(null, m.id)}>
               <button
                 type="submit"
@@ -228,21 +269,25 @@ function MemberRow({
   );
 }
 
-function RoleSelect({ memberId, currentRole }: { memberId: string; currentRole: AppRole }) {
+// ── RoleSelect ────────────────────────────────────────────────────────────────
+
+function RoleSelect({ memberId, currentRole, roleLabels }: { memberId: string; currentRole: AppRole; roleLabels: Record<AppRole, string> }) {
   return (
     <select
       defaultValue={currentRole}
       onChange={(e) => updateMemberRole(memberId, e.target.value as AppRole)}
       className="text-xs rounded border border-gray-200 px-1.5 py-1 bg-white text-brand-gray focus:outline-none focus:ring-1 focus:ring-brand-orange"
     >
-      <option value="owner">Líder</option>
-      <option value="admin">Analista</option>
-      <option value="member">Stakeholder</option>
+      <option value="owner">{roleLabels.owner}</option>
+      <option value="admin">{roleLabels.admin}</option>
+      <option value="member">{roleLabels.member}</option>
     </select>
   );
 }
 
-function RoleBadge({ role }: { role: AppRole }) {
+// ── RoleBadge ─────────────────────────────────────────────────────────────────
+
+function RoleBadge({ role, roleLabels }: { role: AppRole; roleLabels: Record<AppRole, string> }) {
   return (
     <span
       className="text-xs font-bold px-2.5 py-0.5 rounded-full"
@@ -252,7 +297,105 @@ function RoleBadge({ role }: { role: AppRole }) {
         border: `1px solid ${ROLE_BORDER[role]}`,
       }}
     >
-      {ROLE_LABEL[role]}
+      {roleLabels[role]}
     </span>
+  );
+}
+
+// ── RoleLabelRow ──────────────────────────────────────────────────────────────
+
+function RoleLabelRow({
+  role,
+  currentLabel,
+  defaultLabel,
+  onSave,
+  onReset,
+}: {
+  role: AppRole;
+  currentLabel: string;
+  defaultLabel: string;
+  onSave: (label: string) => Promise<void>;
+  onReset: () => Promise<void>;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [value, setValue] = useState(currentLabel);
+  const [isPending, startTransition] = useTransition();
+  const isCustom = currentLabel !== defaultLabel;
+
+  useEffect(() => { setValue(currentLabel); }, [currentLabel]);
+
+  function handleSave() {
+    if (!value.trim()) return;
+    startTransition(async () => {
+      await onSave(value.trim());
+      setEditing(false);
+    });
+  }
+
+  function handleReset() {
+    startTransition(async () => {
+      await onReset();
+      setEditing(false);
+    });
+  }
+
+  return (
+    <div className="flex items-center gap-3">
+      <div className="w-28 flex-shrink-0">
+        <span
+          className="text-xs font-bold px-2.5 py-0.5 rounded-full"
+          style={{ background: ROLE_BG[role], color: ROLE_COLOR[role], border: `1px solid ${ROLE_BORDER[role]}` }}
+        >
+          {currentLabel}
+        </span>
+      </div>
+      {editing ? (
+        <>
+          <input
+            autoFocus
+            className="flex-1 text-sm border border-brand-orange/40 rounded-lg px-2.5 py-1 focus:outline-none focus:ring-2 focus:ring-brand-orange/20"
+            value={value}
+            maxLength={40}
+            onChange={(e) => setValue(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleSave();
+              if (e.key === "Escape") { setValue(currentLabel); setEditing(false); }
+            }}
+          />
+          <button
+            onClick={handleSave}
+            disabled={isPending || !value.trim()}
+            className="text-xs px-2.5 py-1 rounded-lg bg-brand-orange text-white font-medium hover:opacity-90 disabled:opacity-50 transition-opacity"
+          >
+            Guardar
+          </button>
+          <button
+            onClick={() => { setValue(currentLabel); setEditing(false); }}
+            className="text-xs px-2 py-1 rounded-lg border border-gray-200 text-brand-gray hover:text-brand-black transition-colors"
+          >
+            Cancelar
+          </button>
+        </>
+      ) : (
+        <>
+          <span className="flex-1 text-sm text-brand-black">{currentLabel}</span>
+          <button
+            onClick={() => setEditing(true)}
+            className="text-xs text-brand-gray hover:text-brand-black transition-colors"
+          >
+            Renombrar
+          </button>
+          {isCustom && (
+            <button
+              onClick={handleReset}
+              disabled={isPending}
+              className="text-xs text-brand-gray hover:text-brand-black transition-colors disabled:opacity-40"
+            >
+              Restablecer ({defaultLabel})
+            </button>
+          )}
+        </>
+      )}
+    </div>
   );
 }

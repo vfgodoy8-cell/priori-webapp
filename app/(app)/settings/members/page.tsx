@@ -7,6 +7,7 @@ import type { Organization, OrganizationMember } from "@/types/database";
 import type { Invitation } from "@/types/database";
 import { type AppRole } from "@/lib/roles";
 import { MembersView } from "./MembersView";
+import { getOrgRoleLabels } from "@/lib/role-labels";
 
 export default async function MembersPage() {
   const supabase = createClient();
@@ -67,6 +68,7 @@ export default async function MembersPage() {
     .order("created_at", { ascending: false });
 
   const invitations = (invitationsRaw ?? []) as Invitation[];
+  const roleLabels = await getOrgRoleLabels(org.id);
 
   const membersWithProfiles = members.map((m) => ({
     ...m,
@@ -116,6 +118,7 @@ export default async function MembersPage() {
           invitations={invitations}
           currentUserRole={role}
           currentUserId={user.id}
+          roleLabels={roleLabels}
         />
       </main>
     </div>

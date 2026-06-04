@@ -9,7 +9,7 @@ import { AnalystPanel } from "./AnalystPanel";
 import { ShareModal } from "@/components/ui/ShareModal";
 import { OnboardingTour } from "@/components/ui/OnboardingTour";
 import { loadConfig, DEFAULT_CONFIG, type SquadConfig } from "@/lib/squad-logic";
-import { type AppRole, ROLE_LABEL, ROLE_COLOR, ROLE_BG, ROLE_BORDER } from "@/lib/roles";
+import { type AppRole, ROLE_COLOR, ROLE_BG, ROLE_BORDER } from "@/lib/roles";
 import { AIChatPanel } from "@/components/ai/AIChatPanel";
 import { buildSquadContext } from "@/lib/ai-context";
 import { IconSparkles } from "@tabler/icons-react";
@@ -29,9 +29,10 @@ type Props = {
   filterInitiative?: { id: string; name: string } | null;
   projectIniMap?: Record<string, string>;
   ideaPrefill?: { title: string; problem: string } | null;
+  roleLabels: Record<AppRole, string>;
 };
 
-export function SquadView({ projects, discarded, p0Projects, allActive, orgId, role, currentUserId, crossLinkedIds, highlightIds, filterInitiative, projectIniMap, ideaPrefill }: Props) {
+export function SquadView({ projects, discarded, p0Projects, allActive, orgId, role, currentUserId, crossLinkedIds, highlightIds, filterInitiative, projectIniMap, ideaPrefill, roleLabels }: Props) {
   const router = useRouter();
   const [view, setView] = useState<View>("canvas");
   const [quarterOverlay, setQuarterOverlay] = useState(false);
@@ -103,7 +104,7 @@ export function SquadView({ projects, discarded, p0Projects, allActive, orgId, r
               border: `1px solid ${ROLE_BORDER[role]}`,
             }}
           >
-            {ROLE_LABEL[role]}
+            {roleLabels[role]}
           </span>
         </span>
       </div>

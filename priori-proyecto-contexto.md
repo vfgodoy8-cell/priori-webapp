@@ -1,6 +1,6 @@
 # Priori™ — Contexto del proyecto
 
-> Generado el 2026-06-02, actualizado el 2026-06-04 desde el código fuente real. Todo dato aquí viene del repositorio,
+> Generado el 2026-06-02, actualizado el 2026-06-04 (sesión 2) desde el código fuente real. Todo dato aquí viene del repositorio,
 > no de documentación externa ni archivos de contexto anteriores.
 
 ---
@@ -95,7 +95,8 @@ app/
                         # actions.ts, page.tsx
     roadmap/            # Modo Roadmap: RoadmapView.tsx, actions.ts, page.tsx
                         # actions: CRUD products, segments, teamDeps, channels (listChannels,
-                        # createChannel, updateChannel, deleteChannel)
+                        # createChannel, updateChannel, deleteChannel),
+                        # updateTeamsSortOrder, captureBaseline, listBaselines, deleteBaseline
   api/
     ai/
       analyze/          # POST streaming — chat con contexto Squad/Cross (AI SDK streamText)
@@ -122,6 +123,8 @@ components/
     ActivityFeed.tsx        # Feed de actividad por entidad (entityId)
     CommentsThread.tsx      # Hilo de comentarios con form
     DeviationsThread.tsx    # Lista de desvíos open/resolved + form reportar (Fase 5)
+                            # entityType acepta "project" | "initiative" | "product"
+                            # Campo "Stakeholders afectados" en form y en cada card
     IdeaButton.tsx          # Botón "💡 Tengo una idea" con modal state propio (Fase 5, owner only)
     LogoutButton.tsx        # Botón de cierre de sesión
     ModoSwitcher.tsx        # Dropdown "Cambiar modo" — presente en headers de Squad, Cross, Roadmap
@@ -245,7 +248,13 @@ tailwind.config.ts       # Colores brand-* custom, font Geist Sans
   - Año derivado dinámicamente: años con datos + año actual + año siguiente (sin hardcodear)
   - Botón "Canales" (solo canWrite) abre panel inline para renombrar/eliminar/crear canales
 - **Gantt:** posicionamiento `%` por sprint, reflow automático (Kahn + greedy), manual_mode, barras coloreadas por equipo
-- **Panel lateral:** edición de segmento (label, duración, inicio, dependencias, sprint manual)
+  - **Reorder vertical de filas:** drag-and-drop HTML5 en filas de equipos (icono `⠿`, indicador naranja en destino); persiste en `teams.sort_order` vía `updateTeamsSortOrder`; afecta a todos los modos (tabla compartida)
+  - **Drag horizontal en modo manual:** al activar manual_mode, las barras son arrastrables (cursor `ew-resize`), posición en tiempo real; al soltar persiste `manual_start_sprint`. Desactivar manual_mode no borra los sprints guardados
+- **Panel lateral — dos estados:**
+  - Cuando hay **segmento activo** (`editingSegId` set): `SegmentPanel` — label, duración, inicio fijo, dependencias, sprint manual; **dependencias siempre visibles** (también en modo manual) con label `"Equipo — etiqueta (N sp)"` y hint informativo en modo manual
+  - Cuando no hay segmento activo y hay **producto seleccionado**: `ProductPanel` con dos tabs:
+    - **⚠️ Desvíos:** `DeviationsThread` con `entityType="product"` (incluye campo "Stakeholders afectados")
+    - **📐 Línea base:** captura snapshot del layout calculado (segmentos + sprint de inicio + duración), historial de baselines con fecha/nombre/count; botón "Guardar snapshot" (solo canWrite)
 - **ProductForm:** select de Canal con opción "+ Agregar canal..." inline (crea el canal sin salir del form)
 - **Canales:** 5 por defecto al crear org ("Banco", "Mandarina", "Productores", "Andrea", "Affinity"); CRUD completo en el panel
 
@@ -377,7 +386,7 @@ Enum en DB: `member_role` = `"owner" | "admin" | "member"` — **no cambió**
 | Tabla | Columnas clave |
 |---|---|
 | `ideas` | id, organization_id, created_by (→ profiles, ON DELETE SET NULL), title, problem, current_situation, expected_result, suggested_type (mejora/nuevo_desarrollo/cambio_proceso, nullable), status (raw/refined/promoted/discarded, default raw), raw_transcript (jsonb), created_at, updated_at |
-| `deviations` | id, organization_id, project_id OR initiative_id (polimórfico, CHECK exactamente uno), reported_by (→ profiles, ON DELETE SET NULL), date, reason, blocking_dependency (text nullable), affected_dependency (text nullable), status (open/resolved, default open), source (text nullable), external_ref (text nullable), created_at, updated_at |
+| `deviations` | id, organization_id, project_id OR initiative_id OR product_id (polimórfico, CHECK exactamente uno de los tres), reported_by (→ profiles, ON DELETE SET NULL), date, reason, blocking_dependency (text nullable), affected_dependency (text nullable), **affected_stakeholders** (text nullable), status (open/resolved, default open), source (text nullable), external_ref (text nullable), created_at, updated_at |
 
 **RLS Fase 5:** SELECT para cualquier miembro · INSERT para cualquier miembro · UPDATE/DELETE solo owner/admin
 
@@ -389,6 +398,9 @@ Enum en DB: `member_role` = `"owner" | "admin" | "member"` — **no cambió**
 | `products` | id, organization_id, name, description, business_area (legacy, no usar), **channel_id** (uuid nullable → channels ON DELETE SET NULL), initiative_id (→ initiatives ON DELETE SET NULL, nullable), start_date (date NOT NULL), target_launch_date (date nullable), manual_mode (bool default false), status (active/discarded), sort_order, created_at, updated_at |
 | `roadmap_segments` | id, organization_id, product_id (→ products ON DELETE CASCADE), team_id (→ teams ON DELETE CASCADE), label, duration_sprints (1–52), depends_on (uuid[] default '{}'), manual_start_sprint (int nullable), start_date (date nullable — ancla de inicio fijo), sort_order, created_at, updated_at · UNIQUE(product_id, team_id) |
 | `team_dependencies` | id, organization_id, team_id (→ teams), depends_on_team_id (→ teams), description, created_at · CHECK(team_id != depends_on_team_id) · UNIQUE(team_id, depends_on_team_id) |
+| `roadmap_baselines` | id, organization_id, product_id (→ products ON DELETE CASCADE), name (text nullable), captured_by (→ profiles ON DELETE SET NULL), captured_at (timestamptz), snapshot (jsonb — array de {segment_id, team_id, team_name, start_sprint, duration_sprints}), created_at |
+
+**RLS roadmap_baselines:** SELECT cualquier miembro · INSERT/DELETE owner o admin
 
 **Canales por defecto al crear org:** "Banco", "Mandarina", "Productores", "Andrea", "Affinity" (seed en `onboarding/actions.ts`)
 
@@ -439,7 +451,9 @@ Definidas en `20260526000003_rls_consolidado.sql`:
 20260603000025_roadmap_segment_start_date.sql
 20260603000026_products_target_launch_date.sql
 20260604000027_channels.sql
-20260604000028_org_role_labels.sql     ← aplicar en Supabase si aún no está
+20260604000028_org_role_labels.sql
+20260604000029_deviations_product.sql  ← product_id + affected_stakeholders + CHECK actualizado
+20260604000030_roadmap_baselines.sql   ← tabla roadmap_baselines
 ```
 
 ### RLS
@@ -483,10 +497,14 @@ Lógica: sin user en ruta protegida → `/login`. Con user en ruta auth → `/da
 - **Modo Cross:** timeline Q1-Q4 con CSS Grid span, drag desde backlog a quarters, tabla de capacidad con semáforo, equipos configurables (personas, proy_per_persona, % disponibilidad por Q)
 - **Modo Roadmap:**
   - Gantt por producto, reflow automático (Kahn + greedy), manual_mode, detección de ciclos
-  - Filtros: Canal (nuevo) → Producto → Año (dinámico: actual + siguiente, sin hardcodear)
+  - Filtros: Canal → Producto → Año (dinámico: actual + siguiente, sin hardcodear)
   - Canales de negocio: CRUD completo, 5 canales default por org, select en ProductForm con "+ Agregar canal..." inline
   - Panel de canales en toolbar para renombrar/eliminar (solo canWrite)
-  - Panel lateral de segmento: label, duración, inicio (ancla fija), dependencias, sprint manual
+  - **SegmentPanel:** label, duración, inicio fijo, dependencias (visibles siempre con nombre equipo + label del segmento), sprint manual
+  - **ProductPanel:** panel derecho cuando no hay segmento activo; tabs ⚠️ Desvíos y 📐 Línea base
+  - **Líneas base:** tabla `roadmap_baselines`; captura snapshot del layout calculado (sprint inicio + duración por segmento); historial listable y eliminable; comparativa queda pendiente
+  - **Reorder vertical de equipos:** drag-and-drop con `teams.sort_order`; `updateTeamsSortOrder` en actions
+  - **Drag horizontal en modo manual:** arrastra `manual_start_sprint` en tiempo real; desactivar manual_mode no borra los valores guardados
 - Drill-down bidireccional Squad ↔ Cross: `sq_project_ids` en initiatives, `?ini=` en /squad
 - Vista pública `/share/[token]`: solo lectura con token expiable opcional
 - **Header unificado en los 3 modos:** `ModoSwitcher` dropdown ("Cambiar modo ▾"), `NotificationBell` campanita, `IdeaButton`, `TeamPanelTrigger` (Cross y Roadmap), org.name, LogoutButton
@@ -527,18 +545,23 @@ Lógica: sin user en ruta protegida → `/login`. Con user en ruta auth → `/da
   - `/ideas`: lista por estado con tabs, acciones de refinado, descarte, conversión a proyecto
   - Conversión idea → proyecto: `/squad?idea=<id>` prellena AnalystPanel via `internalPrefill`
 - **Fase 5 — Agenda de Desvíos:**
-  - Tabla `deviations` con RLS; `DeviationsThread` en AnalystPanel (Squad) y CrossPanelTabs (Cross)
-  - `activity_log.action` incluye `"blocked"` y `"unblocked"`
+  - Tabla `deviations` con RLS; `DeviationsThread` en AnalystPanel (Squad), CrossPanelTabs (Cross) y ProductPanel (Roadmap)
+  - `entityType` del componente y las actions acepta `"project" | "initiative" | "product"`; exporta `DeviationEntityType`
+  - Campo `affected_stakeholders` (text nullable) en tabla, form y display
+  - `activity_log.action` incluye `"blocked"` y `"unblocked"` (solo para project/initiative; product no loguea aún por limitación del CHECK de activity_log)
 
 ---
 
 ## Pendiente
 
-- **Migración `20260604000028_org_role_labels.sql`:** aplicar en Supabase SQL Editor si aún no está.
+- **Migraciones pendientes de aplicar en Supabase SQL Editor:**
+  - `20260604000028_org_role_labels.sql` (si aún no está)
+  - `20260604000029_deviations_product.sql`
+  - `20260604000030_roadmap_baselines.sql`
 - **`SUPABASE_HOOK_SECRET`:** agregar en Vercel → Settings → Environment Variables para activar el hook de email auth.
 - **Dominio `priori.ar`:** confirmar propagación DNS (tilde verde en Vercel → Domains), luego actualizar `NEXT_PUBLIC_SITE_URL=https://priori.ar` en Vercel (+redeploy) y en Supabase (Authentication → URL Configuration): Site URL + Redirect URL sin borrar la de `.vercel.app`. Probar login Google + email de invitación.
 - **Umbrales configurables por org:** `DEFAULT_IMPACT_HIGH` y `DEFAULT_EFFORT_HIGH` hardcodeados en `lib/quadrant.ts`.
-- **Modo Roadmap — pendiente de UI:** drag para redimensionar barras, vista cross-producto de capacidad, logActivity para products, team_dependencies UI, mejoras UX del panel lateral.
+- **Modo Roadmap — pendiente de UI:** drag para redimensionar barras (cambiar `duration_sprints`), vista cross-producto de capacidad, logActivity para products (requiere ampliar CHECK de activity_log), team_dependencies UI, vista comparativa de líneas base (delta actual vs snapshot).
 - **Roles — Opción B (permisos configurables reales):** reemplazar el enum `member_role` por roles custom por org con permisos `can_write` y `can_manage` configurables. Implica: nueva tabla `org_roles`, migrar `organization_members.role` de enum a FK, reescribir `my_role_in_org()` y las ~32 políticas RLS, actualizar ~26 callsites de `canWrite()` en 6 archivos de actions. Impacto alto; planificar solo si aparece un caso concreto que los 3 roles actuales no puedan modelar.
 - **Fase 6 — Integraciones:** Azure DevOps, Jira, GitHub Issues/Projects, Linear (`deviations.source` y `external_ref` ya están preparados).
 
@@ -603,3 +626,9 @@ Lógica: sin user en ruta protegida → `/login`. Con user en ruta auth → `/da
 - `getDeadlineAlerts(orgId)` es server-only. Se agrega al `Promise.all` de cada page.tsx de modo. Retorna array vacío si no hay alertas (no lanzar error).
 - Los canales de Roadmap se crean con 5 defaults al hacer onboarding. El seed en migrations (`20260604000027`) aplica a orgs existentes con `ON CONFLICT DO NOTHING`.
 - `ModoSwitcher` y `NotificationBell` son client components en `components/ui/` — compartidos por los 3 modos.
+- `DeviationEntityType = "project" | "initiative" | "product"` — exportado desde `app/(app)/deviations/actions.ts`. El componente `DeviationsThread` usa este tipo para el prop `entityType`.
+- `logActivity` NO se llama para desvíos de producto (`entityType === "product"`): el CHECK de `activity_log.entity_type` acepta solo `"initiative" | "project"`. Queda como TODO para Fase 6.
+- `RoadmapView` tiene `localTeams` (estado local inicializado desde props `initialTeams`). El reorder actualiza `localTeams` optimistamente y persiste en `teams.sort_order`.
+- El drag horizontal de barras en Roadmap usa `SPRINT_PX = 40` como px/sprint constante. El delta de `clientX` entre mousedown y mousemove no depende del scroll horizontal del contenedor.
+- `roadmap_baselines.snapshot` es inmutable — la tabla no tiene `updated_at`. Para corregir una línea base hay que eliminarla y crear otra.
+- El `ProductPanel` aparece cuando `editingSegId === null && selectedProduct !== null`. Al clickear un segmento, `SegmentPanel` toma su lugar; al cerrar el `SegmentPanel`, vuelve el `ProductPanel`.

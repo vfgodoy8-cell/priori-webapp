@@ -22,7 +22,7 @@ Matriz de Impacto vs Esfuerzo, planificación por Quarters."
 
 - App desplegada en Vercel (deploy automático desde `main`).
 - URL de producción: definida por `NEXT_PUBLIC_SITE_URL` (env var en Vercel). No está hardcodeada en el código.
-- Dominio `priori.ar` pendiente de configurar en DNS/Vercel.
+- Landing comercial en producción en priori.ar; `/` es pública y redirige a `/dashboard` para usuarios con sesión.
 
 ---
 

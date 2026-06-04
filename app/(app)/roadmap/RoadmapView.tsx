@@ -221,12 +221,12 @@ export function RoadmapView({ orgId, initialProducts, teams: initialTeams, role 
 
   const effectiveTeams = useMemo(() => {
     const vids = selectedProduct?.visible_team_ids;
-    // NULL o vacío → mostrar TODOS los equipos, sin filtro implícito
+    // NULL o vacío → mostrar TODOS los equipos
     if (!vids || vids.length === 0) return localTeams;
-    // Explícito: exactamente los seleccionados + forzados (tienen segmento, datos mandan)
+    // Exactamente los seleccionados, sin excepciones
     const vidSet = new Set(vids);
-    return localTeams.filter((t) => vidSet.has(t.id) || segmentTeamIds.has(t.id));
-  }, [localTeams, segmentTeamIds, selectedProduct?.visible_team_ids]);
+    return localTeams.filter((t) => vidSet.has(t.id));
+  }, [localTeams, selectedProduct?.visible_team_ids]);
 
   // ── Handlers ─────────────────────────────────────────────────────────────────
 
@@ -736,8 +736,9 @@ function GanttGrid({
 
   function applyFilter() {
     if (!onUpdateVisibleTeams) return;
-    // Draft vacío = "Todos" = null en DB
-    onUpdateVisibleTeams(draftIds.length === 0 ? null : draftIds);
+    // Ninguno o todos seleccionados → null (sin filtro)
+    const isAll = draftIds.length === 0 || draftIds.length === allTeams.length;
+    onUpdateVisibleTeams(isAll ? null : draftIds);
     setShowFilter(false);
   }
 
@@ -746,9 +747,7 @@ function GanttGrid({
   }
 
   function setShortcutAll() {
-    if (!onUpdateVisibleTeams) return;
-    onUpdateVisibleTeams(null);
-    setShowFilter(false);
+    setDraftIds(allTeams.map((t) => t.id));
   }
 
   // Badge: muestra cuando hay filtro activo (visible < total)
@@ -989,8 +988,6 @@ function GanttGrid({
         const isDraggingBar = !!segment && dragSprint?.segmentId === segment.id;
         const displaySprint = isDraggingBar ? dragSprint!.sprint : (layout?.start_sprint ?? 0);
         const canDragBar    = manualMode && !!onUpdateManualSprint;
-        // Punto 8: tiene segmento pero no está en la selección explícita
-        const isForced = visibleTeamIds !== null && !visibleTeamIds.includes(team.id) && segmentTeamIds.has(team.id);
 
         return (
           <div
@@ -1002,10 +999,7 @@ function GanttGrid({
             onDrop={(e)      => handleDrop(e, team.id)}
             onDragEnd={handleDragEnd}
             className={`flex border-b border-gray-100 last:border-b-0 h-14 transition-opacity ${rowBg} ${isDragging ? "opacity-40" : ""}`}
-            style={{
-              ...(isDropTarget ? { boxShadow: "inset 0 2px 0 0 #E8621A" } : {}),
-              ...(isForced ? { borderLeft: "3px solid #E8621A" } : {}),
-            }}
+            style={isDropTarget ? { boxShadow: "inset 0 2px 0 0 #E8621A" } : undefined}
           >
             <div
               className={`flex-shrink-0 flex items-center gap-2 px-4 border-r border-gray-100 ${rowBg} ${onReorderTeams ? "cursor-grab active:cursor-grabbing" : ""}`}
@@ -1014,10 +1008,7 @@ function GanttGrid({
               {onReorderTeams && (
                 <span className="text-gray-300 text-xs select-none flex-shrink-0">⠿</span>
               )}
-              <span
-                className="text-sm font-medium text-brand-black truncate"
-                title={isForced ? "Tiene tareas pero no está en la selección activa" : undefined}
-              >
+              <span className="text-sm font-medium text-brand-black truncate">
                 {team.name}
               </span>
             </div>

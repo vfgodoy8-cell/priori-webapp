@@ -221,15 +221,12 @@ export function RoadmapView({ orgId, initialProducts, teams: initialTeams, role 
 
   const effectiveTeams = useMemo(() => {
     const vids = selectedProduct?.visible_team_ids;
-    if (!vids || vids.length === 0) {
-      // Auto: sin segmentos → todos; con segmentos → solo los que tienen segmento
-      if (segments.length === 0) return localTeams;
-      return localTeams.filter((t) => segmentTeamIds.has(t.id));
-    }
-    // Explícito: los seleccionados + los que tienen segmento (los datos mandan)
+    // NULL o vacío → mostrar TODOS los equipos, sin filtro implícito
+    if (!vids || vids.length === 0) return localTeams;
+    // Explícito: exactamente los seleccionados + forzados (tienen segmento, datos mandan)
     const vidSet = new Set(vids);
     return localTeams.filter((t) => vidSet.has(t.id) || segmentTeamIds.has(t.id));
-  }, [localTeams, segments, segmentTeamIds, selectedProduct?.visible_team_ids]);
+  }, [localTeams, segmentTeamIds, selectedProduct?.visible_team_ids]);
 
   // ── Handlers ─────────────────────────────────────────────────────────────────
 
@@ -709,6 +706,7 @@ function GanttGrid({
   // ── Estado filtro de equipos ──────────────────────────────────────────────────
   const [showFilter, setShowFilter] = useState(false);
   const [draftIds, setDraftIds] = useState<string[]>([]);
+  const [filterSearch, setFilterSearch] = useState("");
   const filterRef = useRef<HTMLDivElement>(null);
 
   // Cierra el dropdown al hacer click fuera
@@ -724,7 +722,9 @@ function GanttGrid({
   }, [showFilter]);
 
   function openFilter() {
-    setDraftIds(visibleTeamIds ?? allTeams.map((t) => t.id));
+    // Fuente de verdad: visible_team_ids del producto (null → ninguno tildado)
+    setDraftIds(visibleTeamIds ?? []);
+    setFilterSearch("");
     setShowFilter(true);
   }
 
@@ -736,9 +736,8 @@ function GanttGrid({
 
   function applyFilter() {
     if (!onUpdateVisibleTeams) return;
-    // Si están todos seleccionados → NULL (auto)
-    const allSelected = draftIds.length === allTeams.length;
-    onUpdateVisibleTeams(allSelected ? null : draftIds);
+    // Draft vacío = "Todos" = null en DB
+    onUpdateVisibleTeams(draftIds.length === 0 ? null : draftIds);
     setShowFilter(false);
   }
 
@@ -901,25 +900,46 @@ function GanttGrid({
                     </button>
                   </div>
 
+                  {/* Buscador */}
+                  <div className="px-2 pt-2 pb-1">
+                    <input
+                      autoFocus
+                      type="text"
+                      placeholder="Buscar equipo…"
+                      value={filterSearch}
+                      onChange={(e) => setFilterSearch(e.target.value)}
+                      className="w-full text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand-orange/20 placeholder:text-gray-400"
+                    />
+                  </div>
+
                   {/* Checkboxes */}
                   <div className="max-h-48 overflow-y-auto p-2 flex flex-col gap-1">
-                    {allTeams.map((t) => (
-                      <label
-                        key={t.id}
-                        className="flex items-center gap-2 text-xs text-brand-black px-2 py-1 rounded-lg hover:bg-gray-50 cursor-pointer"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={draftIds.includes(t.id)}
-                          onChange={() => toggleDraft(t.id)}
-                          className="accent-brand-orange"
-                        />
-                        <span className="flex-1 truncate">{t.name}</span>
-                        {segmentTeamIds.has(t.id) && (
-                          <span className="text-[9px] font-bold text-brand-orange">●</span>
-                        )}
-                      </label>
-                    ))}
+                    {allTeams
+                      .filter((t) =>
+                        t.name.toLowerCase().includes(filterSearch.toLowerCase()),
+                      )
+                      .map((t) => (
+                        <label
+                          key={t.id}
+                          className="flex items-center gap-2 text-xs text-brand-black px-2 py-1 rounded-lg hover:bg-gray-50 cursor-pointer"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={draftIds.includes(t.id)}
+                            onChange={() => toggleDraft(t.id)}
+                            className="accent-brand-orange"
+                          />
+                          <span className="flex-1 truncate">{t.name}</span>
+                          {segmentTeamIds.has(t.id) && (
+                            <span className="text-[9px] font-bold text-brand-orange">●</span>
+                          )}
+                        </label>
+                      ))}
+                    {allTeams.filter((t) =>
+                      t.name.toLowerCase().includes(filterSearch.toLowerCase()),
+                    ).length === 0 && (
+                      <p className="text-xs text-gray-400 text-center py-2">Sin resultados.</p>
+                    )}
                   </div>
 
                   {/* Footer */}

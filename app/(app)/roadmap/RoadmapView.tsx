@@ -467,6 +467,7 @@ export function RoadmapView({ orgId, initialProducts, teams: initialTeams, role 
             segments={segments}
             layoutMap={layoutMap}
             canEdit={canEdit}
+            onAddSegment={handleAddSegment}
           />
         ) : null}
       </div>
@@ -940,13 +941,21 @@ function SegmentPanel({
   return (
     <div className="w-72 flex-shrink-0 bg-white rounded-xl border border-gray-200 self-start sticky top-6">
       <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
-        <div>
-          <p className="text-xs text-brand-gray">Segmento</p>
-          <p className="text-sm font-semibold text-brand-black">{team.name}</p>
+        <div className="flex-1 min-w-0 pr-2">
+          <label className="text-xs text-brand-gray block mb-1">Equipo</label>
+          <select
+            disabled
+            value={team.id}
+            className="w-full text-sm font-semibold text-brand-black bg-transparent border-none outline-none cursor-default truncate"
+          >
+            {allTeams.map((t) => (
+              <option key={t.id} value={t.id}>{t.name}</option>
+            ))}
+          </select>
         </div>
         <button
           onClick={onClose}
-          className="text-brand-gray hover:text-brand-black text-xl leading-none"
+          className="text-brand-gray hover:text-brand-black text-xl leading-none flex-shrink-0"
         >
           ×
         </button>
@@ -1105,12 +1114,14 @@ function ProductPanel({
   segments,
   layoutMap,
   canEdit,
+  onAddSegment,
 }: {
   product: Product;
   teams: Team[];
   segments: RoadmapSegment[];
   layoutMap: Map<string, SegmentLayout>;
   canEdit: boolean;
+  onAddSegment: (teamId: string) => void;
 }) {
   const [tab, setTab] = useState<ProductPanelTab>("deviations");
   const [baselines, setBaselines] = useState<RoadmapBaseline[]>([]);
@@ -1118,6 +1129,10 @@ function ProductPanel({
   const [baselineName, setBaselineName] = useState("");
   const [capturing, setCapturing] = useState(false);
   const [captureError, setCaptureError] = useState<string | null>(null);
+
+  // ── Nueva tarea ──────────────────────────────────────────────────────────────
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newTeamId, setNewTeamId] = useState("");
 
   useEffect(() => {
     if (tab !== "baselines") return;
@@ -1162,6 +1177,16 @@ function ProductPanel({
     setBaselines(prev => prev.filter(b => b.id !== id));
   }
 
+  const usedTeamIds = new Set(segments.map((s) => s.team_id));
+  const availableTeams = teams.filter((t) => !usedTeamIds.has(t.id));
+
+  function handleAddSubmit() {
+    if (!newTeamId) return;
+    onAddSegment(newTeamId);
+    setNewTeamId("");
+    setShowAddForm(false);
+  }
+
   return (
     <div className="w-72 flex-shrink-0 bg-white rounded-xl border border-gray-200 self-start sticky top-6">
       {/* Header */}
@@ -1169,6 +1194,59 @@ function ProductPanel({
         <p className="text-xs text-brand-gray">Producto</p>
         <p className="text-sm font-semibold text-brand-black truncate">{product.name}</p>
       </div>
+
+      {/* Nueva tarea */}
+      {canEdit && (
+        <div className="border-b border-gray-100">
+          {!showAddForm ? (
+            <button
+              onClick={() => { setShowAddForm(true); setNewTeamId(availableTeams[0]?.id ?? ""); }}
+              className="w-full flex items-center gap-1.5 px-4 py-2.5 text-xs font-semibold text-brand-orange hover:bg-orange-50 transition-colors"
+            >
+              <span className="text-base leading-none">+</span> Nueva tarea
+            </button>
+          ) : (
+            <div className="px-4 py-3 flex flex-col gap-2">
+              <div className="text-[11px] font-bold text-brand-gray uppercase tracking-wider">Nueva tarea</div>
+              {availableTeams.length === 0 ? (
+                <p className="text-xs text-brand-gray">
+                  Todos los equipos ya tienen tareas en este producto.
+                </p>
+              ) : (
+                <>
+                  <select
+                    value={newTeamId}
+                    onChange={(e) => setNewTeamId(e.target.value)}
+                    className="w-full text-sm border border-gray-200 rounded-lg px-3 py-1.5 bg-white text-brand-black focus:outline-none focus:ring-2 focus:ring-brand-orange/20"
+                  >
+                    {availableTeams.map((t) => (
+                      <option key={t.id} value={t.id}>{t.name}</option>
+                    ))}
+                  </select>
+                  <p className="text-[10px] text-brand-gray">
+                    ¿El equipo no existe? Crealo desde <span className="font-semibold">Equipos</span> en el encabezado.
+                  </p>
+                </>
+              )}
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleAddSubmit}
+                  disabled={!newTeamId || availableTeams.length === 0}
+                  className="flex-1 text-xs py-1.5 rounded-lg bg-brand-orange text-white font-semibold hover:opacity-90 disabled:opacity-40 transition-opacity"
+                >
+                  Agregar
+                </button>
+                <button
+                  onClick={() => setShowAddForm(false)}
+                  className="flex-1 text-xs py-1.5 rounded-lg border border-gray-200 text-brand-gray hover:text-brand-black transition-colors"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Tabs */}
       <div className="flex border-b border-gray-100">

@@ -1,6 +1,6 @@
 # Priori™ — Contexto del proyecto
 
-> Generado el 2026-06-02, actualizado el 2026-06-04 (sesión 2) desde el código fuente real. Todo dato aquí viene del repositorio,
+> Generado el 2026-06-02, actualizado el 2026-06-04 (sesión 3) desde el código fuente real. Todo dato aquí viene del repositorio,
 > no de documentación externa ni archivos de contexto anteriores.
 
 ---
@@ -110,7 +110,10 @@ app/
     logout/             # Logout + redirect a /login
   invite/[token]/       # Página pública: aceptar invitación (AcceptInviteButton.tsx)
                         # Muestra label de rol custom de la org
-  share/[token]/        # Página pública: vista de solo lectura (SquadReadOnly.tsx o CrossReadOnly.tsx)
+  share/[token]/        # Página pública: vista de solo lectura
+                        # SquadReadOnly.tsx, CrossReadOnly.tsx, RoadmapReadOnly.tsx (nuevos)
+                        # GanttReadOnly.tsx — Gantt estático sin drag para la vista pública
+                        # roadmap-utils.ts — buildQuarterBands compartido
   icon.tsx              # Favicon dinámico PNG 32x32 (next/og, edge runtime)
   layout.tsx            # Root layout — metadata, Geist font, lang="es"
   page.tsx              # Raíz: redirige a /dashboard
@@ -131,6 +134,8 @@ components/
     NotificationBell.tsx    # Campanita con badge de alertas de vencimiento + dropdown
     OnboardingTour.tsx      # Tour guiado (localStorage, forceOpen prop)
     ShareModal.tsx          # Modal compartir/exportar (link público + PDF)
+                            # mode: "squad" | "cross" | "roadmap"; prop productId? para roadmap
+                            # Sección PDF oculta cuando mode = "roadmap"
     TeamPanel.tsx           # Panel modal CRUD de equipos (Cross)
     TeamPanelTrigger.tsx    # Botón que abre TeamPanel
 lib/
@@ -183,7 +188,7 @@ tailwind.config.ts       # Colores brand-* custom, font Geist Sans
 | `/auth/callback` | Callback OAuth de Supabase |
 | `/auth/logout` | Logout, redirige a `/login` |
 | `/invite/[token]` | Aceptar invitación a organización |
-| `/share/[token]` | Vista de solo lectura (Squad o Cross) |
+| `/share/[token]` | Vista de solo lectura (Squad, Cross o Roadmap) |
 | `POST /api/auth/send-email` | Hook Supabase: envío de emails auth en español |
 | `POST /api/invite/accept` | Aceptar token de invitación |
 
@@ -243,20 +248,29 @@ tailwind.config.ts       # Colores brand-* custom, font Geist Sans
 ### Modo Roadmap (`/roadmap`)
 
 - **Header:** logo → separador → "Modo Roadmap" | IdeaButton · NotificationBell · ModoSwitcher · TeamPanelTrigger · org.name · LogoutButton
-- **Toolbar (orden):** `[Canal ▾] [Producto ▾] [Año ▾] [+ Nuevo producto] [Canales]`
+- **Toolbar (orden):** `[Canal ▾] [Producto ▾] [Año ▾] [+ Nuevo producto] [Canales] … [Compartir] [Manual]`
   - Canal filtra productos; "Todos los canales" por defecto
   - Año derivado dinámicamente: años con datos + año actual + año siguiente (sin hardcodear)
   - Botón "Canales" (solo canWrite) abre panel inline para renombrar/eliminar/crear canales
+  - Botón **"Compartir"** (todos los roles): visible cuando hay producto seleccionado; abre `ShareModal` con `mode="roadmap"` y `productId`
 - **Gantt:** posicionamiento `%` por sprint, reflow automático (Kahn + greedy), manual_mode, barras coloreadas por equipo
-  - **Reorder vertical de filas:** drag-and-drop HTML5 en filas de equipos (icono `⠿`, indicador naranja en destino); persiste en `teams.sort_order` vía `updateTeamsSortOrder`; afecta a todos los modos (tabla compartida)
-  - **Drag horizontal en modo manual:** al activar manual_mode, las barras son arrastrables (cursor `ew-resize`), posición en tiempo real; al soltar persiste `manual_start_sprint`. Desactivar manual_mode no borra los sprints guardados
+  - **Filtro de equipos visibles** (`products.visible_team_ids`):
+    - `NULL/[]` → se muestran TODOS los equipos
+    - `[ids...]` → exactamente esos equipos (tildado = visible, destildado = oculto sin excepciones)
+    - Botón `▼` en header "Equipo" → dropdown con buscador + checkboxes + atajos "Con tareas" / "Todos"
+    - Badge `N/M equipos` cuando `effectiveTeams.length < allTeams.length`
+    - El layout (`computeLayout`) siempre usa TODOS los segmentos — el filtro es solo de presentación
+  - **Reorder vertical de filas:** drag-and-drop HTML5 (icono `⠿`, indicador naranja); persiste en `teams.sort_order` vía `updateTeamsSortOrder`; los equipos ocultos se reinsertan al final del orden global
+  - **Drag horizontal en modo manual:** barras arrastrables (cursor `ew-resize`), persiste `manual_start_sprint`; desactivar manual_mode no borra los sprints guardados
 - **Panel lateral — dos estados:**
-  - Cuando hay **segmento activo** (`editingSegId` set): `SegmentPanel` — label, duración, inicio fijo, dependencias, sprint manual; **dependencias siempre visibles** (también en modo manual) con label `"Equipo — etiqueta (N sp)"` y hint informativo en modo manual
-  - Cuando no hay segmento activo y hay **producto seleccionado**: `ProductPanel` con dos tabs:
-    - **⚠️ Desvíos:** `DeviationsThread` con `entityType="product"` (incluye campo "Stakeholders afectados")
-    - **📐 Línea base:** captura snapshot del layout calculado (segmentos + sprint de inicio + duración), historial de baselines con fecha/nombre/count; botón "Guardar snapshot" (solo canWrite)
-- **ProductForm:** select de Canal con opción "+ Agregar canal..." inline (crea el canal sin salir del form)
-- **Canales:** 5 por defecto al crear org ("Banco", "Mandarina", "Productores", "Andrea", "Affinity"); CRUD completo en el panel
+  - **Segmento activo** (`editingSegId` set): `SegmentPanel` — equipo como `<select disabled>` en header, label, duración, inicio fijo, dependencias siempre visibles (modo auto y manual) con `"Equipo — etiqueta (N sp)"`, sprint manual
+  - **Producto seleccionado sin segmento activo**: `ProductPanel` con:
+    - Sección **"+ Nueva tarea"** (canEdit): select de equipos disponibles (excluye los que ya tienen segmento por UNIQUE constraint); mensaje cuando todos ocupados; hint para crear equipo desde header
+    - Tab **⚠️ Desvíos:** `DeviationsThread` con `entityType="product"` (incluye "Stakeholders afectados")
+    - Tab **📐 Línea base:** captura snapshot del layout; historial listable y eliminable; comparativa queda pendiente
+- **ProductForm:** select de Canal con opción "+ Agregar canal..." inline
+- **Canales:** 5 por defecto al crear org; CRUD completo en el panel
+- **Share Roadmap:** `ShareModal` genera token en `shared_views` con `mode="roadmap"` y `product_id`; página pública `/share/[token]` renderiza `RoadmapReadOnly` (ficha del producto + `GanttReadOnly` + lista de desvíos)
 
 ### ModoSwitcher (componente compartido)
 
@@ -372,7 +386,7 @@ Enum en DB: `member_role` = `"owner" | "admin" | "member"` — **no cambió**
 
 | Tabla | Columnas clave |
 |---|---|
-| `shared_views` | id, organization_id, created_by, mode (squad/cross), token (UNIQUE), expires_at (null = sin vencimiento), created_at |
+| `shared_views` | id, organization_id, created_by, mode (squad/cross/**roadmap**), **product_id** (uuid nullable → products ON DELETE CASCADE), token (UNIQUE), expires_at (null = sin vencimiento), created_at |
 | `invitations` | id, organization_id, invited_by, email, role, token (UNIQUE), expires_at (+7 días), accepted_at (null = pendiente), created_at |
 
 ### IA
@@ -395,7 +409,7 @@ Enum en DB: `member_role` = `"owner" | "admin" | "member"` — **no cambió**
 | Tabla | Columnas clave |
 |---|---|
 | `channels` | id, organization_id, name (text, UNIQUE por org), sort_order (int default 0), created_at, updated_at |
-| `products` | id, organization_id, name, description, business_area (legacy, no usar), **channel_id** (uuid nullable → channels ON DELETE SET NULL), initiative_id (→ initiatives ON DELETE SET NULL, nullable), start_date (date NOT NULL), target_launch_date (date nullable), manual_mode (bool default false), status (active/discarded), sort_order, created_at, updated_at |
+| `products` | id, organization_id, name, description, business_area (legacy, no usar), **channel_id** (uuid nullable → channels ON DELETE SET NULL), initiative_id (→ initiatives ON DELETE SET NULL, nullable), start_date (date NOT NULL), target_launch_date (date nullable), manual_mode (bool default false), **visible_team_ids** (uuid[] nullable — NULL = mostrar todos), status (active/discarded), sort_order, created_at, updated_at |
 | `roadmap_segments` | id, organization_id, product_id (→ products ON DELETE CASCADE), team_id (→ teams ON DELETE CASCADE), label, duration_sprints (1–52), depends_on (uuid[] default '{}'), manual_start_sprint (int nullable), start_date (date nullable — ancla de inicio fijo), sort_order, created_at, updated_at · UNIQUE(product_id, team_id) |
 | `team_dependencies` | id, organization_id, team_id (→ teams), depends_on_team_id (→ teams), description, created_at · CHECK(team_id != depends_on_team_id) · UNIQUE(team_id, depends_on_team_id) |
 | `roadmap_baselines` | id, organization_id, product_id (→ products ON DELETE CASCADE), name (text nullable), captured_by (→ profiles ON DELETE SET NULL), captured_at (timestamptz), snapshot (jsonb — array de {segment_id, team_id, team_name, start_sprint, duration_sprints}), created_at |
@@ -454,6 +468,8 @@ Definidas en `20260526000003_rls_consolidado.sql`:
 20260604000028_org_role_labels.sql
 20260604000029_deviations_product.sql  ← product_id + affected_stakeholders + CHECK actualizado
 20260604000030_roadmap_baselines.sql   ← tabla roadmap_baselines
+20260604000031_products_visible_team_ids.sql  ← products.visible_team_ids uuid[]
+20260604000032_shared_views_roadmap.sql       ← shared_views.mode += 'roadmap' + product_id
 ```
 
 ### RLS
@@ -497,14 +513,15 @@ Lógica: sin user en ruta protegida → `/login`. Con user en ruta auth → `/da
 - **Modo Cross:** timeline Q1-Q4 con CSS Grid span, drag desde backlog a quarters, tabla de capacidad con semáforo, equipos configurables (personas, proy_per_persona, % disponibilidad por Q)
 - **Modo Roadmap:**
   - Gantt por producto, reflow automático (Kahn + greedy), manual_mode, detección de ciclos
-  - Filtros: Canal → Producto → Año (dinámico: actual + siguiente, sin hardcodear)
+  - Filtros: Canal → Producto → Año (dinámico)
   - Canales de negocio: CRUD completo, 5 canales default por org, select en ProductForm con "+ Agregar canal..." inline
-  - Panel de canales en toolbar para renombrar/eliminar (solo canWrite)
-  - **SegmentPanel:** label, duración, inicio fijo, dependencias (visibles siempre con nombre equipo + label del segmento), sprint manual
-  - **ProductPanel:** panel derecho cuando no hay segmento activo; tabs ⚠️ Desvíos y 📐 Línea base
-  - **Líneas base:** tabla `roadmap_baselines`; captura snapshot del layout calculado (sprint inicio + duración por segmento); historial listable y eliminable; comparativa queda pendiente
-  - **Reorder vertical de equipos:** drag-and-drop con `teams.sort_order`; `updateTeamsSortOrder` en actions
-  - **Drag horizontal en modo manual:** arrastra `manual_start_sprint` en tiempo real; desactivar manual_mode no borra los valores guardados
+  - **SegmentPanel:** equipo como `<select disabled>`, label, duración, inicio fijo, dependencias siempre visibles, sprint manual
+  - **ProductPanel:** sección "Nueva tarea" (select equipo disponible, excluye los ya usados por UNIQUE), tabs Desvíos y Línea base
+  - **Filtro de equipos por producto:** `visible_team_ids` en `products`; dropdown con buscador + checkboxes + atajos; badge N/M; layout usa todos los segmentos independientemente del filtro
+  - **Líneas base:** tabla `roadmap_baselines`; snapshot inmutable del layout; comparativa pendiente
+  - **Reorder vertical:** drag-and-drop HTML5, persiste en `teams.sort_order`
+  - **Drag horizontal en modo manual:** persiste `manual_start_sprint` en tiempo real
+  - **Share por link público:** `ShareModal` con `mode="roadmap"` y `productId`; página `/share/[token]` renderiza `RoadmapReadOnly` (ficha + GanttReadOnly + desvíos); respeta `visible_team_ids`; sin PDF
 - Drill-down bidireccional Squad ↔ Cross: `sq_project_ids` en initiatives, `?ini=` en /squad
 - Vista pública `/share/[token]`: solo lectura con token expiable opcional
 - **Header unificado en los 3 modos:** `ModoSwitcher` dropdown ("Cambiar modo ▾"), `NotificationBell` campanita, `IdeaButton`, `TeamPanelTrigger` (Cross y Roadmap), org.name, LogoutButton
@@ -532,7 +549,7 @@ Lógica: sin user en ruta protegida → `/login`. Con user en ruta auth → `/da
 - Invitaciones por email: generación de token, página `/invite/[token]`, email via Resend con label custom de rol
 - Email de confirmación de Auth via Supabase Hook → `/api/auth/send-email` → Resend
 - PDF server-side con @react-pdf/renderer: GET `/api/export/pdf?mode=squad|cross`
-- ShareModal con link público + exportar PDF
+- ShareModal con link público + exportar PDF (Squad/Cross); solo link para Roadmap
 - Favicon SVG (3 barras) + favicon PNG dinámico (app/icon.tsx)
 - **Priori AI:**
   - Tabla `ai_settings` por organización
@@ -554,14 +571,16 @@ Lógica: sin user en ruta protegida → `/login`. Con user en ruta auth → `/da
 
 ## Pendiente
 
-- **Migraciones pendientes de aplicar en Supabase SQL Editor:**
+- **Migraciones pendientes de aplicar en Supabase SQL Editor (en orden):**
   - `20260604000028_org_role_labels.sql` (si aún no está)
   - `20260604000029_deviations_product.sql`
   - `20260604000030_roadmap_baselines.sql`
+  - `20260604000031_products_visible_team_ids.sql`
+  - `20260604000032_shared_views_roadmap.sql`
 - **`SUPABASE_HOOK_SECRET`:** agregar en Vercel → Settings → Environment Variables para activar el hook de email auth.
 - **Dominio `priori.ar`:** confirmar propagación DNS (tilde verde en Vercel → Domains), luego actualizar `NEXT_PUBLIC_SITE_URL=https://priori.ar` en Vercel (+redeploy) y en Supabase (Authentication → URL Configuration): Site URL + Redirect URL sin borrar la de `.vercel.app`. Probar login Google + email de invitación.
 - **Umbrales configurables por org:** `DEFAULT_IMPACT_HIGH` y `DEFAULT_EFFORT_HIGH` hardcodeados en `lib/quadrant.ts`.
-- **Modo Roadmap — pendiente de UI:** drag para redimensionar barras (cambiar `duration_sprints`), vista cross-producto de capacidad, logActivity para products (requiere ampliar CHECK de activity_log), team_dependencies UI, vista comparativa de líneas base (delta actual vs snapshot).
+- **Modo Roadmap — pendiente de UI:** drag para redimensionar barras (`duration_sprints`), vista cross-producto de capacidad, logActivity para products (requiere ampliar CHECK de `activity_log.entity_type`), team_dependencies UI, vista comparativa de líneas base (delta actual vs snapshot).
 - **Roles — Opción B (permisos configurables reales):** reemplazar el enum `member_role` por roles custom por org con permisos `can_write` y `can_manage` configurables. Implica: nueva tabla `org_roles`, migrar `organization_members.role` de enum a FK, reescribir `my_role_in_org()` y las ~32 políticas RLS, actualizar ~26 callsites de `canWrite()` en 6 archivos de actions. Impacto alto; planificar solo si aparece un caso concreto que los 3 roles actuales no puedan modelar.
 - **Fase 6 — Integraciones:** Azure DevOps, Jira, GitHub Issues/Projects, Linear (`deviations.source` y `external_ref` ya están preparados).
 
@@ -632,3 +651,10 @@ Lógica: sin user en ruta protegida → `/login`. Con user en ruta auth → `/da
 - El drag horizontal de barras en Roadmap usa `SPRINT_PX = 40` como px/sprint constante. El delta de `clientX` entre mousedown y mousemove no depende del scroll horizontal del contenedor.
 - `roadmap_baselines.snapshot` es inmutable — la tabla no tiene `updated_at`. Para corregir una línea base hay que eliminarla y crear otra.
 - El `ProductPanel` aparece cuando `editingSegId === null && selectedProduct !== null`. Al clickear un segmento, `SegmentPanel` toma su lugar; al cerrar el `SegmentPanel`, vuelve el `ProductPanel`.
+- `visible_team_ids` en `products`: `NULL/[]` → todos los equipos; `[ids...]` → exactamente esos (sin excepciones, sin "red de seguridad"). El filtro es solo de presentación — `computeLayout` recibe todos los segmentos siempre. `effectiveTeams` se computa en `RoadmapView` y se pasa al `GanttGrid` como prop `teams`.
+- `GanttGrid` recibe: `teams` (ya filtrados = effectiveTeams), `allTeams` (todos, para el dropdown del filtro), `visibleTeamIds` (la config guardada), `onUpdateVisibleTeams`. El buscador en el dropdown filtra la lista visible pero no modifica `draftIds`.
+- `applyFilter` en `GanttGrid`: si `draftIds.length === 0` o `draftIds.length === allTeams.length` → guarda `null` (sin filtro); si es selección parcial → guarda los ids.
+- `ShareModal`: `mode: "squad" | "cross" | "roadmap"`, prop `productId?: string`. La sección PDF está envuelta en `{mode !== "roadmap" && (...)}`.
+- La página pública `/share/[token]` para Roadmap carga todo server-side con `createAdminClient`, computa el layout con `computeLayout` para obtener la fecha de publicación estimada (`max(end_sprint)` → `sprintStartDate`), y respeta `visible_team_ids` del producto.
+- `app/share/[token]/roadmap-utils.ts` exporta `buildQuarterBands` — compartido entre `GanttReadOnly` y el helper visual. No duplicar esta función en `RoadmapView` (ahí se define inline en el archivo).
+- `SharedView.product_id` es `null` para mode squad/cross, y debe ser non-null para mode roadmap. No hay CHECK de DB que lo exija, es una convención de código.

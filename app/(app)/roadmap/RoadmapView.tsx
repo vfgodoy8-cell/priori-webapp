@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useTransition, useMemo } from "react";
-import type { Product, Team, RoadmapSegment, TeamDependency } from "@/types/database";
+import { useState, useEffect, useTransition, useMemo, useRef } from "react";
+import type { Channel, Product, Team, RoadmapSegment, TeamDependency } from "@/types/database";
 import { type AppRole, canWrite } from "@/lib/roles";
 import {
   computeLayout,
@@ -13,6 +13,10 @@ import {
   type SegmentLayout,
 } from "@/lib/roadmap-logic";
 import {
+  listChannels,
+  createChannel,
+  updateChannel,
+  deleteChannel,
   loadProductSegments,
   addSegment,
   updateSegment,
@@ -39,16 +43,14 @@ function segmentColor(idx: number) {
 // ── Paleta de quarters ────────────────────────────────────────────────────────
 
 const QUARTER_COLORS = [
-  { bg: "#EAF1FB", border: "#BDD5F5", text: "#1E6FC5" }, // Q1 – azul marca
-  { bg: "#F0F4F8", border: "#D5DDED", text: "#64748B" }, // Q2 – slate
-  { bg: "#EAF1FB", border: "#BDD5F5", text: "#1E6FC5" }, // Q3 – azul marca
-  { bg: "#F0F4F8", border: "#D5DDED", text: "#64748B" }, // Q4 – slate
+  { bg: "#EAF1FB", border: "#BDD5F5", text: "#1E6FC5" },
+  { bg: "#F0F4F8", border: "#D5DDED", text: "#64748B" },
+  { bg: "#EAF1FB", border: "#BDD5F5", text: "#1E6FC5" },
+  { bg: "#F0F4F8", border: "#D5DDED", text: "#64748B" },
 ];
 
 type QuarterBand = { label: string; startSprint: number; sprintCount: number; q: number };
 
-// Calcula las bandas de Q visibles dentro del rango [0, totalSprints).
-// Usa sprints no clampeados para capturar quarters que empiezan antes del productStart.
 function buildQuarterBands(productStart: Date, totalSprints: number): QuarterBand[] {
   const msPerSprint = 14 * 86_400_000;
   const rawSprint = (d: Date) => (d.getTime() - productStart.getTime()) / msPerSprint;
@@ -80,8 +82,8 @@ function fmtDate(d: Date): string {
 
 // ── Constantes de layout ──────────────────────────────────────────────────────
 
-const LABEL_W   = 160; // ancho columna equipo (px)
-const SPRINT_PX = 40;  // ancho mínimo por sprint para el scroll horizontal
+const LABEL_W   = 160;
+const SPRINT_PX = 40;
 
 // ── RoadmapView ───────────────────────────────────────────────────────────────
 
@@ -95,6 +97,12 @@ type Props = {
 
 export function RoadmapView({ orgId, initialProducts, teams, role }: Props) {
   const [products, setProducts] = useState<Product[]>(initialProducts);
+  const [channels, setChannels] = useState<Channel[]>([]);
+  const [showChannelPanel, setShowChannelPanel] = useState(false);
+
+  useEffect(() => {
+    listChannels().then(({ channels: ch }) => setChannels(ch ?? []));
+  }, []);
 
   // ── Selector de año ──────────────────────────────────────────────────────────
   const [selectedYear, setSelectedYear] = useState<number>(() => {
@@ -125,7 +133,6 @@ export function RoadmapView({ orgId, initialProducts, teams, role }: Props) {
 
   const selectedProduct = filteredProducts.find((p) => p.id === selectedId) ?? null;
 
-  // Sincronizar selección cuando cambia el año
   useEffect(() => {
     if (selectedId && !filteredProducts.find((p) => p.id === selectedId)) {
       setSelectedId(filteredProducts[0]?.id ?? null);
@@ -133,7 +140,6 @@ export function RoadmapView({ orgId, initialProducts, teams, role }: Props) {
     }
   }, [selectedYear]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Cargar segmentos al cambiar el producto seleccionado
   useEffect(() => {
     if (!selectedId) { setSegments([]); return; }
     let active = true;
@@ -164,7 +170,6 @@ export function RoadmapView({ orgId, initialProducts, teams, role }: Props) {
     return m;
   }, [reflowResult]);
 
-  // Mínimo de sprints: cubre desde productStart hasta fin del año seleccionado.
   const minSprintsForYear = useMemo(() => {
     const nextYearStart = new Date(productStart.getFullYear() + 1, 0, 1);
     return Math.max(dateToSprint(productStart, nextYearStart) + 2, 13);
@@ -236,6 +241,28 @@ export function RoadmapView({ orgId, initialProducts, teams, role }: Props) {
     });
   }
 
+  async function handleCreateChannel(name: string): Promise<Channel | null> {
+    const { channel, error } = await createChannel(name);
+    if (error || !channel) return null;
+    setChannels((prev) => [...prev, channel]);
+    return channel;
+  }
+
+  async function handleRenameChannel(id: string, name: string) {
+    const { error } = await updateChannel(id, name);
+    if (!error) setChannels((prev) => prev.map((c) => (c.id === id ? { ...c, name } : c)));
+  }
+
+  async function handleDeleteChannel(id: string) {
+    const { error } = await deleteChannel(id);
+    if (!error) {
+      setChannels((prev) => prev.filter((c) => c.id !== id));
+      setProducts((prev) =>
+        prev.map((p) => (p.channel_id === id ? { ...p, channel_id: null } : p)),
+      );
+    }
+  }
+
   const editingSeg  = segments.find((s) => s.id === editingSegId) ?? null;
   const editingTeam = editingSeg ? (teams.find((t) => t.id === editingSeg.team_id) ?? null) : null;
 
@@ -247,7 +274,6 @@ export function RoadmapView({ orgId, initialProducts, teams, role }: Props) {
     <div className="space-y-4">
       {/* Toolbar */}
       <div className="flex items-center gap-3 flex-wrap">
-        {/* Selector de año */}
         <select
           value={selectedYear}
           onChange={(e) => handleYearChange(Number(e.target.value))}
@@ -258,7 +284,6 @@ export function RoadmapView({ orgId, initialProducts, teams, role }: Props) {
           ))}
         </select>
 
-        {/* Selector de producto (filtrado por año) */}
         {filteredProducts.length > 0 && (
           <select
             value={selectedId ?? ""}
@@ -280,20 +305,32 @@ export function RoadmapView({ orgId, initialProducts, teams, role }: Props) {
           </button>
         )}
 
+        {canEdit && (
+          <button
+            onClick={() => setShowChannelPanel((v) => !v)}
+            className={`text-sm px-3 py-1.5 rounded-lg border transition-colors ${
+              showChannelPanel
+                ? "border-brand-orange text-brand-orange bg-orange-50"
+                : "border-gray-200 text-brand-gray hover:border-brand-orange hover:text-brand-orange"
+            }`}
+          >
+            Canales
+          </button>
+        )}
+
         <div className="ml-auto flex items-center gap-3 flex-wrap">
-          {/* Badge de salida a producción */}
           {selectedProduct?.target_launch_date && (
             <div
               className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium"
               style={{ backgroundColor: "#FFF4EE", border: "1px solid #FDDCB5", color: "#E8621A" }}
             >
-              🚀 Salida: {fmtDate(parseProductDate(selectedProduct.target_launch_date))}
+              Salida: {fmtDate(parseProductDate(selectedProduct.target_launch_date))}
             </div>
           )}
 
           {reflowResult?.hasCycle && (
             <span className="text-xs text-red-600 bg-red-50 border border-red-200 px-2 py-1 rounded-full">
-              ⚠ Ciclo en dependencias
+              Ciclo en dependencias
             </span>
           )}
 
@@ -306,10 +343,22 @@ export function RoadmapView({ orgId, initialProducts, teams, role }: Props) {
         </div>
       </div>
 
+      {/* Panel de canales */}
+      {showChannelPanel && (
+        <ChannelPanel
+          channels={channels}
+          onRename={handleRenameChannel}
+          onDelete={handleDeleteChannel}
+          onCreate={handleCreateChannel}
+        />
+      )}
+
       {/* Formulario nuevo producto */}
       {showProductForm && (
         <ProductForm
           orgId={orgId}
+          channels={channels}
+          onChannelCreated={handleCreateChannel}
           onSuccess={(p) => {
             setProducts((prev) => [...prev, p]);
             setSelectedYear(parseProductDate(p.start_date).getFullYear());
@@ -370,6 +419,157 @@ export function RoadmapView({ orgId, initialProducts, teams, role }: Props) {
   );
 }
 
+// ── ChannelPanel ──────────────────────────────────────────────────────────────
+
+function ChannelPanel({
+  channels,
+  onRename,
+  onDelete,
+  onCreate,
+}: {
+  channels: Channel[];
+  onRename: (id: string, name: string) => Promise<void>;
+  onDelete: (id: string) => Promise<void>;
+  onCreate: (name: string) => Promise<Channel | null>;
+}) {
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editValue, setEditValue] = useState("");
+  const [newName, setNewName] = useState("");
+  const [showNew, setShowNew] = useState(false);
+  const [isPending, startTransition] = useTransition();
+  const newInputRef = useRef<HTMLInputElement>(null);
+
+  function startEdit(ch: Channel) {
+    setEditingId(ch.id);
+    setEditValue(ch.name);
+  }
+
+  function handleSaveRename(id: string) {
+    if (!editValue.trim()) return;
+    startTransition(async () => {
+      await onRename(id, editValue.trim());
+      setEditingId(null);
+    });
+  }
+
+  function handleDelete(id: string) {
+    startTransition(async () => {
+      await onDelete(id);
+    });
+  }
+
+  function handleCreate() {
+    if (!newName.trim()) return;
+    startTransition(async () => {
+      await onCreate(newName.trim());
+      setNewName("");
+      setShowNew(false);
+    });
+  }
+
+  useEffect(() => {
+    if (showNew) newInputRef.current?.focus();
+  }, [showNew]);
+
+  return (
+    <div className="bg-white rounded-xl border border-gray-200 p-4">
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-sm font-semibold text-brand-black">Canales</p>
+        <button
+          onClick={() => setShowNew((v) => !v)}
+          className="text-xs px-2.5 py-1 rounded-lg border border-dashed border-gray-300 text-brand-gray hover:border-brand-orange hover:text-brand-orange transition-colors"
+        >
+          + Canal
+        </button>
+      </div>
+
+      <div className="space-y-1.5">
+        {channels.map((ch) => (
+          <div key={ch.id} className="flex items-center gap-2">
+            {editingId === ch.id ? (
+              <>
+                <input
+                  autoFocus
+                  className="flex-1 text-sm border border-brand-orange/40 rounded-lg px-2.5 py-1 focus:outline-none focus:ring-2 focus:ring-brand-orange/20"
+                  value={editValue}
+                  onChange={(e) => setEditValue(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") handleSaveRename(ch.id);
+                    if (e.key === "Escape") setEditingId(null);
+                  }}
+                />
+                <button
+                  onClick={() => handleSaveRename(ch.id)}
+                  disabled={isPending}
+                  className="text-xs px-2.5 py-1 rounded-lg bg-brand-orange text-white font-medium hover:opacity-90 disabled:opacity-50 transition-opacity"
+                >
+                  Guardar
+                </button>
+                <button
+                  onClick={() => setEditingId(null)}
+                  className="text-xs px-2 py-1 rounded-lg border border-gray-200 text-brand-gray hover:text-brand-black transition-colors"
+                >
+                  Cancelar
+                </button>
+              </>
+            ) : (
+              <>
+                <span className="flex-1 text-sm text-brand-black">{ch.name}</span>
+                <button
+                  onClick={() => startEdit(ch)}
+                  className="text-xs text-brand-gray hover:text-brand-black transition-colors"
+                >
+                  Renombrar
+                </button>
+                <button
+                  onClick={() => handleDelete(ch.id)}
+                  disabled={isPending}
+                  className="text-xs text-red-400 hover:text-red-600 disabled:opacity-40 transition-colors"
+                >
+                  Eliminar
+                </button>
+              </>
+            )}
+          </div>
+        ))}
+
+        {channels.length === 0 && !showNew && (
+          <p className="text-xs text-brand-gray">Sin canales todavía.</p>
+        )}
+
+        {showNew && (
+          <div className="flex items-center gap-2 pt-1 border-t border-gray-100 mt-1">
+            <input
+              ref={newInputRef}
+              className="flex-1 text-sm border border-gray-200 rounded-lg px-2.5 py-1 focus:outline-none focus:ring-2 focus:ring-brand-orange/20"
+              placeholder="Nombre del canal"
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleCreate();
+                if (e.key === "Escape") { setShowNew(false); setNewName(""); }
+              }}
+            />
+            <button
+              onClick={handleCreate}
+              disabled={isPending || !newName.trim()}
+              className="text-xs px-2.5 py-1 rounded-lg bg-brand-orange text-white font-medium hover:opacity-90 disabled:opacity-50 transition-opacity"
+            >
+              Agregar
+            </button>
+            <button
+              onClick={() => { setShowNew(false); setNewName(""); }}
+              className="text-xs px-2 py-1 rounded-lg border border-gray-200 text-brand-gray hover:text-brand-black transition-colors"
+            >
+              Cancelar
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ── GanttGrid ─────────────────────────────────────────────────────────────────
 
 function GanttGrid({
@@ -399,22 +599,18 @@ function GanttGrid({
   const quarterBands  = buildQuarterBands(productStart, totalSprints);
   const minW          = LABEL_W + totalSprints * SPRINT_PX;
 
-  // Posición % dentro del track (no incluye LABEL_W)
-  const pct = (sprint: number) => `${(sprint / totalSprints) * 100}%`;
+  const pct  = (sprint: number) => `${(sprint / totalSprints) * 100}%`;
   const wPct = (sprints: number) => `${(sprints / totalSprints) * 100}%`;
 
   return (
-    // min-width fuerza el scroll cuando la pantalla es estrecha
     <div style={{ minWidth: minW }}>
 
-      {/* ── Fila de Quarters ─────────────────────────────────────────────────── */}
+      {/* Fila de Quarters */}
       <div className="flex" style={{ height: 28, borderBottom: "1px solid #E5E7EB" }}>
-        {/* celda sticky vacía */}
         <div
           className="flex-shrink-0 bg-gray-50 border-r border-gray-200"
           style={{ width: LABEL_W, position: "sticky", left: 0, zIndex: 10 }}
         />
-        {/* bandas de Q */}
         <div className="flex-1 relative bg-gray-50">
           {quarterBands.map((band, i) => {
             const c = QUARTER_COLORS[band.q];
@@ -438,7 +634,7 @@ function GanttGrid({
         </div>
       </div>
 
-      {/* ── Fila de meses ────────────────────────────────────────────────────── */}
+      {/* Fila de meses */}
       <div className="flex border-b border-gray-200">
         <div
           className="flex-shrink-0 flex items-center px-4 py-2 bg-gray-50 border-r border-gray-200"
@@ -459,7 +655,7 @@ function GanttGrid({
         </div>
       </div>
 
-      {/* ── Filas de equipos ─────────────────────────────────────────────────── */}
+      {/* Filas de equipos */}
       {teams.map((team, idx) => {
         const segment  = segments.find((s) => s.team_id === team.id);
         const layout   = segment ? layoutMap.get(segment.id) : null;
@@ -473,7 +669,6 @@ function GanttGrid({
             key={team.id}
             className={`flex border-b border-gray-100 last:border-b-0 h-14 ${rowBg}`}
           >
-            {/* Columna equipo — sticky */}
             <div
               className={`flex-shrink-0 flex items-center px-4 border-r border-gray-100 ${rowBg}`}
               style={{ width: LABEL_W, position: "sticky", left: 0, zIndex: 10 }}
@@ -481,9 +676,7 @@ function GanttGrid({
               <span className="text-sm font-medium text-brand-black truncate">{team.name}</span>
             </div>
 
-            {/* Track */}
             <div className="flex-1 relative overflow-hidden">
-              {/* Separadores de mes */}
               {monthHeaders.map((h, i) => (
                 <div
                   key={i}
@@ -492,7 +685,6 @@ function GanttGrid({
                 />
               ))}
 
-              {/* Barra del segmento */}
               {segment && layout ? (
                 <button
                   className="absolute top-2 bottom-2 rounded-lg flex items-center px-3 text-xs font-medium transition-all hover:brightness-95 focus:outline-none"
@@ -572,7 +764,6 @@ function SegmentPanel({
 
   const otherSegments = allSegments.filter((s) => s.id !== segment.id);
 
-  // Fecha de inicio calculada por el layout actual (guardado en DB).
   const computedStartDate = (() => {
     const layout = layoutMap.get(segment.id);
     return layout ? sprintStartDate(productStart, layout.start_sprint) : null;
@@ -605,7 +796,6 @@ function SegmentPanel({
       </div>
 
       <div className="p-4 space-y-4">
-        {/* Label */}
         <div>
           <label className="text-xs text-brand-gray block mb-1">Etiqueta</label>
           <input
@@ -617,7 +807,6 @@ function SegmentPanel({
           />
         </div>
 
-        {/* Duration */}
         <div>
           <label className="text-xs text-brand-gray block mb-1">
             Duración — <span className="text-brand-black font-medium">{duration * 2} semanas</span>
@@ -631,7 +820,6 @@ function SegmentPanel({
           </div>
         </div>
 
-        {/* Anchor date */}
         <div>
           <label className="text-xs text-brand-gray block mb-1">Inicio (opcional)</label>
           <input
@@ -653,7 +841,6 @@ function SegmentPanel({
           ) : null}
         </div>
 
-        {/* Manual start sprint */}
         {manualMode && (
           <div>
             <label className="text-xs text-brand-gray block mb-1">Sprint de inicio</label>
@@ -667,7 +854,6 @@ function SegmentPanel({
           </div>
         )}
 
-        {/* Dependencies (auto mode only) */}
         {!manualMode && otherSegments.length > 0 && (
           <div>
             <label className="text-xs text-brand-gray block mb-2">Depende de</label>
@@ -700,7 +886,6 @@ function SegmentPanel({
           </div>
         )}
 
-        {/* Actions */}
         {canEdit && (
           <div className="space-y-2 pt-2 border-t border-gray-100">
             <button
@@ -748,27 +933,66 @@ function StepButton({
 
 // ── ProductForm ───────────────────────────────────────────────────────────────
 
+const ADD_CHANNEL_SENTINEL = "__add_channel__";
+
 function ProductForm({
   orgId,
+  channels,
+  onChannelCreated,
   onSuccess,
   onCancel,
 }: {
   orgId: string;
+  channels: Channel[];
+  onChannelCreated: (name: string) => Promise<Channel | null>;
   onSuccess: (p: Product) => void;
   onCancel: () => void;
 }) {
   const [name, setName] = useState("");
-  const [businessArea, setBusinessArea] = useState("");
+  const [channelId, setChannelId] = useState("");
+  const [localChannels, setLocalChannels] = useState<Channel[]>(channels);
+  const [showNewChannel, setShowNewChannel] = useState(false);
+  const [newChannelName, setNewChannelName] = useState("");
   const [startDate, setStartDate] = useState(new Date().toISOString().slice(0, 10));
   const [targetLaunchDate, setTargetLaunchDate] = useState("");
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const newChannelRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    setLocalChannels(channels);
+  }, [channels]);
+
+  useEffect(() => {
+    if (showNewChannel) newChannelRef.current?.focus();
+  }, [showNewChannel]);
+
+  function handleChannelSelect(val: string) {
+    if (val === ADD_CHANNEL_SENTINEL) {
+      setShowNewChannel(true);
+    } else {
+      setChannelId(val);
+    }
+  }
+
+  function handleAddChannel() {
+    if (!newChannelName.trim()) return;
+    startTransition(async () => {
+      const ch = await onChannelCreated(newChannelName.trim());
+      if (ch) {
+        setLocalChannels((prev) => [...prev, ch]);
+        setChannelId(ch.id);
+      }
+      setNewChannelName("");
+      setShowNewChannel(false);
+    });
+  }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const fd = new FormData();
     fd.set("name", name);
-    fd.set("business_area", businessArea);
+    if (channelId) fd.set("channel_id", channelId);
     fd.set("start_date", startDate);
     if (targetLaunchDate) fd.set("target_launch_date", targetLaunchDate);
     startTransition(async () => {
@@ -780,7 +1004,8 @@ function ProductForm({
           organization_id: orgId,
           name: name.trim(),
           description: null,
-          business_area: businessArea.trim() || null,
+          business_area: null,
+          channel_id: channelId || null,
           initiative_id: null,
           start_date: startDate,
           target_launch_date: targetLaunchDate || null,
@@ -819,12 +1044,49 @@ function ProductForm({
           autoFocus
         />
 
-        <input
-          className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-orange/20"
-          placeholder="Área de negocio"
-          value={businessArea}
-          onChange={(e) => setBusinessArea(e.target.value)}
-        />
+        {/* Select de canal */}
+        {!showNewChannel ? (
+          <select
+            className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-brand-orange/20"
+            value={channelId}
+            onChange={(e) => handleChannelSelect(e.target.value)}
+          >
+            <option value="">Canal (opcional)</option>
+            {localChannels.map((ch) => (
+              <option key={ch.id} value={ch.id}>{ch.name}</option>
+            ))}
+            <option value={ADD_CHANNEL_SENTINEL}>+ Agregar canal...</option>
+          </select>
+        ) : (
+          <div className="flex items-center gap-2">
+            <input
+              ref={newChannelRef}
+              className="flex-1 text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-orange/20"
+              placeholder="Nombre del canal"
+              value={newChannelName}
+              onChange={(e) => setNewChannelName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") { e.preventDefault(); handleAddChannel(); }
+                if (e.key === "Escape") { setShowNewChannel(false); setNewChannelName(""); }
+              }}
+            />
+            <button
+              type="button"
+              onClick={handleAddChannel}
+              disabled={isPending || !newChannelName.trim()}
+              className="text-sm px-3 py-2 rounded-lg bg-brand-orange text-white font-medium hover:opacity-90 disabled:opacity-50 transition-opacity"
+            >
+              OK
+            </button>
+            <button
+              type="button"
+              onClick={() => { setShowNewChannel(false); setNewChannelName(""); }}
+              className="text-sm px-3 py-2 rounded-lg border border-gray-200 text-brand-gray hover:text-brand-black transition-colors"
+            >
+              Cancelar
+            </button>
+          </div>
+        )}
 
         <div className="grid grid-cols-2 gap-2">
           <div>

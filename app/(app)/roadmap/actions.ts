@@ -5,7 +5,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { type AppRole, canWrite } from "@/lib/roles";
-import type { Product, RoadmapSegment, TeamDependency } from "@/types/database";
+import type { Channel, Product, RoadmapSegment, TeamDependency } from "@/types/database";
 
 async function getAuthContext() {
   const supabase = createClient();
@@ -26,6 +26,85 @@ async function getAuthContext() {
     orgId: (membership as { organization_id: string; role: string }).organization_id,
     role: (membership as { organization_id: string; role: string }).role as AppRole,
   };
+}
+
+// ── CHANNELS ──────────────────────────────────────────────────────────────────
+
+export async function listChannels(): Promise<{ channels: Channel[]; error?: string }> {
+  const { admin, orgId } = await getAuthContext();
+  const { data, error } = await admin
+    .from("channels")
+    .select("*")
+    .eq("organization_id", orgId)
+    .order("sort_order", { ascending: true })
+    .order("name", { ascending: true });
+  if (error) return { channels: [], error: error.message };
+  return { channels: (data ?? []) as Channel[] };
+}
+
+export async function createChannel(
+  name: string,
+): Promise<{ error?: string; channel?: Channel }> {
+  const { admin, orgId, role } = await getAuthContext();
+  if (!canWrite(role)) return { error: "Sin permisos." };
+
+  const trimmed = name.trim();
+  if (!trimmed) return { error: "El nombre es requerido." };
+
+  const maxSort = await admin
+    .from("channels")
+    .select("sort_order")
+    .eq("organization_id", orgId)
+    .order("sort_order", { ascending: false })
+    .limit(1)
+    .single();
+  const nextSort = ((maxSort.data as { sort_order: number } | null)?.sort_order ?? -1) + 1;
+
+  const { data, error } = await admin
+    .from("channels")
+    .insert({ organization_id: orgId, name: trimmed, sort_order: nextSort })
+    .select()
+    .single();
+
+  if (error) return { error: error.message };
+  revalidatePath("/roadmap");
+  return { channel: data as Channel };
+}
+
+export async function updateChannel(
+  id: string,
+  name: string,
+): Promise<{ error?: string }> {
+  const { admin, orgId, role } = await getAuthContext();
+  if (!canWrite(role)) return { error: "Sin permisos." };
+
+  const trimmed = name.trim();
+  if (!trimmed) return { error: "El nombre es requerido." };
+
+  const { error } = await admin
+    .from("channels")
+    .update({ name: trimmed })
+    .eq("id", id)
+    .eq("organization_id", orgId);
+
+  if (error) return { error: error.message };
+  revalidatePath("/roadmap");
+  return {};
+}
+
+export async function deleteChannel(id: string): Promise<{ error?: string }> {
+  const { admin, orgId, role } = await getAuthContext();
+  if (!canWrite(role)) return { error: "Sin permisos." };
+
+  const { error } = await admin
+    .from("channels")
+    .delete()
+    .eq("id", id)
+    .eq("organization_id", orgId);
+
+  if (error) return { error: error.message };
+  revalidatePath("/roadmap");
+  return {};
 }
 
 // ── PRODUCTS ──────────────────────────────────────────────────────────────────
@@ -60,6 +139,7 @@ export async function createProduct(
       name,
       description: (formData.get("description") as string)?.trim() || null,
       business_area: (formData.get("business_area") as string)?.trim() || null,
+      channel_id: (formData.get("channel_id") as string) || null,
       initiative_id: (formData.get("initiative_id") as string) || null,
       start_date: (formData.get("start_date") as string) || new Date().toISOString().slice(0, 10),
       target_launch_date: (formData.get("target_launch_date") as string) || null,
@@ -75,7 +155,7 @@ export async function createProduct(
 
 export async function updateProduct(
   id: string,
-  patch: Partial<Pick<Product, "name" | "description" | "business_area" | "initiative_id" | "start_date" | "target_launch_date" | "manual_mode" | "sort_order">>,
+  patch: Partial<Pick<Product, "name" | "description" | "business_area" | "channel_id" | "initiative_id" | "start_date" | "target_launch_date" | "manual_mode" | "sort_order">>,
 ): Promise<{ error?: string }> {
   const { admin, orgId, role } = await getAuthContext();
   if (!canWrite(role)) return { error: "Sin permisos." };

@@ -45,5 +45,14 @@ export async function createOrganization(
 
   if (memberError) return { error: memberError.message };
 
+  const DEFAULT_CHANNELS = ["Banco", "Mandarina", "Productores", "Andrea", "Affinity"];
+  await admin.from("channels").insert(
+    DEFAULT_CHANNELS.map((name, sort_order) => ({
+      organization_id: org.id,
+      name,
+      sort_order,
+    })),
+  );
+
   redirect("/onboarding/teams");
 }

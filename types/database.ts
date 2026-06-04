@@ -175,6 +175,29 @@ export type Database = {
           sort_order?: number;
         };
       };
+      channels: {
+        Row: {
+          id: string;
+          organization_id: string;
+          name: string;
+          sort_order: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          name: string;
+          sort_order?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          name?: string;
+          sort_order?: number;
+          updated_at?: string;
+        };
+      };
       products: {
         Row: {
           id: string;
@@ -182,6 +205,7 @@ export type Database = {
           name: string;
           description: string | null;
           business_area: string | null;
+          channel_id: string | null;
           initiative_id: string | null;
           start_date: string;
           target_launch_date: string | null;
@@ -197,6 +221,7 @@ export type Database = {
           name: string;
           description?: string | null;
           business_area?: string | null;
+          channel_id?: string | null;
           initiative_id?: string | null;
           start_date?: string;
           target_launch_date?: string | null;
@@ -210,6 +235,7 @@ export type Database = {
           name?: string;
           description?: string | null;
           business_area?: string | null;
+          channel_id?: string | null;
           initiative_id?: string | null;
           start_date?: string;
           target_launch_date?: string | null;
@@ -473,6 +499,8 @@ export type Deviation = {
   updated_at: string;
   reporter?: { full_name: string | null } | null;
 };
+
+export type Channel = Database["public"]["Tables"]["channels"]["Row"];
 
 export type Product = Database["public"]["Tables"]["products"]["Row"];
 export type ProductStatus = "active" | "discarded";

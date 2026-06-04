@@ -1,26 +1,31 @@
-﻿"use client";
-import { IconBrandTeams, IconBrandWhatsapp, IconMail, IconLink, IconFileTypePdf } from "@tabler/icons-react";
+"use client";
+import { IconBrandTeams, IconBrandWhatsapp, IconMail, IconFileTypePdf } from "@tabler/icons-react";
 
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { createSharedView } from "@/app/(app)/share/actions";
 
 type Props = {
-  mode: "squad" | "cross";
+  mode: "squad" | "cross" | "roadmap";
+  productId?: string;
   targetRef?: React.RefObject<HTMLElement>;
   onClose: () => void;
 };
 
-export function ShareModal({ mode, targetRef, onClose }: Props) {
+export function ShareModal({ mode, productId, onClose }: Props) {
   const [pdfProgress, setPdfProgress] = useState(false);
   const [toast, setToast] = useState("");
   const [publicToken, setPublicToken] = useState<string | null>(null);
   const [generatingLink, setGeneratingLink] = useState(false);
   const [expireIn7Days, setExpireIn7Days] = useState(false);
 
-  const modeLabel = mode === "squad" ? "Modo Squad" : "Modo Cross";
+  const modeLabel =
+    mode === "squad" ? "Modo Squad" :
+    mode === "cross" ? "Modo Cross" :
+    "Modo Roadmap";
+
   const origin = typeof window !== "undefined" ? window.location.origin : "";
   const publicUrl = publicToken ? `${origin}/share/${publicToken}` : null;
-  const message = `Prioriâ„¢ â€” Priorización visual (${modeLabel}): ${publicUrl ?? origin}`;
+  const message = `Priori™ — Priorización visual (${modeLabel}): ${publicUrl ?? origin}`;
 
   function showToast(msg: string) {
     setToast(msg);
@@ -29,7 +34,7 @@ export function ShareModal({ mode, targetRef, onClose }: Props) {
 
   async function generateLink() {
     setGeneratingLink(true);
-    const result = await createSharedView(mode, expireIn7Days);
+    const result = await createSharedView(mode, expireIn7Days, productId);
     if ("error" in result) {
       showToast(`Error: ${result.error}`);
     } else {
@@ -68,7 +73,7 @@ export function ShareModal({ mode, targetRef, onClose }: Props) {
   }
 
   function shareMail() {
-    const subject = encodeURIComponent("Prioriâ„¢ â€” Priorización visual");
+    const subject = encodeURIComponent("Priori™ — Priorización visual");
     const body = encodeURIComponent(
       `Te comparto la previsualización del Estimador de Proyectos:\n\n${message}\n\nAbrí el enlace para ver el estado actual de la planificación.`
     );
@@ -163,7 +168,7 @@ export function ShareModal({ mode, targetRef, onClose }: Props) {
               )}
             </div>
 
-            {/* Channels â€” available once link is generated */}
+            {/* Channels — available once link is generated */}
             {publicUrl && (
               <div>
                 <div className="text-[11px] font-bold text-brand-gray uppercase tracking-wider mb-2">Compartir vía</div>
@@ -189,26 +194,29 @@ export function ShareModal({ mode, targetRef, onClose }: Props) {
               </div>
             )}
 
-            <hr className="border-gray-100" />
-
-            {/* PDF */}
-            <div>
-              <div className="text-[11px] font-bold text-brand-gray uppercase tracking-wider mb-2">Exportar PDF</div>
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  onClick={exportPDF}
-                  disabled={pdfProgress}
-                  className="flex flex-col items-center gap-1 px-3 py-3 rounded-xl border border-gray-100 hover:border-brand-orange hover:bg-orange-50 transition disabled:opacity-60"
-                >
-                  <IconFileTypePdf size={22} />
-                  <span className="text-xs font-bold text-brand-black">Vista actual</span>
-                  <span className="text-[10px] text-brand-gray">{modeLabel}</span>
-                </button>
-              </div>
-              {pdfProgress && (
-                <p className="text-xs text-brand-orange font-semibold text-center mt-2">Generando PDF…</p>
-              )}
-            </div>
+            {/* PDF — solo para squad y cross */}
+            {mode !== "roadmap" && (
+              <>
+                <hr className="border-gray-100" />
+                <div>
+                  <div className="text-[11px] font-bold text-brand-gray uppercase tracking-wider mb-2">Exportar PDF</div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      onClick={exportPDF}
+                      disabled={pdfProgress}
+                      className="flex flex-col items-center gap-1 px-3 py-3 rounded-xl border border-gray-100 hover:border-brand-orange hover:bg-orange-50 transition disabled:opacity-60"
+                    >
+                      <IconFileTypePdf size={22} />
+                      <span className="text-xs font-bold text-brand-black">Vista actual</span>
+                      <span className="text-[10px] text-brand-gray">{modeLabel}</span>
+                    </button>
+                  </div>
+                  {pdfProgress && (
+                    <p className="text-xs text-brand-orange font-semibold text-center mt-2">Generando PDF…</p>
+                  )}
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>

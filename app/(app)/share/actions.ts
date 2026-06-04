@@ -6,8 +6,9 @@ import { redirect } from "next/navigation";
 import { randomBytes } from "crypto";
 
 export async function createSharedView(
-  mode: "squad" | "cross",
-  expiresIn7Days: boolean
+  mode: "squad" | "cross" | "roadmap",
+  expiresIn7Days: boolean,
+  productId?: string,
 ): Promise<{ token: string } | { error: string }> {
   const supabase = createClient();
   const {
@@ -35,6 +36,7 @@ export async function createSharedView(
     mode,
     token,
     expires_at,
+    product_id: productId ?? null,
   });
 
   if (error) return { error: error.message };

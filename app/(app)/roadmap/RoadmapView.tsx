@@ -30,6 +30,7 @@ import {
   type BaselineSnapshot,
 } from "./actions";
 import { DeviationsThread } from "@/components/ui/DeviationsThread";
+import { ShareModal } from "@/components/ui/ShareModal";
 
 
 // ── Paleta de segmentos ───────────────────────────────────────────────────────
@@ -147,6 +148,7 @@ export function RoadmapView({ orgId, initialProducts, teams: initialTeams, role 
   const [loadingSegments, setLoadingSegments] = useState(false);
   const [editingSegId, setEditingSegId] = useState<string | null>(null);
   const [showProductForm, setShowProductForm] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   const selectedProduct = filteredProducts.find((p) => p.id === selectedId) ?? null;
@@ -408,6 +410,15 @@ export function RoadmapView({ orgId, initialProducts, teams: initialTeams, role 
             </span>
           )}
 
+          {selectedProduct && (
+            <button
+              onClick={() => setShowShareModal(true)}
+              className="text-xs px-3 py-1.5 rounded-lg border border-gray-200 text-brand-gray hover:border-brand-orange hover:text-brand-orange transition-colors"
+            >
+              Compartir
+            </button>
+          )}
+
           {canEdit && selectedProduct && (
             <ManualModeToggle
               active={selectedProduct.manual_mode}
@@ -505,6 +516,14 @@ export function RoadmapView({ orgId, initialProducts, teams: initialTeams, role 
           />
         ) : null}
       </div>
+
+      {showShareModal && selectedProduct && (
+        <ShareModal
+          mode="roadmap"
+          productId={selectedProduct.id}
+          onClose={() => setShowShareModal(false)}
+        />
+      )}
     </div>
   );
 }

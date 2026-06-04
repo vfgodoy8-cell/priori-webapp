@@ -458,7 +458,8 @@ export type SharedView = {
   id: string;
   organization_id: string;
   created_by: string;
-  mode: "squad" | "cross";
+  mode: "squad" | "cross" | "roadmap";
+  product_id: string | null;
   token: string;
   expires_at: string | null;
   created_at: string;

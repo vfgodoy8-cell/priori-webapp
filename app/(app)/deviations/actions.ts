@@ -28,14 +28,17 @@ async function getAuthContext() {
   };
 }
 
+export type DeviationEntityType = "project" | "initiative" | "product";
+
 export async function createDeviation(input: {
-  entityType: "project" | "initiative";
+  entityType: DeviationEntityType;
   entityId: string;
   entityName: string;
   date: string;
   reason: string;
   blocking_dependency: string | null;
   affected_dependency: string | null;
+  affected_stakeholders: string | null;
 }): Promise<{ error?: string; id?: string }> {
   const { user, admin, orgId } = await getAuthContext();
 
@@ -46,9 +49,11 @@ export async function createDeviation(input: {
     reason: input.reason.trim(),
     blocking_dependency: input.blocking_dependency?.trim() || null,
     affected_dependency: input.affected_dependency?.trim() || null,
+    affected_stakeholders: input.affected_stakeholders?.trim() || null,
     status: "open",
     project_id:    input.entityType === "project"    ? input.entityId : null,
     initiative_id: input.entityType === "initiative" ? input.entityId : null,
+    product_id:    input.entityType === "product"    ? input.entityId : null,
   };
 
   const { data, error } = await admin
@@ -59,21 +64,28 @@ export async function createDeviation(input: {
 
   if (error) return { error: error.message };
 
-  logActivity(admin, orgId, user.id, input.entityType, input.entityId, input.entityName, "blocked", {
-    deviation_id: (data as { id: string }).id,
-    reason: input.reason,
-  });
+  // logActivity solo para project/initiative — activity_log.entity_type no acepta "product" aún
+  if (input.entityType !== "product") {
+    logActivity(admin, orgId, user.id, input.entityType as "project" | "initiative", input.entityId, input.entityName, "blocked", {
+      deviation_id: (data as { id: string }).id,
+      reason: input.reason,
+    });
+  }
 
   return { id: (data as { id: string }).id };
 }
 
 export async function listDeviations(
-  entityType: "project" | "initiative",
+  entityType: DeviationEntityType,
   entityId: string
 ): Promise<Deviation[]> {
   const { admin } = await getAuthContext();
 
-  const column = entityType === "project" ? "project_id" : "initiative_id";
+  const column =
+    entityType === "project"    ? "project_id"    :
+    entityType === "initiative" ? "initiative_id" :
+    "product_id";
+
   const { data } = await admin
     .from("deviations")
     .select("*, reporter:profiles!reported_by(full_name)")
@@ -85,7 +97,7 @@ export async function listDeviations(
 
 export async function resolveDeviation(
   id: string,
-  entityType: "project" | "initiative",
+  entityType: DeviationEntityType,
   entityId: string,
   entityName: string
 ): Promise<{ error?: string }> {
@@ -100,9 +112,11 @@ export async function resolveDeviation(
 
   if (error) return { error: error.message };
 
-  logActivity(admin, orgId, user.id, entityType, entityId, entityName, "unblocked", {
-    deviation_id: id,
-  });
+  if (entityType !== "product") {
+    logActivity(admin, orgId, user.id, entityType as "project" | "initiative", entityId, entityName, "unblocked", {
+      deviation_id: id,
+    });
+  }
 
   return {};
 }

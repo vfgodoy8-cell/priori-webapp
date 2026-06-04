@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useTransition, useMemo, useRef } from "react";
-import type { Channel, Product, Team, RoadmapSegment, TeamDependency } from "@/types/database";
+import type { Channel, Product, RoadmapBaseline, Team, RoadmapSegment, TeamDependency } from "@/types/database";
 import { type AppRole, canWrite } from "@/lib/roles";
 import {
   computeLayout,
@@ -23,7 +23,13 @@ import {
   removeSegment,
   createProduct,
   updateProduct,
+  captureBaseline,
+  listBaselines,
+  deleteBaseline,
+  type BaselineSnapshot,
 } from "./actions";
+import { DeviationsThread } from "@/components/ui/DeviationsThread";
+
 
 // ── Paleta de segmentos ───────────────────────────────────────────────────────
 
@@ -429,7 +435,7 @@ export function RoadmapView({ orgId, initialProducts, teams, role }: Props) {
           )}
         </div>
 
-        {editingSeg && editingTeam && (
+        {editingSeg && editingTeam ? (
           <SegmentPanel
             segment={editingSeg}
             team={editingTeam}
@@ -444,7 +450,15 @@ export function RoadmapView({ orgId, initialProducts, teams, role }: Props) {
             onClose={() => setEditingSegId(null)}
             isPending={isPending}
           />
-        )}
+        ) : selectedProduct ? (
+          <ProductPanel
+            product={selectedProduct}
+            teams={teams}
+            segments={segments}
+            layoutMap={layoutMap}
+            canEdit={canEdit}
+          />
+        ) : null}
       </div>
     </div>
   );
@@ -960,6 +974,206 @@ function StepButton({
       {children}
     </button>
   );
+}
+
+// ── ProductPanel ──────────────────────────────────────────────────────────────
+
+type ProductPanelTab = "deviations" | "baselines";
+
+function ProductPanel({
+  product,
+  teams,
+  segments,
+  layoutMap,
+  canEdit,
+}: {
+  product: Product;
+  teams: Team[];
+  segments: RoadmapSegment[];
+  layoutMap: Map<string, SegmentLayout>;
+  canEdit: boolean;
+}) {
+  const [tab, setTab] = useState<ProductPanelTab>("deviations");
+  const [baselines, setBaselines] = useState<RoadmapBaseline[]>([]);
+  const [loadingBaselines, setLoadingBaselines] = useState(false);
+  const [baselineName, setBaselineName] = useState("");
+  const [capturing, setCapturing] = useState(false);
+  const [captureError, setCaptureError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (tab !== "baselines") return;
+    setLoadingBaselines(true);
+    listBaselines(product.id).then(({ baselines: bl }) => {
+      setBaselines(bl);
+      setLoadingBaselines(false);
+    });
+  }, [tab, product.id]);
+
+  async function handleCapture() {
+    const snapshot: BaselineSnapshot = segments
+      .map(s => {
+        const layout = layoutMap.get(s.id);
+        if (!layout) return null;
+        const team = teams.find(t => t.id === s.team_id);
+        return {
+          segment_id: s.id,
+          team_id: s.team_id,
+          team_name: team?.name ?? "Equipo desconocido",
+          start_sprint: layout.start_sprint,
+          duration_sprints: s.duration_sprints,
+        };
+      })
+      .filter((x): x is BaselineSnapshot[number] => x !== null);
+
+    setCapturing(true);
+    setCaptureError(null);
+    const { error } = await captureBaseline(product.id, snapshot, baselineName);
+    if (error) {
+      setCaptureError(error);
+    } else {
+      setBaselineName("");
+      const { baselines: fresh } = await listBaselines(product.id);
+      setBaselines(fresh);
+    }
+    setCapturing(false);
+  }
+
+  async function handleDeleteBaseline(id: string) {
+    await deleteBaseline(id);
+    setBaselines(prev => prev.filter(b => b.id !== id));
+  }
+
+  return (
+    <div className="w-72 flex-shrink-0 bg-white rounded-xl border border-gray-200 self-start sticky top-6">
+      {/* Header */}
+      <div className="px-4 py-3 border-b border-gray-100">
+        <p className="text-xs text-brand-gray">Producto</p>
+        <p className="text-sm font-semibold text-brand-black truncate">{product.name}</p>
+      </div>
+
+      {/* Tabs */}
+      <div className="flex border-b border-gray-100">
+        <button
+          onClick={() => setTab("deviations")}
+          className={`flex-1 text-xs py-2 font-semibold transition-colors ${
+            tab === "deviations"
+              ? "text-brand-orange border-b-2 border-brand-orange"
+              : "text-brand-gray hover:text-brand-black"
+          }`}
+        >
+          ⚠️ Desvíos
+        </button>
+        <button
+          onClick={() => setTab("baselines")}
+          className={`flex-1 text-xs py-2 font-semibold transition-colors ${
+            tab === "baselines"
+              ? "text-brand-orange border-b-2 border-brand-orange"
+              : "text-brand-gray hover:text-brand-black"
+          }`}
+        >
+          📐 Línea base
+        </button>
+      </div>
+
+      <div className="p-4">
+        {tab === "deviations" && (
+          <DeviationsThread
+            entityType="product"
+            entityId={product.id}
+            entityName={product.name}
+            canWrite={canEdit}
+          />
+        )}
+
+        {tab === "baselines" && (
+          <div className="flex flex-col gap-3">
+            {/* Capturar */}
+            {canEdit && (
+              <div className="flex flex-col gap-2">
+                <div className="text-[11px] font-bold text-brand-gray uppercase tracking-wider">
+                  Establecer línea base
+                </div>
+                <input
+                  value={baselineName}
+                  onChange={e => setBaselineName(e.target.value)}
+                  placeholder="Nombre (opcional, ej: Baseline Q2)"
+                  className="w-full rounded-lg border border-gray-200 px-3 py-1.5 text-xs text-brand-black placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-orange"
+                />
+                {captureError && (
+                  <p className="text-[11px] text-red-500">{captureError}</p>
+                )}
+                <button
+                  onClick={handleCapture}
+                  disabled={capturing || segments.length === 0}
+                  className="self-start px-4 py-1.5 text-xs font-bold rounded-lg bg-brand-orange hover:bg-orange-600 disabled:opacity-50 text-white transition"
+                >
+                  {capturing ? "Guardando…" : "Guardar snapshot"}
+                </button>
+                {segments.length === 0 && (
+                  <p className="text-[11px] text-brand-gray">
+                    Agregá segmentos al producto para capturar una línea base.
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Lista */}
+            <div className="flex flex-col gap-2 border-t border-gray-100 pt-3">
+              <div className="text-[11px] font-bold text-brand-gray uppercase tracking-wider">
+                Historial
+              </div>
+              {loadingBaselines && (
+                <p className="text-xs text-gray-400 text-center py-2">Cargando…</p>
+              )}
+              {!loadingBaselines && baselines.length === 0 && (
+                <p className="text-xs text-gray-400 text-center py-2">
+                  Sin líneas base capturadas.
+                </p>
+              )}
+              {baselines.map(b => (
+                <div
+                  key={b.id}
+                  className="rounded-lg border border-gray-100 bg-gray-50 p-2.5 flex flex-col gap-1"
+                >
+                  <div className="flex items-start justify-between gap-1">
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-xs font-semibold text-brand-black">
+                        {b.name ?? fmtBaselineDate(b.captured_at)}
+                      </span>
+                      {b.name && (
+                        <span className="text-[10px] text-brand-gray">
+                          {fmtBaselineDate(b.captured_at)}
+                        </span>
+                      )}
+                    </div>
+                    {canEdit && (
+                      <button
+                        onClick={() => handleDeleteBaseline(b.id)}
+                        className="text-[10px] text-gray-300 hover:text-red-400 flex-shrink-0"
+                        title="Eliminar"
+                      >
+                        ×
+                      </button>
+                    )}
+                  </div>
+                  <p className="text-[10px] text-brand-gray">
+                    {b.snapshot.length} segmento{b.snapshot.length !== 1 ? "s" : ""}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function fmtBaselineDate(iso: string): string {
+  return new Date(iso).toLocaleString("es-AR", {
+    day: "2-digit", month: "short", year: "numeric",
+    hour: "2-digit", minute: "2-digit",
+  });
 }
 
 // ── ProductForm ───────────────────────────────────────────────────────────────

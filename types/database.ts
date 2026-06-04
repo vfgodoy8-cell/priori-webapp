@@ -487,11 +487,13 @@ export type Deviation = {
   organization_id: string;
   project_id: string | null;
   initiative_id: string | null;
+  product_id: string | null;
   reported_by: string | null;
   date: string;
   reason: string;
   blocking_dependency: string | null;
   affected_dependency: string | null;
+  affected_stakeholders: string | null;
   status: DeviationStatus;
   source: string | null;
   external_ref: string | null;
@@ -508,6 +510,23 @@ export type ProductStatus = "active" | "discarded";
 export type RoadmapSegment = Database["public"]["Tables"]["roadmap_segments"]["Row"];
 
 export type TeamDependency = Database["public"]["Tables"]["team_dependencies"]["Row"];
+
+export type RoadmapBaseline = {
+  id: string;
+  organization_id: string;
+  product_id: string;
+  name: string | null;
+  captured_by: string | null;
+  captured_at: string;
+  snapshot: Array<{
+    segment_id: string;
+    team_id: string;
+    team_name: string;
+    start_sprint: number;
+    duration_sprints: number;
+  }>;
+  created_at: string;
+};
 
 export type AiProvider = "anthropic" | "openai" | "azure" | "google" | "groq";
 

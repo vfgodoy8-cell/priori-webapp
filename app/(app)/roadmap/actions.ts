@@ -5,7 +5,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { type AppRole, canWrite } from "@/lib/roles";
-import type { Channel, Product, RoadmapSegment, TeamDependency } from "@/types/database";
+import type { Channel, Product, RoadmapBaseline, RoadmapSegment, TeamDependency } from "@/types/database";
 
 async function getAuthContext() {
   const supabase = createClient();
@@ -326,5 +326,69 @@ export async function deleteTeamDependency(id: string): Promise<{ error?: string
 
   if (error) return { error: error.message };
   revalidatePath("/roadmap");
+  return {};
+}
+
+// ── ROADMAP BASELINES ─────────────────────────────────────────────────────────
+
+export type BaselineSnapshot = Array<{
+  segment_id: string;
+  team_id: string;
+  team_name: string;
+  start_sprint: number;
+  duration_sprints: number;
+}>;
+
+export async function captureBaseline(
+  productId: string,
+  snapshot: BaselineSnapshot,
+  name?: string,
+): Promise<{ error?: string; id?: string }> {
+  const { user, admin, orgId, role } = await getAuthContext();
+  if (!canWrite(role)) return { error: "Sin permisos." };
+
+  const { data, error } = await admin
+    .from("roadmap_baselines")
+    .insert({
+      organization_id: orgId,
+      product_id: productId,
+      name: name?.trim() || null,
+      captured_by: user.id,
+      snapshot,
+    })
+    .select("id")
+    .single();
+
+  if (error) return { error: error.message };
+  return { id: (data as { id: string }).id };
+}
+
+export async function listBaselines(
+  productId: string,
+): Promise<{ baselines: RoadmapBaseline[]; error?: string }> {
+  const { admin, orgId } = await getAuthContext();
+
+  const { data, error } = await admin
+    .from("roadmap_baselines")
+    .select("*")
+    .eq("product_id", productId)
+    .eq("organization_id", orgId)
+    .order("captured_at", { ascending: false });
+
+  if (error) return { baselines: [], error: error.message };
+  return { baselines: (data ?? []) as unknown as RoadmapBaseline[] };
+}
+
+export async function deleteBaseline(id: string): Promise<{ error?: string }> {
+  const { admin, orgId, role } = await getAuthContext();
+  if (!canWrite(role)) return { error: "Sin permisos." };
+
+  const { error } = await admin
+    .from("roadmap_baselines")
+    .delete()
+    .eq("id", id)
+    .eq("organization_id", orgId);
+
+  if (error) return { error: error.message };
   return {};
 }

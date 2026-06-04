@@ -1,11 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { createDeviation, listDeviations, resolveDeviation, deleteDeviation } from "@/app/(app)/deviations/actions";
+import { createDeviation, listDeviations, resolveDeviation, deleteDeviation, type DeviationEntityType } from "@/app/(app)/deviations/actions";
 import type { Deviation } from "@/types/database";
 
 type Props = {
-  entityType: "project" | "initiative";
+  entityType: DeviationEntityType;
   entityId: string;
   entityName: string;
   canWrite: boolean;
@@ -22,6 +22,7 @@ export function DeviationsThread({ entityType, entityId, entityName, canWrite }:
   const [reason, setReason] = useState("");
   const [blockingDep, setBlockingDep] = useState("");
   const [affectedDep, setAffectedDep] = useState("");
+  const [affectedStakeholders, setAffectedStakeholders] = useState("");
 
   useEffect(() => {
     setLoading(true);
@@ -42,11 +43,13 @@ export function DeviationsThread({ entityType, entityId, entityName, canWrite }:
       reason,
       blocking_dependency: blockingDep.trim() || null,
       affected_dependency: affectedDep.trim() || null,
+      affected_stakeholders: affectedStakeholders.trim() || null,
     });
     if (result.error) {
       setError(result.error);
     } else {
-      setReason(""); setBlockingDep(""); setAffectedDep(""); setDate(today);
+      setReason(""); setBlockingDep(""); setAffectedDep("");
+      setAffectedStakeholders(""); setDate(today);
       setDeviations(await listDeviations(entityType, entityId));
     }
     setSubmitting(false);
@@ -104,6 +107,11 @@ export function DeviationsThread({ entityType, entityId, entityName, canWrite }:
                 <span className="font-semibold">Podría afectar:</span> {d.affected_dependency}
               </p>
             )}
+            {d.affected_stakeholders && (
+              <p className="text-[11px] text-brand-gray">
+                <span className="font-semibold">Stakeholders afectados:</span> {d.affected_stakeholders}
+              </p>
+            )}
             <div className="flex items-center justify-between mt-0.5">
               <span className="text-[10px] text-gray-400">
                 {d.reporter?.full_name ?? "Usuario"} · {fmtDateTime(d.created_at)}
@@ -159,6 +167,12 @@ export function DeviationsThread({ entityType, entityId, entityName, canWrite }:
           value={affectedDep}
           onChange={e => setAffectedDep(e.target.value)}
           placeholder="¿Qué podría verse afectado? (opcional)"
+          className="w-full rounded-lg border border-gray-200 px-3 py-1.5 text-xs text-brand-black placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-orange"
+        />
+        <input
+          value={affectedStakeholders}
+          onChange={e => setAffectedStakeholders(e.target.value)}
+          placeholder="Stakeholders afectados (opcional)"
           className="w-full rounded-lg border border-gray-200 px-3 py-1.5 text-xs text-brand-black placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-orange"
         />
         {error && <p className="text-[11px] text-red-500">{error}</p>}

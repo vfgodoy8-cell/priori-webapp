@@ -155,7 +155,7 @@ export async function createProduct(
 
 export async function updateProduct(
   id: string,
-  patch: Partial<Pick<Product, "name" | "description" | "business_area" | "channel_id" | "initiative_id" | "start_date" | "target_launch_date" | "manual_mode" | "sort_order">>,
+  patch: Partial<Pick<Product, "name" | "description" | "business_area" | "channel_id" | "initiative_id" | "start_date" | "target_launch_date" | "manual_mode" | "visible_team_ids" | "sort_order">>,
 ): Promise<{ error?: string }> {
   const { admin, orgId, role } = await getAuthContext();
   if (!canWrite(role)) return { error: "Sin permisos." };

@@ -210,6 +210,7 @@ export type Database = {
           start_date: string;
           target_launch_date: string | null;
           manual_mode: boolean;
+          visible_team_ids: string[] | null;
           status: "active" | "discarded";
           sort_order: number;
           created_at: string;
@@ -226,6 +227,7 @@ export type Database = {
           start_date?: string;
           target_launch_date?: string | null;
           manual_mode?: boolean;
+          visible_team_ids?: string[] | null;
           status?: "active" | "discarded";
           sort_order?: number;
           created_at?: string;
@@ -240,6 +242,7 @@ export type Database = {
           start_date?: string;
           target_launch_date?: string | null;
           manual_mode?: boolean;
+          visible_team_ids?: string[] | null;
           status?: "active" | "discarded";
           sort_order?: number;
           updated_at?: string;

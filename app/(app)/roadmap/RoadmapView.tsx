@@ -212,6 +212,25 @@ export function RoadmapView({ orgId, initialProducts, teams: initialTeams, role 
 
   const canEdit = canWrite(role);
 
+  // ── Equipos visibles por producto ────────────────────────────────────────────
+
+  const segmentTeamIds = useMemo(
+    () => new Set(segments.map((s) => s.team_id)),
+    [segments],
+  );
+
+  const effectiveTeams = useMemo(() => {
+    const vids = selectedProduct?.visible_team_ids;
+    if (!vids || vids.length === 0) {
+      // Auto: sin segmentos → todos; con segmentos → solo los que tienen segmento
+      if (segments.length === 0) return localTeams;
+      return localTeams.filter((t) => segmentTeamIds.has(t.id));
+    }
+    // Explícito: los seleccionados + los que tienen segmento (los datos mandan)
+    const vidSet = new Set(vids);
+    return localTeams.filter((t) => vidSet.has(t.id) || segmentTeamIds.has(t.id));
+  }, [localTeams, segments, segmentTeamIds, selectedProduct?.visible_team_ids]);
+
   // ── Handlers ─────────────────────────────────────────────────────────────────
 
   function handleSelectProduct(id: string) {
@@ -266,9 +285,23 @@ export function RoadmapView({ orgId, initialProducts, teams: initialTeams, role 
     });
   }
 
-  function handleReorderTeams(newOrder: Team[]) {
-    setLocalTeams(newOrder);
-    updateTeamsSortOrder(newOrder.map((t, i) => ({ id: t.id, sort_order: i })));
+  function handleReorderTeams(newVisibleOrder: Team[]) {
+    // Reinserta los equipos ocultos al final manteniendo su orden relativo
+    const visibleIds = new Set(newVisibleOrder.map((t) => t.id));
+    const hidden = localTeams.filter((t) => !visibleIds.has(t.id));
+    const newGlobalOrder = [...newVisibleOrder, ...hidden];
+    setLocalTeams(newGlobalOrder);
+    updateTeamsSortOrder(newGlobalOrder.map((t, i) => ({ id: t.id, sort_order: i })));
+  }
+
+  function handleUpdateVisibleTeams(teamIds: string[] | null) {
+    if (!selectedProduct) return;
+    setProducts((prev) =>
+      prev.map((p) =>
+        p.id === selectedProduct.id ? { ...p, visible_team_ids: teamIds } : p,
+      ),
+    );
+    updateProduct(selectedProduct.id, { visible_team_ids: teamIds });
   }
 
   async function handleCreateChannel(name: string): Promise<Channel | null> {
@@ -428,8 +461,12 @@ export function RoadmapView({ orgId, initialProducts, teams: initialTeams, role 
             </div>
           ) : (
             <GanttGrid
-              teams={localTeams}
+              teams={effectiveTeams}
+              allTeams={localTeams}
               segments={segments}
+              segmentTeamIds={segmentTeamIds}
+              visibleTeamIds={selectedProduct?.visible_team_ids ?? null}
+              onUpdateVisibleTeams={canEdit ? handleUpdateVisibleTeams : undefined}
               layoutMap={layoutMap}
               monthHeaders={monthHeaders}
               totalSprints={totalSprints}
@@ -630,7 +667,11 @@ function ChannelPanel({
 
 function GanttGrid({
   teams,
+  allTeams,
   segments,
+  segmentTeamIds,
+  visibleTeamIds,
+  onUpdateVisibleTeams,
   layoutMap,
   monthHeaders,
   totalSprints,
@@ -644,7 +685,11 @@ function GanttGrid({
   isPending,
 }: {
   teams: Team[];
+  allTeams: Team[];
   segments: RoadmapSegment[];
+  segmentTeamIds: Set<string>;
+  visibleTeamIds: string[] | null;
+  onUpdateVisibleTeams?: (ids: string[] | null) => void;
   layoutMap: Map<string, SegmentLayout>;
   monthHeaders: ReturnType<typeof buildMonthHeaders>;
   totalSprints: number;
@@ -660,6 +705,55 @@ function GanttGrid({
   // ── Estado drag de filas (reorder vertical) ──────────────────────────────────
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [dragOverId, setDragOverId] = useState<string | null>(null);
+
+  // ── Estado filtro de equipos ──────────────────────────────────────────────────
+  const [showFilter, setShowFilter] = useState(false);
+  const [draftIds, setDraftIds] = useState<string[]>([]);
+  const filterRef = useRef<HTMLDivElement>(null);
+
+  // Cierra el dropdown al hacer click fuera
+  useEffect(() => {
+    if (!showFilter) return;
+    function onClickOutside(e: MouseEvent) {
+      if (filterRef.current && !filterRef.current.contains(e.target as Node)) {
+        setShowFilter(false);
+      }
+    }
+    document.addEventListener("mousedown", onClickOutside);
+    return () => document.removeEventListener("mousedown", onClickOutside);
+  }, [showFilter]);
+
+  function openFilter() {
+    setDraftIds(visibleTeamIds ?? allTeams.map((t) => t.id));
+    setShowFilter(true);
+  }
+
+  function toggleDraft(teamId: string) {
+    setDraftIds((prev) =>
+      prev.includes(teamId) ? prev.filter((id) => id !== teamId) : [...prev, teamId],
+    );
+  }
+
+  function applyFilter() {
+    if (!onUpdateVisibleTeams) return;
+    // Si están todos seleccionados → NULL (auto)
+    const allSelected = draftIds.length === allTeams.length;
+    onUpdateVisibleTeams(allSelected ? null : draftIds);
+    setShowFilter(false);
+  }
+
+  function setShortcutWithTasks() {
+    setDraftIds(Array.from(segmentTeamIds));
+  }
+
+  function setShortcutAll() {
+    if (!onUpdateVisibleTeams) return;
+    onUpdateVisibleTeams(null);
+    setShowFilter(false);
+  }
+
+  // Badge: muestra cuando hay filtro activo (visible < total)
+  const showBadge = teams.length < allTeams.length;
 
   // ── Estado drag horizontal de barras (modo manual) ───────────────────────────
   const [dragSprint, setDragSprint] = useState<{ segmentId: string; sprint: number } | null>(null);
@@ -766,10 +860,88 @@ function GanttGrid({
       {/* Fila de meses */}
       <div className="flex border-b border-gray-200">
         <div
-          className="flex-shrink-0 flex items-center px-4 py-2 bg-gray-50 border-r border-gray-200"
-          style={{ width: LABEL_W, position: "sticky", left: 0, zIndex: 10 }}
+          className="flex-shrink-0 flex items-center px-4 py-2 bg-gray-50 border-r border-gray-200 gap-2"
+          style={{ width: LABEL_W, position: "sticky", left: 0, zIndex: 20 }}
         >
-          <span className="text-xs text-brand-gray font-medium uppercase tracking-wide">Equipo</span>
+          <span className="text-xs text-brand-gray font-medium uppercase tracking-wide flex-1">Equipo</span>
+          {showBadge && (
+            <span className="text-[10px] font-semibold text-brand-orange bg-orange-50 border border-orange-200 px-1.5 py-0.5 rounded-full whitespace-nowrap">
+              {teams.length}/{allTeams.length}
+            </span>
+          )}
+          {onUpdateVisibleTeams && (
+            <div ref={filterRef} className="relative">
+              <button
+                onClick={openFilter}
+                title="Configurar equipos visibles"
+                className={`text-[11px] px-1.5 py-0.5 rounded border transition-colors ${
+                  visibleTeamIds !== null
+                    ? "border-brand-orange text-brand-orange bg-orange-50"
+                    : "border-gray-200 text-brand-gray hover:border-brand-orange hover:text-brand-orange"
+                }`}
+              >
+                ▼
+              </button>
+
+              {showFilter && (
+                <div className="absolute top-full left-0 mt-1 w-56 bg-white border border-gray-200 rounded-xl shadow-lg z-50 overflow-hidden">
+                  {/* Atajos */}
+                  <div className="p-2 border-b border-gray-100 flex flex-col gap-1">
+                    <button
+                      onClick={setShortcutWithTasks}
+                      className="text-left text-xs px-2 py-1.5 rounded-lg hover:bg-orange-50 hover:text-brand-orange text-brand-gray transition-colors"
+                    >
+                      Con tareas en este producto
+                    </button>
+                    <button
+                      onClick={setShortcutAll}
+                      className="text-left text-xs px-2 py-1.5 rounded-lg hover:bg-gray-50 text-brand-gray transition-colors"
+                    >
+                      Todos
+                    </button>
+                  </div>
+
+                  {/* Checkboxes */}
+                  <div className="max-h-48 overflow-y-auto p-2 flex flex-col gap-1">
+                    {allTeams.map((t) => (
+                      <label
+                        key={t.id}
+                        className="flex items-center gap-2 text-xs text-brand-black px-2 py-1 rounded-lg hover:bg-gray-50 cursor-pointer"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={draftIds.includes(t.id)}
+                          onChange={() => toggleDraft(t.id)}
+                          className="accent-brand-orange"
+                        />
+                        <span className="flex-1 truncate">{t.name}</span>
+                        {segmentTeamIds.has(t.id) && (
+                          <span className="text-[9px] font-bold text-brand-orange">●</span>
+                        )}
+                      </label>
+                    ))}
+                  </div>
+
+                  {/* Footer */}
+                  <div className="p-2 border-t border-gray-100 flex gap-2">
+                    <button
+                      onClick={applyFilter}
+                      disabled={draftIds.length === 0}
+                      className="flex-1 text-xs py-1.5 rounded-lg bg-brand-orange text-white font-semibold hover:opacity-90 disabled:opacity-40 transition-opacity"
+                    >
+                      Aplicar
+                    </button>
+                    <button
+                      onClick={() => setShowFilter(false)}
+                      className="flex-1 text-xs py-1.5 rounded-lg border border-gray-200 text-brand-gray hover:text-brand-black transition-colors"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
         <div className="flex-1 relative h-9 bg-gray-50 overflow-hidden">
           {monthHeaders.map((h, i) => (
@@ -797,6 +969,8 @@ function GanttGrid({
         const isDraggingBar = !!segment && dragSprint?.segmentId === segment.id;
         const displaySprint = isDraggingBar ? dragSprint!.sprint : (layout?.start_sprint ?? 0);
         const canDragBar    = manualMode && !!onUpdateManualSprint;
+        // Punto 8: tiene segmento pero no está en la selección explícita
+        const isForced = visibleTeamIds !== null && !visibleTeamIds.includes(team.id) && segmentTeamIds.has(team.id);
 
         return (
           <div
@@ -808,7 +982,10 @@ function GanttGrid({
             onDrop={(e)      => handleDrop(e, team.id)}
             onDragEnd={handleDragEnd}
             className={`flex border-b border-gray-100 last:border-b-0 h-14 transition-opacity ${rowBg} ${isDragging ? "opacity-40" : ""}`}
-            style={isDropTarget ? { boxShadow: "inset 0 2px 0 0 #E8621A" } : undefined}
+            style={{
+              ...(isDropTarget ? { boxShadow: "inset 0 2px 0 0 #E8621A" } : {}),
+              ...(isForced ? { borderLeft: "3px solid #E8621A" } : {}),
+            }}
           >
             <div
               className={`flex-shrink-0 flex items-center gap-2 px-4 border-r border-gray-100 ${rowBg} ${onReorderTeams ? "cursor-grab active:cursor-grabbing" : ""}`}
@@ -817,7 +994,12 @@ function GanttGrid({
               {onReorderTeams && (
                 <span className="text-gray-300 text-xs select-none flex-shrink-0">⠿</span>
               )}
-              <span className="text-sm font-medium text-brand-black truncate">{team.name}</span>
+              <span
+                className="text-sm font-medium text-brand-black truncate"
+                title={isForced ? "Tiene tareas pero no está en la selección activa" : undefined}
+              >
+                {team.name}
+              </span>
             </div>
 
             <div className="flex-1 relative overflow-hidden">
@@ -1452,6 +1634,7 @@ function ProductForm({
           start_date: startDate,
           target_launch_date: targetLaunchDate || null,
           manual_mode: false,
+          visible_team_ids: null,
           status: "active",
           sort_order: 0,
           created_at: new Date().toISOString(),

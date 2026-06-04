@@ -167,22 +167,22 @@ export default async function DashboardPage() {
           </div>
           <div className="flex gap-2">
             <Link
-              href="/squad"
-              className="flex items-center gap-1.5 px-4 py-2 text-sm font-bold rounded-lg bg-brand-orange hover:bg-orange-600 text-white transition"
+              href="/roadmap"
+              className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-lg bg-brand-orange text-white hover:brightness-95 transition"
             >
-              <IconLayoutKanban size={15} strokeWidth={2} /> Modo Squad
+              <IconTimeline size={15} strokeWidth={2} /> Modo Roadmap
             </Link>
             <Link
               href="/cross"
-              className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-lg border border-gray-200 bg-white text-brand-gray hover:text-brand-black hover:border-gray-300 transition"
+              className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-lg bg-brand-orange/65 text-brand-black hover:brightness-95 transition"
             >
               <IconCalendarStats size={15} strokeWidth={2} /> Modo Cross
             </Link>
             <Link
-              href="/roadmap"
-              className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-lg border border-gray-200 bg-white text-brand-gray hover:text-brand-black hover:border-gray-300 transition"
+              href="/squad"
+              className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-lg bg-brand-orange/30 text-brand-black hover:brightness-95 transition"
             >
-              <IconTimeline size={15} strokeWidth={2} /> Modo Roadmap
+              <IconLayoutKanban size={15} strokeWidth={2} /> Modo Squad
             </Link>
           </div>
         </div>

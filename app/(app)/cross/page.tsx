@@ -6,6 +6,7 @@ import { CrossHeaderRight } from "./CrossHeaderRight";
 import Link from "next/link";
 import type { OrganizationMember, Organization, Team, Initiative, Project } from "@/types/database";
 import { type AppRole } from "@/lib/roles";
+import { getDeadlineAlerts } from "@/lib/deadlines";
 
 export default async function CrossPage() {
   const supabase = createClient();
@@ -36,7 +37,7 @@ export default async function CrossPage() {
 
   const role = membership.role as AppRole;
 
-  const [{ data: teamsData }, { data: initiativesData }, { data: projectsData }] = await Promise.all([
+  const [{ data: teamsData }, { data: initiativesData }, { data: projectsData }, alerts] = await Promise.all([
     admin
       .from("teams")
       .select("*")
@@ -54,6 +55,7 @@ export default async function CrossPage() {
       .eq("organization_id", org.id)
       .eq("status", "active")
       .order("name", { ascending: true }),
+    getDeadlineAlerts(org.id),
   ]);
 
   const teams = (teamsData ?? []) as Team[];
@@ -83,7 +85,7 @@ export default async function CrossPage() {
           </div>
 
           {/* Right */}
-          <CrossHeaderRight orgName={org.name} teams={teams} orgId={org.id} role={role} />
+          <CrossHeaderRight orgName={org.name} teams={teams} orgId={org.id} role={role} alerts={alerts} />
         </div>
       </header>
 

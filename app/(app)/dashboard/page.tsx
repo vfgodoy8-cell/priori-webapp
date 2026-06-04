@@ -10,6 +10,8 @@ import { IconLayoutKanban, IconCalendarStats, IconTimeline, IconSettings, IconUs
 import { getRecentActivity } from "@/app/(app)/activity/actions";
 import type { ActivityLog, ActivityAction } from "@/lib/activity";
 import { ACTION_LABEL } from "@/lib/activity";
+import { getDeadlineAlerts, SEVERITY_COLOR, SEVERITY_LABEL } from "@/lib/deadlines";
+import type { DeadlineAlert, DeadlineSeverity } from "@/lib/deadlines";
 
 export default async function DashboardPage() {
   const supabase = createClient();
@@ -46,13 +48,14 @@ export default async function DashboardPage() {
     .single();
   const firstName = (profileData as { full_name: string | null } | null)?.full_name?.split(" ")[0] ?? null;
 
-  const [{ data: projectsData }, { data: initiativesData }, { data: teamsData }, recentActivity, { data: rmProductsData }, { data: rmChannelsData }] = await Promise.all([
+  const [{ data: projectsData }, { data: initiativesData }, { data: teamsData }, recentActivity, { data: rmProductsData }, { data: rmChannelsData }, deadlineAlerts] = await Promise.all([
     admin.from("projects").select("id, impact_value, effort_sprints, squad_status, status").eq("organization_id", org.id).eq("status", "active"),
     admin.from("initiatives").select("id, q_start, duration_quarters, team_ids, team_allocations, status").eq("organization_id", org.id).eq("status", "active"),
     admin.from("teams").select("*").eq("organization_id", org.id).order("sort_order", { ascending: true }),
     getRecentActivity(10),
     admin.from("products").select("id, channel_id").eq("organization_id", org.id).eq("status", "active"),
     admin.from("channels").select("id, name").eq("organization_id", org.id).order("sort_order", { ascending: true }),
+    getDeadlineAlerts(org.id),
   ]);
 
   const projects = (projectsData ?? []) as Pick<Project, "id" | "impact_value" | "effort_sprints" | "squad_status" | "status">[];
@@ -356,6 +359,52 @@ export default async function DashboardPage() {
                   + <span className="font-semibold text-brand-black">{inBacklog}</span> iniciativa{inBacklog !== 1 ? "s" : ""} sin asignar en el backlog
                 </p>
               )}
+            </div>
+          </div>
+        )}
+
+        {/* Alertas de vencimiento */}
+        {deadlineAlerts.length > 0 && (
+          <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+            <div className="px-5 py-3.5 bg-gray-50 border-b border-gray-100">
+              <span className="text-sm font-bold text-brand-black">Alertas de vencimiento</span>
+            </div>
+            <div className="divide-y divide-gray-50">
+              {(["red", "orange", "yellow"] as DeadlineSeverity[]).map((sev) => {
+                const group = (deadlineAlerts as DeadlineAlert[]).filter((a) => a.severity === sev);
+                if (group.length === 0) return null;
+                return (
+                  <div key={sev}>
+                    <div
+                      className="px-5 py-1.5"
+                      style={{ background: `${SEVERITY_COLOR[sev]}12` }}
+                    >
+                      <span className="text-[10px] font-bold uppercase tracking-wide" style={{ color: SEVERITY_COLOR[sev] }}>
+                        {SEVERITY_LABEL[sev]}
+                      </span>
+                    </div>
+                    {group.map((a) => {
+                      const [, m, d] = a.dueDate.split("-").map(Number);
+                      const MONTHS = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
+                      const MODE_LABEL: Record<string, string> = { squad: "Squad", cross: "Cross", roadmap: "Roadmap" };
+                      return (
+                        <Link
+                          key={a.id}
+                          href={a.href}
+                          className="flex items-center gap-3 px-5 py-3 hover:bg-gray-50 transition"
+                        >
+                          <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: SEVERITY_COLOR[sev] }} />
+                          <span className="flex-1 text-sm font-medium text-brand-black truncate">{a.name}</span>
+                          <span className="text-xs text-brand-gray flex-shrink-0">{MODE_LABEL[a.mode]}</span>
+                          <span className="text-xs font-semibold flex-shrink-0" style={{ color: SEVERITY_COLOR[sev] }}>
+                            {d} {MONTHS[m - 1]}
+                          </span>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}

@@ -9,6 +9,8 @@ import { ModoSwitcher } from "@/components/ui/ModoSwitcher";
 import { IdeaButton } from "@/components/ui/IdeaButton";
 import { TeamPanelTrigger } from "@/components/ui/TeamPanelTrigger";
 import { LogoutButton } from "@/components/ui/LogoutButton";
+import { NotificationBell } from "@/components/ui/NotificationBell";
+import { getDeadlineAlerts } from "@/lib/deadlines";
 
 export default async function RoadmapPage() {
   const supabase = createClient();
@@ -37,7 +39,7 @@ export default async function RoadmapPage() {
 
   const role = membership.role as AppRole;
 
-  const [{ data: teamsData }, { data: productsData }, { data: teamDepsData }] = await Promise.all([
+  const [{ data: teamsData }, { data: productsData }, { data: teamDepsData }, alerts] = await Promise.all([
     admin
       .from("teams")
       .select("*")
@@ -54,6 +56,7 @@ export default async function RoadmapPage() {
       .from("team_dependencies")
       .select("*")
       .eq("organization_id", org.id),
+    getDeadlineAlerts(org.id),
   ]);
 
   const teams = (teamsData ?? []) as Team[];
@@ -88,6 +91,7 @@ export default async function RoadmapPage() {
 
           <div className="flex items-center gap-4">
             {role === "owner" && <IdeaButton />}
+            <NotificationBell alerts={alerts} />
             <ModoSwitcher current="roadmap" />
             <TeamPanelTrigger teams={teams} orgId={org.id} />
             <span className="text-sm text-brand-gray">{org.name}</span>

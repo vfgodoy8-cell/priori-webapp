@@ -10,6 +10,8 @@ import type { OrganizationMember, Organization, Project } from "@/types/database
 import { type AppRole } from "@/lib/roles";
 import { IconSettings } from "@tabler/icons-react";
 import { ModoSwitcher } from "@/components/ui/ModoSwitcher";
+import { NotificationBell } from "@/components/ui/NotificationBell";
+import { getDeadlineAlerts } from "@/lib/deadlines";
 
 export default async function SquadPage({ searchParams }: { searchParams?: { ini?: string; idea?: string } }) {
   const supabase = createClient();
@@ -40,7 +42,7 @@ export default async function SquadPage({ searchParams }: { searchParams?: { ini
 
   const role = membership.role as AppRole;
 
-  const [{ data: projectsData }, { data: initiativesData }] = await Promise.all([
+  const [{ data: projectsData }, { data: initiativesData }, alerts] = await Promise.all([
     admin
       .from("projects")
       .select("*")
@@ -51,6 +53,7 @@ export default async function SquadPage({ searchParams }: { searchParams?: { ini
       .select("id, name, sq_project_ids")
       .eq("organization_id", org.id)
       .eq("status", "active"),
+    getDeadlineAlerts(org.id),
   ]);
 
   const all = (projectsData ?? []) as Project[];
@@ -119,6 +122,7 @@ export default async function SquadPage({ searchParams }: { searchParams?: { ini
           {/* Right */}
           <div className="flex items-center gap-4">
             {role === "owner" && <IdeaButton />}
+            <NotificationBell alerts={alerts} />
             <ModoSwitcher current="squad" />
             <Link
               href="/settings/members"

@@ -5,6 +5,10 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import type { Organization, OrganizationMember, Team, Product, TeamDependency } from "@/types/database";
 import { type AppRole } from "@/lib/roles";
 import { RoadmapView } from "./RoadmapView";
+import { ModoSwitcher } from "@/components/ui/ModoSwitcher";
+import { IdeaButton } from "@/components/ui/IdeaButton";
+import { TeamPanelTrigger } from "@/components/ui/TeamPanelTrigger";
+import { LogoutButton } from "@/components/ui/LogoutButton";
 
 export default async function RoadmapPage() {
   const supabase = createClient();
@@ -82,19 +86,12 @@ export default async function RoadmapPage() {
             <span className="text-sm font-medium text-brand-black">Modo Roadmap</span>
           </div>
 
-          <div className="flex items-center gap-2">
-            <Link
-              href="/squad"
-              className="text-xs px-3 py-1.5 rounded-lg border border-gray-200 text-brand-gray hover:text-brand-black hover:border-gray-300 transition"
-            >
-              Modo Squad
-            </Link>
-            <Link
-              href="/cross"
-              className="text-xs px-3 py-1.5 rounded-lg border border-gray-200 text-brand-gray hover:text-brand-black hover:border-gray-300 transition"
-            >
-              Modo Cross
-            </Link>
+          <div className="flex items-center gap-4">
+            {role === "owner" && <IdeaButton />}
+            <ModoSwitcher current="roadmap" />
+            <TeamPanelTrigger teams={teams} orgId={org.id} />
+            <span className="text-sm text-brand-gray">{org.name}</span>
+            <LogoutButton />
           </div>
         </div>
       </header>

@@ -8,7 +8,8 @@ import { LogoutButton } from "@/components/ui/LogoutButton";
 import { IdeaButton } from "@/components/ui/IdeaButton";
 import type { OrganizationMember, Organization, Project } from "@/types/database";
 import { type AppRole } from "@/lib/roles";
-import { IconCalendarEvent, IconSettings } from "@tabler/icons-react";
+import { IconSettings } from "@tabler/icons-react";
+import { ModoSwitcher } from "@/components/ui/ModoSwitcher";
 
 export default async function SquadPage({ searchParams }: { searchParams?: { ini?: string; idea?: string } }) {
   const supabase = createClient();
@@ -118,13 +119,7 @@ export default async function SquadPage({ searchParams }: { searchParams?: { ini
           {/* Right */}
           <div className="flex items-center gap-4">
             {role === "owner" && <IdeaButton />}
-            <Link
-              href="/cross"
-              className="flex items-center gap-1.5 text-sm font-semibold px-3.5 py-1.5 rounded-lg bg-white text-brand-gray hover:text-brand-orange hover:border-brand-orange transition"
-              style={{ border: "1.5px solid #E5E5E5", borderRadius: 8 }}
-            >
-              <IconCalendarEvent size={14} strokeWidth={2} /> Modo Cross →
-            </Link>
+            <ModoSwitcher current="squad" />
             <Link
               href="/settings/members"
               className="flex items-center gap-1.5 text-sm font-semibold px-3.5 py-1.5 rounded-lg bg-white text-brand-gray hover:text-brand-black transition"

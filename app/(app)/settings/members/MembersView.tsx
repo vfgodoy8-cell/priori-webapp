@@ -53,9 +53,9 @@ export function MembersView({ members, invitations: initialInvitations, currentU
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-gray-100 text-brand-gray text-xs uppercase tracking-wide">
+              <th className="text-left px-5 py-3 font-medium">Rol</th>
               <th className="text-left px-5 py-3 font-medium">Nombre</th>
               <th className="text-left px-5 py-3 font-medium">Email</th>
-              <th className="text-left px-5 py-3 font-medium">Rol</th>
               {canManage && <th className="px-5 py-3" />}
             </tr>
           </thead>
@@ -189,6 +189,9 @@ function MemberRow({
   return (
     <tr className="hover:bg-gray-50 transition group">
       <td className="px-5 py-3">
+        <RoleBadge role={m.role as AppRole} />
+      </td>
+      <td className="px-5 py-3">
         <div className="flex items-center gap-3">
           <div
             className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
@@ -205,9 +208,6 @@ function MemberRow({
         </div>
       </td>
       <td className="px-5 py-3 text-brand-gray text-sm">{email ?? "—"}</td>
-      <td className="px-5 py-3">
-        <RoleBadge role={m.role as AppRole} />
-      </td>
       {canManage && !isCurrentUser && (
         <td className="px-5 py-3">
           <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition">

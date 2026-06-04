@@ -104,6 +104,14 @@ export function RoadmapView({ orgId, initialProducts, teams, role }: Props) {
     listChannels().then(({ channels: ch }) => setChannels(ch ?? []));
   }, []);
 
+  // ── Filtro por canal ──────────────────────────────────────────────────────────
+  const [selectedChannelId, setSelectedChannelId] = useState<string>("");
+
+  const productsByChannel = useMemo(
+    () => (selectedChannelId ? products.filter((p) => p.channel_id === selectedChannelId) : products),
+    [products, selectedChannelId],
+  );
+
   // ── Selector de año ──────────────────────────────────────────────────────────
   const [selectedYear, setSelectedYear] = useState<number>(() => {
     const first = initialProducts[0];
@@ -113,14 +121,16 @@ export function RoadmapView({ orgId, initialProducts, teams, role }: Props) {
   });
 
   const availableYears = useMemo(() => {
-    const set = new Set(products.map((p) => parseProductDate(p.start_date).getFullYear()));
-    set.add(new Date().getFullYear());
+    const cur = new Date().getFullYear();
+    const set = new Set(productsByChannel.map((p) => parseProductDate(p.start_date).getFullYear()));
+    set.add(cur);
+    set.add(cur + 1);
     return Array.from(set).sort((a, b) => a - b);
-  }, [products]);
+  }, [productsByChannel]);
 
   const filteredProducts = useMemo(
-    () => products.filter((p) => parseProductDate(p.start_date).getFullYear() === selectedYear),
-    [products, selectedYear],
+    () => productsByChannel.filter((p) => parseProductDate(p.start_date).getFullYear() === selectedYear),
+    [productsByChannel, selectedYear],
   );
 
   // ── Selección de producto ────────────────────────────────────────────────────
@@ -139,6 +149,13 @@ export function RoadmapView({ orgId, initialProducts, teams, role }: Props) {
       setEditingSegId(null);
     }
   }, [selectedYear]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (selectedId && !filteredProducts.find((p) => p.id === selectedId)) {
+      setSelectedId(filteredProducts[0]?.id ?? null);
+      setEditingSegId(null);
+    }
+  }, [selectedChannelId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!selectedId) { setSegments([]); return; }
@@ -274,16 +291,19 @@ export function RoadmapView({ orgId, initialProducts, teams, role }: Props) {
     <div className="space-y-4">
       {/* Toolbar */}
       <div className="flex items-center gap-3 flex-wrap">
+        {/* Canal */}
         <select
-          value={selectedYear}
-          onChange={(e) => handleYearChange(Number(e.target.value))}
+          value={selectedChannelId}
+          onChange={(e) => setSelectedChannelId(e.target.value)}
           className="text-sm font-medium border border-gray-200 rounded-lg px-3 py-1.5 bg-white text-brand-black focus:outline-none focus:ring-2 focus:ring-brand-orange/20"
         >
-          {availableYears.map((y) => (
-            <option key={y} value={y}>{y}</option>
+          <option value="">Todos los canales</option>
+          {channels.map((ch) => (
+            <option key={ch.id} value={ch.id}>{ch.name}</option>
           ))}
         </select>
 
+        {/* Producto */}
         {filteredProducts.length > 0 && (
           <select
             value={selectedId ?? ""}
@@ -295,6 +315,17 @@ export function RoadmapView({ orgId, initialProducts, teams, role }: Props) {
             ))}
           </select>
         )}
+
+        {/* Año */}
+        <select
+          value={selectedYear}
+          onChange={(e) => handleYearChange(Number(e.target.value))}
+          className="text-sm font-medium border border-gray-200 rounded-lg px-3 py-1.5 bg-white text-brand-black focus:outline-none focus:ring-2 focus:ring-brand-orange/20"
+        >
+          {availableYears.map((y) => (
+            <option key={y} value={y}>{y}</option>
+          ))}
+        </select>
 
         {canEdit && (
           <button

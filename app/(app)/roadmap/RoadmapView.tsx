@@ -1120,6 +1120,7 @@ function SegmentPanel({
 }) {
   const [label, setLabel] = useState(segment.label);
   const [duration, setDuration] = useState(segment.duration_sprints);
+  const [assignedPeople, setAssignedPeople] = useState(segment.assigned_people ?? 1);
   const [manualStart, setManualStart] = useState(segment.manual_start_sprint ?? 0);
   const [dependsOn, setDependsOn] = useState<string[]>(segment.depends_on);
   const [anchorDate, setAnchorDate] = useState(segment.start_date ?? "");
@@ -1127,6 +1128,7 @@ function SegmentPanel({
   useEffect(() => {
     setLabel(segment.label);
     setDuration(segment.duration_sprints);
+    setAssignedPeople(segment.assigned_people ?? 1);
     setManualStart(segment.manual_start_sprint ?? 0);
     setDependsOn(segment.depends_on);
     setAnchorDate(segment.start_date ?? "");
@@ -1143,6 +1145,7 @@ function SegmentPanel({
     const patch: Parameters<typeof updateSegment>[1] = {
       label,
       duration_sprints: duration,
+      assigned_people: assignedPeople,
       depends_on: dependsOn,
       start_date: anchorDate || null,
     };
@@ -1154,16 +1157,23 @@ function SegmentPanel({
     <div className="w-72 flex-shrink-0 bg-white rounded-xl border border-gray-200 self-start sticky top-6">
       <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
         <div className="flex-1 min-w-0 pr-2">
-          <label className="text-xs text-brand-gray block mb-1">Equipo</label>
-          <select
-            disabled
-            value={team.id}
-            className="w-full text-sm font-semibold text-brand-black bg-transparent border-none outline-none cursor-default truncate"
-          >
-            {allTeams.map((t) => (
-              <option key={t.id} value={t.id}>{t.name}</option>
-            ))}
-          </select>
+          <label className="text-xs text-brand-gray block mb-0.5">Grupo</label>
+          <div className="flex flex-col">
+            {team.level > 1 && (() => {
+              const chain: Team[] = [];
+              let cur: Team | undefined = allTeams.find((t) => t.id === team.parent_id);
+              while (cur) {
+                chain.unshift(cur);
+                cur = cur.parent_id ? allTeams.find((t) => t.id === cur!.parent_id) : undefined;
+              }
+              return chain.length > 0 ? (
+                <span className="text-[9px] text-brand-gray truncate">
+                  {chain.map((a) => a.name).join(" › ")} ›
+                </span>
+              ) : null;
+            })()}
+            <span className="text-sm font-semibold text-brand-black truncate">{team.name}</span>
+          </div>
         </div>
         <button
           onClick={onClose}
@@ -1196,6 +1206,27 @@ function SegmentPanel({
             </span>
             <StepButton onClick={() => setDuration((d) => Math.min(52, d + 1))} disabled={!canEdit}>+</StepButton>
           </div>
+        </div>
+
+        <div>
+          <label className="text-xs text-brand-gray block mb-1">
+            Personas asignadas —{" "}
+            <span className="text-brand-black font-medium">
+              {assignedPeople} de {team.personas}
+            </span>
+          </label>
+          <div className="flex items-center gap-2">
+            <StepButton onClick={() => setAssignedPeople((n) => Math.max(1, n - 1))} disabled={!canEdit}>−</StepButton>
+            <span className="text-sm font-semibold text-brand-black w-12 text-center">
+              {assignedPeople}
+            </span>
+            <StepButton onClick={() => setAssignedPeople((n) => n + 1)} disabled={!canEdit}>+</StepButton>
+          </div>
+          {assignedPeople > team.personas && (
+            <p className="text-[10px] text-brand-orange mt-1">
+              Supera la dotación del grupo ({team.personas} pers.)
+            </p>
+          )}
         </div>
 
         <div>
@@ -1422,7 +1453,7 @@ function ProductPanel({
               <div className="text-[11px] font-bold text-brand-gray uppercase tracking-wider">Nueva tarea</div>
               {availableTeams.length === 0 ? (
                 <p className="text-xs text-brand-gray">
-                  Todos los equipos ya tienen tareas en este producto.
+                  Todos los grupos ya tienen tareas en este producto.
                 </p>
               ) : (
                 <>
@@ -1432,11 +1463,13 @@ function ProductPanel({
                     className="w-full text-sm border border-gray-200 rounded-lg px-3 py-1.5 bg-white text-brand-black focus:outline-none focus:ring-2 focus:ring-brand-orange/20"
                   >
                     {availableTeams.map((t) => (
-                      <option key={t.id} value={t.id}>{t.name}</option>
+                      <option key={t.id} value={t.id}>
+                        {"  ".repeat(t.level - 1)}{t.level > 1 ? "└ " : ""}{t.name}
+                      </option>
                     ))}
                   </select>
                   <p className="text-[10px] text-brand-gray">
-                    ¿El equipo no existe? Crealo desde <span className="font-semibold">Equipos</span> en el encabezado.
+                    ¿El grupo no existe? Crealo desde <span className="font-semibold">Grupos</span> en el encabezado.
                   </p>
                 </>
               )}

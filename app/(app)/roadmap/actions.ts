@@ -246,7 +246,7 @@ export async function addSegment(
 
 export async function updateSegment(
   id: string,
-  patch: Partial<Pick<RoadmapSegment, "label" | "duration_sprints" | "depends_on" | "manual_start_sprint" | "start_date" | "sort_order">>,
+  patch: Partial<Pick<RoadmapSegment, "label" | "duration_sprints" | "depends_on" | "manual_start_sprint" | "start_date" | "sort_order" | "assigned_people">>,
 ): Promise<{ error?: string }> {
   const { admin, orgId, role } = await getAuthContext();
   if (!canWrite(role)) return { error: "Sin permisos." };

@@ -6,13 +6,14 @@ import { SquadView } from "./SquadView";
 import { computeQuadrant } from "@/lib/quadrant";
 import { LogoutButton } from "@/components/ui/LogoutButton";
 import { IdeaButton } from "@/components/ui/IdeaButton";
-import type { OrganizationMember, Organization, Project } from "@/types/database";
+import type { OrganizationMember, Organization, Project, OrgSquadConfig } from "@/types/database";
 import { type AppRole } from "@/lib/roles";
 import { IconSettings } from "@tabler/icons-react";
 import { ModoSwitcher } from "@/components/ui/ModoSwitcher";
 import { NotificationBell } from "@/components/ui/NotificationBell";
 import { getDeadlineAlerts } from "@/lib/deadlines";
 import { getOrgRoleLabels } from "@/lib/role-labels";
+import { getSquadConfig } from "./actions";
 
 export default async function SquadPage({ searchParams }: { searchParams?: { ini?: string; idea?: string } }) {
   const supabase = createClient();
@@ -43,7 +44,7 @@ export default async function SquadPage({ searchParams }: { searchParams?: { ini
 
   const role = membership.role as AppRole;
 
-  const [{ data: projectsData }, { data: initiativesData }, alerts, roleLabels] = await Promise.all([
+  const [{ data: projectsData }, { data: initiativesData }, alerts, roleLabels, dbSquadConfig] = await Promise.all([
     admin
       .from("projects")
       .select("*")
@@ -56,6 +57,7 @@ export default async function SquadPage({ searchParams }: { searchParams?: { ini
       .eq("status", "active"),
     getDeadlineAlerts(org.id),
     getOrgRoleLabels(org.id),
+    getSquadConfig(),
   ]);
 
   const all = (projectsData ?? []) as Project[];
@@ -91,12 +93,16 @@ export default async function SquadPage({ searchParams }: { searchParams?: { ini
   const allActive = all.filter((p) => p.status === "active");
   const discarded = all.filter((p) => p.status === "discarded");
 
-  // Separate p0 projects (active but discarded quadrant â€” not shown on canvas)
+  // Use DB config thresholds if available (fallback to defaults)
+  const iHighThreshold = dbSquadConfig?.i_high ?? undefined;
+  const eHighThreshold = dbSquadConfig?.e_high ?? undefined;
+
+  // Separate p0 projects (active but discarded quadrant - not shown on canvas)
   const p0Projects = allActive.filter(
-    (p) => computeQuadrant(p.impact_value, p.effort_sprints) === "p0"
+    (p) => computeQuadrant(p.impact_value, p.effort_sprints, iHighThreshold, eHighThreshold) === "p0"
   );
   const projects = allActive.filter(
-    (p) => computeQuadrant(p.impact_value, p.effort_sprints) !== "p0"
+    (p) => computeQuadrant(p.impact_value, p.effort_sprints, iHighThreshold, eHighThreshold) !== "p0"
   );
 
   return (
@@ -155,6 +161,7 @@ export default async function SquadPage({ searchParams }: { searchParams?: { ini
           projectIniMap={projectIniMap}
           ideaPrefill={ideaPrefill}
           roleLabels={roleLabels}
+          initialDbConfig={dbSquadConfig}
         />
       </main>
     </div>

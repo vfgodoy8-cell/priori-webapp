@@ -464,7 +464,7 @@ export function SquadCanvas({ projects, discarded, p0Projects, config, onEdit, q
             const y2 = slicePos.y + sr;
             const mx = (x1 + x2) / 2;
             const my = (y1 + y2) / 2;
-            const q = computeQuadrant(parent.impact_value, parent.effort_sprints);
+            const q = computeQuadrant(parent.impact_value, parent.effort_sprints, config.iHigh, config.eHigh);
             const color = QUADRANT_META[q].color;
             return (
               <g key={slice.id} opacity={0.4}>
@@ -512,6 +512,8 @@ export function SquadCanvas({ projects, discarded, p0Projects, config, onEdit, q
                 onMouseLeave={handleBubbleMouseLeave}
                 readOnly={readOnly}
                 crossLinked={crossLinkedIds?.has(project.id) ?? false}
+                iHigh={config.iHigh}
+                eHigh={config.eHigh}
               />
               {/* Sin fecha badge in overlay mode */}
               {quarterOverlay && isBacklog && noDate && (
@@ -603,6 +605,8 @@ export function SquadCanvas({ projects, discarded, p0Projects, config, onEdit, q
           bh={tooltip.bh}
           aggregate={tooltip.aggregate}
           iniName={tooltip.iniName}
+          iHigh={config.iHigh}
+          eHigh={config.eHigh}
         />
       )}
     </div>
@@ -636,6 +640,8 @@ function BubbleTooltip({
   bh,
   aggregate,
   iniName,
+  iHigh,
+  eHigh,
 }: {
   project: Project;
   cx: number;
@@ -643,6 +649,8 @@ function BubbleTooltip({
   bh: number;
   aggregate?: { total: number; completed: number; count: number };
   iniName?: string;
+  iHigh?: number;
+  eHigh?: number;
 }) {
   const TOOLTIP_W = 244;
   const divRef = useRef<HTMLDivElement>(null);
@@ -661,7 +669,7 @@ function BubbleTooltip({
     setPos({ top, left, visible: true });
   }, [cx, ty, bh]);
 
-  const q = computeQuadrant(project.impact_value, project.effort_sprints);
+  const q = computeQuadrant(project.impact_value, project.effort_sprints, iHigh, eHigh);
   const m = QUADRANT_META[q];
   const effTotal = aggregate ? aggregate.total : project.effort_sprints;
   const effCompleted = aggregate ? aggregate.completed : (project.sprints_completed ?? 0);

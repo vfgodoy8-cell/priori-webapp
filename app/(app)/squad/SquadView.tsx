@@ -1,18 +1,43 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import type { Project } from "@/types/database";
+import type { Project, OrgSquadConfig } from "@/types/database";
 import { ProjectList } from "./ProjectList";
 import { SquadCanvas } from "./SquadCanvas";
 import { AnalystPanel } from "./AnalystPanel";
 import { ShareModal } from "@/components/ui/ShareModal";
 import { OnboardingTour } from "@/components/ui/OnboardingTour";
-import { loadConfig, DEFAULT_CONFIG, type SquadConfig } from "@/lib/squad-logic";
+import { loadConfig, saveConfig, DEFAULT_CONFIG, type SquadConfig } from "@/lib/squad-logic";
 import { type AppRole, ROLE_COLOR, ROLE_BG, ROLE_BORDER } from "@/lib/roles";
 import { AIChatPanel } from "@/components/ai/AIChatPanel";
 import { buildSquadContext } from "@/lib/ai-context";
 import { IconSparkles } from "@tabler/icons-react";
+import { upsertSquadConfig } from "./actions";
+
+function dbToSquadConfig(db: OrgSquadConfig): SquadConfig {
+  return {
+    devN: db.dev_n,
+    devP: db.dev_p,
+    metric: db.metric as SquadConfig["metric"],
+    iHigh: db.i_high,
+    iMid: db.i_mid,
+    eHigh: db.e_high,
+    eMid: db.e_mid,
+  };
+}
+
+function squadConfigToDbPatch(cfg: SquadConfig) {
+  return {
+    dev_n: cfg.devN,
+    dev_p: cfg.devP,
+    metric: cfg.metric,
+    i_high: cfg.iHigh,
+    i_mid: cfg.iMid,
+    e_high: cfg.eHigh,
+    e_mid: cfg.eMid,
+  } as const;
+}
 
 type View = "canvas" | "list";
 
@@ -30,13 +55,16 @@ type Props = {
   projectIniMap?: Record<string, string>;
   ideaPrefill?: { title: string; problem: string } | null;
   roleLabels: Record<AppRole, string>;
+  initialDbConfig?: OrgSquadConfig | null;
 };
 
-export function SquadView({ projects, discarded, p0Projects, allActive, orgId, role, currentUserId, crossLinkedIds, highlightIds, filterInitiative, projectIniMap, ideaPrefill, roleLabels }: Props) {
+export function SquadView({ projects, discarded, p0Projects, allActive, orgId, role, currentUserId, crossLinkedIds, highlightIds, filterInitiative, projectIniMap, ideaPrefill, roleLabels, initialDbConfig }: Props) {
   const router = useRouter();
   const [view, setView] = useState<View>("canvas");
   const [quarterOverlay, setQuarterOverlay] = useState(false);
-  const [config, setConfig] = useState<SquadConfig>(DEFAULT_CONFIG);
+  const [config, setConfig] = useState<SquadConfig>(
+    initialDbConfig ? dbToSquadConfig(initialDbConfig) : DEFAULT_CONFIG
+  );
   const [forceEdit, setForceEdit] = useState<Project | null>(null);
   const [openRequest, setOpenRequest] = useState(0);
   const [showShare, setShowShare] = useState(false);
@@ -47,10 +75,23 @@ export function SquadView({ projects, discarded, p0Projects, allActive, orgId, r
   );
 
   useEffect(() => {
-    setConfig(loadConfig(orgId));
+    if (initialDbConfig) {
+      // DB config already loaded — keep localStorage in sync for resilience
+      saveConfig(orgId, dbToSquadConfig(initialDbConfig));
+    } else {
+      // No DB config yet — bootstrap from localStorage and persist to DB
+      const local = loadConfig(orgId);
+      setConfig(local);
+      upsertSquadConfig(squadConfigToDbPatch(local));
+    }
     if (ideaPrefill) setOpenRequest(n => n + 1);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orgId]);
+
+  const handleConfigChange = useCallback((cfg: SquadConfig) => {
+    setConfig(cfg);
+    upsertSquadConfig(squadConfigToDbPatch(cfg));
+  }, []);
 
   const aiContext = useMemo(() => buildSquadContext(allActive, config), [allActive, config]);
 
@@ -189,7 +230,7 @@ export function SquadView({ projects, discarded, p0Projects, allActive, orgId, r
           projects={allActive}
           orgId={orgId}
           config={config}
-          onConfigChange={setConfig}
+          onConfigChange={handleConfigChange}
           forceEdit={forceEdit}
           onForceEditConsumed={() => setForceEdit(null)}
           openRequest={openRequest}

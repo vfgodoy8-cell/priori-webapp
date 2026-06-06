@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import type { Project } from "@/types/database";
+import type { Project, OrgSquadConfig } from "@/types/database";
 import { type AppRole, canWrite } from "@/lib/roles";
 import { logActivity } from "@/lib/activity";
 
@@ -227,4 +227,30 @@ export async function swapSquadStatus(
     admin.from("projects").update({ squad_status: "backlog" }).eq("id", outgoingId).eq("organization_id", orgId),
   ]);
   revalidatePath("/squad");
+}
+
+// ── SQUAD CONFIG ──────────────────────────────────────────────────────────────
+
+export async function getSquadConfig(): Promise<OrgSquadConfig | null> {
+  const { admin, orgId } = await getAuthContext();
+  const { data } = await admin
+    .from("org_squad_config")
+    .select("*")
+    .eq("organization_id", orgId)
+    .maybeSingle();
+  return (data as OrgSquadConfig | null) ?? null;
+}
+
+export async function upsertSquadConfig(
+  patch: Partial<Pick<OrgSquadConfig, "dev_n" | "dev_p" | "metric" | "i_high" | "i_mid" | "e_high" | "e_mid">>
+): Promise<{ error: string | null }> {
+  const { admin, orgId, role } = await getAuthContext();
+  if (!canWrite(role)) return { error: "Sin permisos." };
+
+  const { error } = await admin
+    .from("org_squad_config")
+    .upsert({ organization_id: orgId, ...patch }, { onConflict: "organization_id" });
+
+  if (error) return { error: error.message };
+  return { error: null };
 }

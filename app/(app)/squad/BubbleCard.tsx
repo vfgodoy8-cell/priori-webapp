@@ -73,12 +73,14 @@ type Props = {
   aggregate?: Aggregate;
   readOnly?: boolean;
   crossLinked?: boolean;
+  iHigh?: number;
+  eHigh?: number;
 };
 
-export function BubbleCard({ project, onEdit, style, onMouseDown, onMouseEnter, onMouseLeave, urgencyColor: urgencyColorProp, isSlice, hasSlices, aggregate, readOnly, crossLinked }: Props) {
+export function BubbleCard({ project, onEdit, style, onMouseDown, onMouseEnter, onMouseLeave, urgencyColor: urgencyColorProp, isSlice, hasSlices, aggregate, readOnly, crossLinked, iHigh, eHigh }: Props) {
   const quadrant = useMemo(
-    () => computeQuadrant(project.impact_value, project.effort_sprints),
-    [project.impact_value, project.effort_sprints]
+    () => computeQuadrant(project.impact_value, project.effort_sprints, iHigh, eHigh),
+    [project.impact_value, project.effort_sprints, iHigh, eHigh]
   );
 
   const { size, strokeWidth } = getBubble(project.effort_sprints);

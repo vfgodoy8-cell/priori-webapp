@@ -67,9 +67,26 @@ function buildChildMap(groups: Group[]): Map<string | null, Group[]> {
     if (!map.has(pid)) map.set(pid, []);
     map.get(pid)!.push(g);
   }
-  // sort each level by sort_order
-  Array.from(map.values()).forEach((arr) => arr.sort((a, b) => a.sort_order - b.sort_order));
+  Array.from(map.values()).forEach((arr) =>
+    arr.sort((a, b) => a.sort_order - b.sort_order || a.name.localeCompare(b.name))
+  );
   return map;
+}
+
+type FlatGroup = { group: Group; depth: number };
+
+/** DFS pre-order: cada raíz seguida de todos sus descendientes, hermanos por sort_order+nombre. */
+function flattenGroupTree(groups: Group[]): FlatGroup[] {
+  const map = buildChildMap(groups);
+  const result: FlatGroup[] = [];
+  function visit(parentId: string | null, depth: number) {
+    for (const g of map.get(parentId) ?? []) {
+      result.push({ group: g, depth });
+      visit(g.id, depth + 1);
+    }
+  }
+  visit(null, 0);
+  return result;
 }
 
 function sumDescendantPersonas(gid: string, childMap: Map<string | null, Group[]>): number {
@@ -863,7 +880,11 @@ export function GroupsManagerModal({ groups: initialGroups, orgId, role, open, o
 
   const selectedGroup = groups.find((g) => g.id === selectedId) ?? null;
   const childMap = useMemo(() => buildChildMap(groups), [groups]);
-  const rootGroups = childMap.get(null) ?? [];
+  const flatGroups = useMemo(() => flattenGroupTree(groups), [groups]);
+  const rootGroups = useMemo(
+    () => flatGroups.filter(({ depth }) => depth === 0).map(({ group }) => group),
+    [flatGroups]
+  );
 
   async function handleCreateRoot() {
     if (!createName.trim()) return;
@@ -932,14 +953,14 @@ export function GroupsManagerModal({ groups: initialGroups, orgId, role, open, o
             {needsGroup && (
               <div className="w-56 border-r border-gray-100 overflow-y-auto p-3 flex flex-col gap-1">
                 <span className="text-[9px] font-bold text-brand-gray uppercase tracking-wider mb-1">Seleccionar grupo</span>
-                {groups.map((g) => (
+                {flatGroups.map(({ group: g, depth }) => (
                   <button
                     key={g.id}
                     onClick={() => setSelectedId(g.id)}
                     className={`text-left px-2 py-1.5 rounded-lg text-xs transition ${
                       selectedId === g.id ? "bg-orange-50 text-brand-orange font-semibold" : "text-brand-black hover:bg-gray-50"
                     }`}
-                    style={{ paddingLeft: (g.level - 1) * 12 + 8 }}
+                    style={{ paddingLeft: depth * 12 + 8 }}
                   >
                     {g.name}
                   </button>

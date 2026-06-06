@@ -116,6 +116,7 @@ export default async function RoadmapPage() {
 
         <RoadmapView
           orgId={org.id}
+          currentUserId={user.id}
           initialProducts={products}
           teams={teams}
           teamDeps={teamDeps}

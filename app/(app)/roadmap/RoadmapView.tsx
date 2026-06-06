@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useTransition, useMemo, useRef } from "react";
+import { useWorkspaceState } from "@/hooks/useWorkspaceState";
 import type { Channel, Product, RoadmapBaseline, Team, RoadmapSegment, TeamDependency } from "@/types/database";
 import { type AppRole, canWrite } from "@/lib/roles";
 import {
@@ -97,13 +98,14 @@ const SPRINT_PX = 40;
 
 type Props = {
   orgId: string;
+  currentUserId: string;
   initialProducts: Product[];
   teams: Team[];
   teamDeps: TeamDependency[];
   role: AppRole;
 };
 
-export function RoadmapView({ orgId, initialProducts, teams: initialTeams, role }: Props) {
+export function RoadmapView({ orgId, currentUserId, initialProducts, teams: initialTeams, role }: Props) {
   const [products, setProducts] = useState<Product[]>(initialProducts);
   const [localTeams, setLocalTeams] = useState<Team[]>(initialTeams);
   const [channels, setChannels] = useState<Channel[]>([]);
@@ -113,8 +115,26 @@ export function RoadmapView({ orgId, initialProducts, teams: initialTeams, role 
     listChannels().then(({ channels: ch }) => setChannels(ch ?? []));
   }, []);
 
-  // ── Filtro por canal ──────────────────────────────────────────────────────────
-  const [selectedChannelId, setSelectedChannelId] = useState<string>("");
+  // ── Workspace state (filtros + selección persistidos por usuario) ────────────
+  const defaultYear = (() => {
+    const first = initialProducts[0];
+    return first ? parseProductDate(first.start_date).getFullYear() : new Date().getFullYear();
+  })();
+  const [ws, mergeWs] = useWorkspaceState<{
+    channelId: string;
+    year: number;
+    productId: string | null;
+  }>("roadmap", orgId, currentUserId, {
+    channelId: "",
+    year: defaultYear,
+    productId: initialProducts[0]?.id ?? null,
+  });
+  const selectedChannelId = ws.channelId;
+  const selectedYear = ws.year;
+  const selectedId = ws.productId;
+  const setSelectedChannelId = (id: string) => mergeWs({ channelId: id });
+  const setSelectedYear = (y: number) => mergeWs({ year: y });
+  const setSelectedId = (id: string | null) => mergeWs({ productId: id });
 
   const productsByChannel = useMemo(
     () => (selectedChannelId ? products.filter((p) => p.channel_id === selectedChannelId) : products),
@@ -122,13 +142,6 @@ export function RoadmapView({ orgId, initialProducts, teams: initialTeams, role 
   );
 
   // ── Selector de año ──────────────────────────────────────────────────────────
-  const [selectedYear, setSelectedYear] = useState<number>(() => {
-    const first = initialProducts[0];
-    return first
-      ? parseProductDate(first.start_date).getFullYear()
-      : new Date().getFullYear();
-  });
-
   const availableYears = useMemo(() => {
     const cur = new Date().getFullYear();
     const set = new Set(productsByChannel.map((p) => parseProductDate(p.start_date).getFullYear()));
@@ -141,9 +154,6 @@ export function RoadmapView({ orgId, initialProducts, teams: initialTeams, role 
     () => productsByChannel.filter((p) => parseProductDate(p.start_date).getFullYear() === selectedYear),
     [productsByChannel, selectedYear],
   );
-
-  // ── Selección de producto ────────────────────────────────────────────────────
-  const [selectedId, setSelectedId] = useState<string | null>(initialProducts[0]?.id ?? null);
   const [segments, setSegments] = useState<RoadmapSegment[]>([]);
   const [loadingSegments, setLoadingSegments] = useState(false);
   const [editingSegId, setEditingSegId] = useState<string | null>(null);

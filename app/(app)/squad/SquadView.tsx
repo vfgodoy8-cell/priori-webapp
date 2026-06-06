@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { useWorkspaceState } from "@/hooks/useWorkspaceState";
 import type { Project, OrgSquadConfig } from "@/types/database";
 import { ProjectList } from "./ProjectList";
 import { SquadCanvas } from "./SquadCanvas";
@@ -60,8 +61,19 @@ type Props = {
 
 export function SquadView({ projects, discarded, p0Projects, allActive, orgId, role, currentUserId, crossLinkedIds, highlightIds, filterInitiative, projectIniMap, ideaPrefill, roleLabels, initialDbConfig }: Props) {
   const router = useRouter();
-  const [view, setView] = useState<View>("canvas");
-  const [quarterOverlay, setQuarterOverlay] = useState(false);
+  const [ws, mergeWs] = useWorkspaceState(
+    "squad",
+    orgId,
+    currentUserId,
+    { view: "canvas" as View, quarterOverlay: false }
+  );
+  const view = ws.view;
+  const quarterOverlay = ws.quarterOverlay;
+  const setView = (v: View) => mergeWs({ view: v });
+  const setQuarterOverlay = (fn: boolean | ((prev: boolean) => boolean)) => {
+    const next = typeof fn === "function" ? fn(ws.quarterOverlay) : fn;
+    mergeWs({ quarterOverlay: next });
+  };
   const [config, setConfig] = useState<SquadConfig>(
     initialDbConfig ? dbToSquadConfig(initialDbConfig) : DEFAULT_CONFIG
   );

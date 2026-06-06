@@ -52,7 +52,7 @@ export default async function DashboardPage() {
   const [{ data: projectsData }, { data: initiativesData }, { data: teamsData }, recentActivity, { data: rmProductsData }, { data: rmChannelsData }, deadlineAlerts, roleLabels] = await Promise.all([
     admin.from("projects").select("id, impact_value, effort_sprints, squad_status, status").eq("organization_id", org.id).eq("status", "active"),
     admin.from("initiatives").select("id, q_start, duration_quarters, team_ids, team_allocations, status").eq("organization_id", org.id).eq("status", "active"),
-    admin.from("teams").select("*").eq("organization_id", org.id).order("sort_order", { ascending: true }),
+    admin.from("groups").select("*").eq("organization_id", org.id).order("sort_order", { ascending: true }),
     getRecentActivity(10),
     admin.from("products").select("id, channel_id").eq("organization_id", org.id).eq("status", "active"),
     admin.from("channels").select("id, name").eq("organization_id", org.id).order("sort_order", { ascending: true }),

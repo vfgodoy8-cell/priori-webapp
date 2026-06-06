@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 import { useRouter } from "next/navigation";
-import type { Team, Initiative, Project } from "@/types/database";
+import type { Team, Initiative, Project, CapacityAdjustment, OrgCapacitySettings } from "@/types/database";
 import { computeQuadrant, QUADRANT_META } from "@/lib/quadrant";
 import { dateToQuarter, quartersBetween } from "@/lib/squad-logic";
 import {
@@ -22,31 +22,19 @@ import { AIChatPanel } from "@/components/ai/AIChatPanel";
 import { AIInterviewModal } from "@/components/ai/AIInterviewModal";
 import { buildCrossContext } from "@/lib/ai-context";
 import { IconSparkles } from "@tabler/icons-react";
+import {
+  resolveUnit,
+  groupCapacity,
+  committedFromInitiatives,
+  computeAvailability,
+  effectivePeopleInRange,
+  quarterDateRange,
+  type OrgCapacitySettingsLike,
+} from "@/lib/capacity-engine";
 
 const Q_LABELS = ["Q1", "Q2", "Q3", "Q4"];
 const Q_SUB = ["Ene – Mar", "Abr – Jun", "Jul – Sep", "Oct – Dic"];
-
-function teamCap(team: Team, q: number): number {
-  const pcts = [team.q1_pct, team.q2_pct, team.q3_pct, team.q4_pct];
-  return Math.floor(team.personas * team.proy_per_persona * (pcts[q] / 100));
-}
-
-function teamAvailPeople(team: Team, q: number): number {
-  const pcts = [team.q1_pct, team.q2_pct, team.q3_pct, team.q4_pct];
-  return Math.floor(team.personas * (pcts[q] / 100));
-}
-
-function teamUsed(initiatives: Initiative[], teamId: string, q: number): number {
-  return initiatives.filter(
-    (i) =>
-      i.q_start !== null &&
-      i.status === "active" &&
-      Array.isArray(i.team_ids) &&
-      i.team_ids.includes(teamId) &&
-      i.q_start <= q &&
-      i.q_start + i.duration_quarters - 1 >= q
-  ).length;
-}
+const CURRENT_YEAR = new Date().getFullYear();
 
 function capColor(pct: number): string {
   return pct >= 100 ? "#E24B4A" : pct >= 95 ? "#E8621A" : pct >= 90 ? "#EF9F27" : "#1D9E75";
@@ -75,9 +63,11 @@ type Props = {
   role: AppRole;
   currentUserId: string;
   roleLabels: Record<AppRole, string>;
+  capacityAdjustments?: CapacityAdjustment[];
+  orgCapacitySettings?: OrgCapacitySettings | null;
 };
 
-export function CrossView({ orgId, initialTeams, initialInitiatives, squadProjects = [], role, currentUserId, roleLabels }: Props) {
+export function CrossView({ orgId, initialTeams, initialInitiatives, squadProjects = [], role, currentUserId, roleLabels, capacityAdjustments = [], orgCapacitySettings = null }: Props) {
   const readOnly = role === "member";
   const router = useRouter();
 
@@ -127,7 +117,10 @@ export function CrossView({ orgId, initialTeams, initialInitiatives, squadProjec
   const qPrev = prevImp > 0 || prevSp > 0 ? computeQuadrant(prevImp, prevSp) : null;
   const mPrev = qPrev ? QUADRANT_META[qPrev] : null;
 
-  // Per-team capacity warnings (people-based) — maps teamId → overloaded quarter labels
+  // Per-team capacity warnings (people-based using engine) — maps teamId → overloaded quarter labels
+  const ancestorsById = useMemo(() => new Map(teams.map((t) => [t.id, t])), [teams]);
+  const cfgLike: OrgCapacitySettingsLike = orgCapacitySettings ?? {};
+
   const teamWarnings = useMemo<Record<string, string[]>>(() => {
     const result: Record<string, string[]> = {};
     if (calcQStart === null) return result;
@@ -140,7 +133,13 @@ export function CrossView({ orgId, initialTeams, initialInitiatives, squadProjec
       for (let d = 0; d < dur; d++) {
         const q = calcQStart + d;
         if (q > 3) continue;
-        const avail = teamAvailPeople(team, q);
+        const { from, to } = quarterDateRange(CURRENT_YEAR, q);
+        const effPeople = effectivePeopleInRange(
+          team,
+          capacityAdjustments.filter((a) => a.group_id === teamId),
+          from,
+          to
+        );
         const used = initiatives
           .filter((i) => i.q_start !== null && i.status === "active" && i.id !== editIni?.id)
           .filter((i) => i.q_start! <= q && i.q_start! + i.duration_quarters - 1 >= q)
@@ -148,12 +147,12 @@ export function CrossView({ orgId, initialTeams, initialInitiatives, squadProjec
             const alloc = i.team_allocations as Record<string, number> | null;
             return sum + (alloc?.[teamId] ?? 0);
           }, 0);
-        if (used + n > avail) overQ.push(`Q${q + 1}`);
+        if (used + n > effPeople) overQ.push(`Q${q + 1}`);
       }
       if (overQ.length > 0) result[teamId] = overQ;
     });
     return result;
-  }, [teamAllocations, calcQStart, effectiveDuration, teams, initiatives, editIni]);
+  }, [teamAllocations, calcQStart, effectiveDuration, teams, initiatives, editIni, capacityAdjustments, cfgLike]);
 
   // Reset form on successful save + refresh data
   useEffect(() => {
@@ -405,42 +404,55 @@ export function CrossView({ orgId, initialTeams, initialInitiatives, squadProjec
       {teams.length > 0 && (
         <div className="border border-gray-200 rounded-xl overflow-hidden">
           <div className="px-4 py-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
-            <span className="text-sm font-bold text-brand-black">Capacidad por equipo</span>
+            <span className="text-sm font-bold text-brand-black">Capacidad por grupo</span>
             <span className="text-xs text-brand-gray">Verde &lt;90% · Amarillo 90-95% · Naranja 95-99% · Rojo ≥100%</span>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full border-collapse">
               <thead>
                 <tr>
-                  <th className="text-left text-[10px] text-brand-gray uppercase tracking-wide font-semibold px-4 py-2 border-b border-gray-100 min-w-[160px]">Equipo</th>
+                  <th className="text-left text-[10px] text-brand-gray uppercase tracking-wide font-semibold px-4 py-2 border-b border-gray-100 min-w-[160px]">Grupo</th>
                   {Q_LABELS.map((q) => (
                     <th key={q} className="text-center text-[10px] text-brand-gray uppercase tracking-wide font-semibold px-3 py-2 border-b border-gray-100">{q}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {teams.map((team) => (
-                  <tr key={team.id}>
-                    <td className="px-4 py-2 text-xs font-semibold text-brand-black border-b border-gray-50">{team.name}</td>
-                    {[0, 1, 2, 3].map((q) => {
-                      const cap = teamCap(team, q);
-                      const used = teamUsed(initiatives, team.id, q);
-                      const pct = cap === 0 ? 0 : Math.min(100, Math.round((used / cap) * 100));
-                      const col = capColor(pct);
-                      const over = used > cap;
-                      return (
-                        <td key={q} className="px-3 py-2 min-w-[90px] border-b border-gray-50" style={over ? { background: "#FEF3F3" } : {}}>
-                          <div className="h-1.5 bg-gray-100 rounded-full border border-gray-200 overflow-hidden mb-1">
-                            <div className="h-full rounded-full transition-all" style={{ width: `${Math.min(100, pct)}%`, background: col }} />
-                          </div>
-                          <div className="text-center text-[11px] font-bold" style={{ color: col }}>
-                            {over ? "⚠️ " : ""}{used}/{cap} ({pct}%)
-                          </div>
-                        </td>
-                      );
-                    })}
-                  </tr>
-                ))}
+                {teams.map((team) => {
+                  const unit = resolveUnit(team, ancestorsById, cfgLike);
+                  const teamAdjs = capacityAdjustments.filter((a) => a.group_id === team.id);
+                  return (
+                    <tr key={team.id}>
+                      <td className="px-4 py-2 text-xs font-semibold text-brand-black border-b border-gray-50">
+                        {team.level > 1 && (
+                          <span className="inline-block mr-1 opacity-30" style={{ width: (team.level - 1) * 12 }} />
+                        )}
+                        {team.name}
+                        <span className="ml-1.5 text-[9px] text-brand-gray font-normal">{unit}</span>
+                      </td>
+                      {[0, 1, 2, 3].map((q) => {
+                        const { from, to } = quarterDateRange(CURRENT_YEAR, q);
+                        const capResult = groupCapacity(team, ancestorsById, teamAdjs, cfgLike, from, to);
+                        const commResult = committedFromInitiatives(team.id, unit, initiatives, CURRENT_YEAR, from, to);
+                        const avail = computeAvailability(capResult, commResult);
+                        const pct = Math.round(avail.occupancyPct);
+                        const col = capColor(pct);
+                        const capVal = capResult.value.toFixed(1).replace(/\.0$/, "");
+                        const usedVal = commResult.value.toFixed(1).replace(/\.0$/, "");
+                        return (
+                          <td key={q} className="px-3 py-2 min-w-[100px] border-b border-gray-50" style={avail.overassigned ? { background: "#FEF3F3" } : {}}>
+                            <div className="h-1.5 bg-gray-100 rounded-full border border-gray-200 overflow-hidden mb-1">
+                              <div className="h-full rounded-full transition-all" style={{ width: `${Math.min(100, pct)}%`, background: col }} />
+                            </div>
+                            <div className="text-center text-[11px] font-bold" style={{ color: col }}>
+                              {avail.overassigned ? "⚠️ " : ""}{usedVal}/{capVal} ({pct}%)
+                            </div>
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

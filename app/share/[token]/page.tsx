@@ -102,7 +102,7 @@ export default async function SharePage({ params }: Props) {
     ] = await Promise.all([
       admin.from("products").select("*").eq("id", share.product_id).single(),
       admin.from("roadmap_segments").select("*").eq("product_id", share.product_id).order("sort_order"),
-      admin.from("teams").select("*").eq("organization_id", org.id).order("sort_order"),
+      admin.from("groups").select("*").eq("organization_id", org.id).order("sort_order"),
       admin
         .from("deviations")
         .select("id, date, reason, affected_stakeholders, status")
@@ -180,7 +180,7 @@ export default async function SharePage({ params }: Props) {
     projects = all.filter(p => computeQuadrant(p.impact_value, p.effort_sprints) !== "p0");
   } else if (share.mode === "cross") {
     const [{ data: tData }, { data: iData }] = await Promise.all([
-      admin.from("teams").select("*").eq("organization_id", org.id).order("sort_order"),
+      admin.from("groups").select("*").eq("organization_id", org.id).order("sort_order"),
       admin.from("initiatives").select("*").eq("organization_id", org.id).eq("status", "active").order("created_at"),
     ]);
     teams = (tData ?? []) as Team[];

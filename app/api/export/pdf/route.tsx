@@ -33,7 +33,7 @@ export async function GET(req: NextRequest) {
 
   if (mode === "cross") {
     const [{ data: teamsData }, { data: inisData }] = await Promise.all([
-      admin.from("teams").select("*").eq("organization_id", orgId).order("sort_order"),
+      admin.from("groups").select("*").eq("organization_id", orgId).order("sort_order"),
       admin.from("initiatives").select("*").eq("organization_id", orgId).eq("status", "active"),
     ]);
 

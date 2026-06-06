@@ -41,7 +41,7 @@ export default async function RoadmapPage() {
 
   const [{ data: teamsData }, { data: productsData }, { data: teamDepsData }, alerts] = await Promise.all([
     admin
-      .from("teams")
+      .from("groups")
       .select("*")
       .eq("organization_id", org.id)
       .order("sort_order", { ascending: true }),

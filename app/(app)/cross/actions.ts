@@ -43,7 +43,7 @@ export async function createTeam(_prev: State, formData: FormData): Promise<Stat
     q4_pct: parseInt(formData.get("q4_pct") as string) || 80,
   };
   if (!payload.name) return { error: "El nombre es requerido." };
-  const { error } = await admin.from("teams").insert(payload);
+  const { error } = await admin.from("groups").insert(payload);
   if (error) return { error: error.message };
   revalidatePath("/cross");
   return { error: null };
@@ -52,14 +52,14 @@ export async function createTeam(_prev: State, formData: FormData): Promise<Stat
 export async function updateTeam(id: string, patch: Partial<Team>): Promise<void> {
   const { admin, orgId, role } = await getAuthContext();
   if (!canWrite(role)) return;
-  await admin.from("teams").update(patch).eq("id", id).eq("organization_id", orgId);
+  await admin.from("groups").update(patch).eq("id", id).eq("organization_id", orgId);
   revalidatePath("/cross");
 }
 
 export async function deleteTeam(id: string): Promise<void> {
   const { admin, orgId, role } = await getAuthContext();
   if (!canWrite(role)) return;
-  await admin.from("teams").delete().eq("id", id).eq("organization_id", orgId);
+  await admin.from("groups").delete().eq("id", id).eq("organization_id", orgId);
   revalidatePath("/cross");
 }
 

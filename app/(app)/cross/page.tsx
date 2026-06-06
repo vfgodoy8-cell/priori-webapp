@@ -4,7 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { CrossView } from "./CrossView";
 import { CrossHeaderRight } from "./CrossHeaderRight";
 import Link from "next/link";
-import type { OrganizationMember, Organization, Team, Initiative, Project } from "@/types/database";
+import type { OrganizationMember, Organization, Team, Initiative, Project, CapacityAdjustment, OrgCapacitySettings } from "@/types/database";
 import { type AppRole } from "@/lib/roles";
 import { getDeadlineAlerts } from "@/lib/deadlines";
 import { getOrgRoleLabels } from "@/lib/role-labels";
@@ -38,24 +38,20 @@ export default async function CrossPage() {
 
   const role = membership.role as AppRole;
 
-  const [{ data: teamsData }, { data: initiativesData }, { data: projectsData }, alerts, roleLabels] = await Promise.all([
-    admin
-      .from("teams")
-      .select("*")
-      .eq("organization_id", org.id)
-      .order("sort_order", { ascending: true }),
-    admin
-      .from("initiatives")
-      .select("*")
-      .eq("organization_id", org.id)
-      .eq("status", "active")
-      .order("created_at", { ascending: false }),
-    admin
-      .from("projects")
-      .select("id, name, effort_sprints, impact_value, status, squad_status")
-      .eq("organization_id", org.id)
-      .eq("status", "active")
-      .order("name", { ascending: true }),
+  const [
+    { data: teamsData },
+    { data: initiativesData },
+    { data: projectsData },
+    { data: adjustmentsData },
+    { data: orgSettingsData },
+    alerts,
+    roleLabels,
+  ] = await Promise.all([
+    admin.from("groups").select("*").eq("organization_id", org.id).order("sort_order", { ascending: true }),
+    admin.from("initiatives").select("*").eq("organization_id", org.id).eq("status", "active").order("created_at", { ascending: false }),
+    admin.from("projects").select("id, name, effort_sprints, impact_value, status, squad_status").eq("organization_id", org.id).eq("status", "active").order("name", { ascending: true }),
+    admin.from("capacity_adjustments").select("*").eq("organization_id", org.id),
+    admin.from("org_capacity_settings").select("*").eq("organization_id", org.id).maybeSingle(),
     getDeadlineAlerts(org.id),
     getOrgRoleLabels(org.id),
   ]);
@@ -63,6 +59,8 @@ export default async function CrossPage() {
   const teams = (teamsData ?? []) as Team[];
   const initiatives = (initiativesData ?? []) as Initiative[];
   const squadProjects = (projectsData ?? []) as Pick<Project, "id" | "name" | "effort_sprints" | "impact_value" | "status" | "squad_status">[];
+  const capacityAdjustments = (adjustmentsData ?? []) as CapacityAdjustment[];
+  const orgCapacitySettings = (orgSettingsData as OrgCapacitySettings | null) ?? null;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -113,6 +111,8 @@ export default async function CrossPage() {
           role={role}
           currentUserId={user.id}
           roleLabels={roleLabels}
+          capacityAdjustments={capacityAdjustments}
+          orgCapacitySettings={orgCapacitySettings}
         />
       </main>
     </div>

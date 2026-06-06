@@ -340,7 +340,7 @@ export async function updateTeamsSortOrder(
   await Promise.all(
     teams.map(({ id, sort_order }) =>
       admin
-        .from("teams")
+        .from("groups")
         .update({ sort_order })
         .eq("id", id)
         .eq("organization_id", orgId),

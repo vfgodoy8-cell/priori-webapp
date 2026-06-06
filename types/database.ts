@@ -134,20 +134,26 @@ export type Database = {
           updated_at?: string;
         };
       };
-      teams: {
+      // Tabla renombrada desde 'teams' (migración 33). FK columns conservan nombre team_id.
+      groups: {
         Row: {
           id: string;
           organization_id: string;
           name: string;
           description: string | null;
           personas: number;
-          proy_per_persona: number;
-          q1_pct: number;
-          q2_pct: number;
-          q3_pct: number;
-          q4_pct: number;
+          proy_per_persona: number;   // legacy deprecated
+          q1_pct: number;             // legacy deprecated
+          q2_pct: number;             // legacy deprecated
+          q3_pct: number;             // legacy deprecated
+          q4_pct: number;             // legacy deprecated
           sort_order: number;
           created_at: string;
+          updated_at: string;
+          parent_id: string | null;
+          level: number;
+          unit: "hours" | "days" | "sprints" | "projects_per_person" | "story_points" | null;
+          capacity_per_period: number | null;
         };
         Insert: {
           id?: string;
@@ -162,6 +168,11 @@ export type Database = {
           q4_pct?: number;
           sort_order?: number;
           created_at?: string;
+          updated_at?: string;
+          parent_id?: string | null;
+          level?: number;
+          unit?: "hours" | "days" | "sprints" | "projects_per_person" | "story_points" | null;
+          capacity_per_period?: number | null;
         };
         Update: {
           name?: string;
@@ -173,6 +184,148 @@ export type Database = {
           q3_pct?: number;
           q4_pct?: number;
           sort_order?: number;
+          updated_at?: string;
+          parent_id?: string | null;
+          level?: number;
+          unit?: "hours" | "days" | "sprints" | "projects_per_person" | "story_points" | null;
+          capacity_per_period?: number | null;
+        };
+      };
+      org_group_level_labels: {
+        Row: {
+          organization_id: string;
+          level: number;
+          label: string;
+        };
+        Insert: {
+          organization_id: string;
+          level: number;
+          label: string;
+        };
+        Update: {
+          label?: string;
+        };
+      };
+      org_capacity_settings: {
+        Row: {
+          organization_id: string;
+          sprint_weeks: number;
+          hours_per_day: number;
+          workdays_per_week: number;
+          default_unit: "hours" | "days" | "sprints" | "projects_per_person" | "story_points";
+          consolidation_period: "sprint" | "month" | "quarter";
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          organization_id: string;
+          sprint_weeks?: number;
+          hours_per_day?: number;
+          workdays_per_week?: number;
+          default_unit?: "hours" | "days" | "sprints" | "projects_per_person" | "story_points";
+          consolidation_period?: "sprint" | "month" | "quarter";
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          sprint_weeks?: number;
+          hours_per_day?: number;
+          workdays_per_week?: number;
+          default_unit?: "hours" | "days" | "sprints" | "projects_per_person" | "story_points";
+          consolidation_period?: "sprint" | "month" | "quarter";
+          updated_at?: string;
+        };
+      };
+      capacity_adjustments: {
+        Row: {
+          id: string;
+          organization_id: string;
+          group_id: string;
+          start_date: string;
+          end_date: string;
+          kind: "pct" | "people_delta";
+          value: number;
+          note: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          group_id: string;
+          start_date: string;
+          end_date: string;
+          kind: "pct" | "people_delta";
+          value: number;
+          note?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          start_date?: string;
+          end_date?: string;
+          kind?: "pct" | "people_delta";
+          value?: number;
+          note?: string | null;
+          updated_at?: string;
+        };
+      };
+      org_squad_config: {
+        Row: {
+          organization_id: string;
+          dev_n: number;
+          dev_p: number;
+          metric: "money" | "clients";
+          i_high: number;
+          i_mid: number;
+          e_high: number;
+          e_mid: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          organization_id: string;
+          dev_n?: number;
+          dev_p?: number;
+          metric?: "money" | "clients";
+          i_high?: number;
+          i_mid?: number;
+          e_high?: number;
+          e_mid?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          dev_n?: number;
+          dev_p?: number;
+          metric?: "money" | "clients";
+          i_high?: number;
+          i_mid?: number;
+          e_high?: number;
+          e_mid?: number;
+          updated_at?: string;
+        };
+      };
+      user_workspace_state: {
+        Row: {
+          id: string;
+          organization_id: string;
+          profile_id: string;
+          context: "squad" | "cross" | "roadmap" | "dashboard";
+          state: Record<string, unknown>;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          profile_id: string;
+          context: "squad" | "cross" | "roadmap" | "dashboard";
+          state?: Record<string, unknown>;
+          updated_at?: string;
+        };
+        Update: {
+          state?: Record<string, unknown>;
+          updated_at?: string;
         };
       };
       channels: {
@@ -253,13 +406,14 @@ export type Database = {
           id: string;
           organization_id: string;
           product_id: string;
-          team_id: string;
+          team_id: string;       // FK conserva nombre 'team_id' por compatibilidad
           label: string;
           duration_sprints: number;
           depends_on: string[];
           manual_start_sprint: number | null;
           start_date: string | null;
           sort_order: number;
+          assigned_people: number;
           created_at: string;
           updated_at: string;
         };
@@ -274,6 +428,7 @@ export type Database = {
           manual_start_sprint?: number | null;
           start_date?: string | null;
           sort_order?: number;
+          assigned_people?: number;
           created_at?: string;
           updated_at?: string;
         };
@@ -284,6 +439,7 @@ export type Database = {
           manual_start_sprint?: number | null;
           start_date?: string | null;
           sort_order?: number;
+          assigned_people?: number;
           updated_at?: string;
         };
       };
@@ -291,8 +447,8 @@ export type Database = {
         Row: {
           id: string;
           organization_id: string;
-          team_id: string;
-          depends_on_team_id: string;
+          team_id: string;           // FK conserva nombre 'team_id'
+          depends_on_team_id: string; // FK conserva nombre
           description: string | null;
           created_at: string;
         };
@@ -317,7 +473,7 @@ export type Database = {
           effort_sprints: number;
           duration_quarters: number;
           q_start: number | null;
-          team_ids: string[];
+          team_ids: string[];          // FK names conservadas
           team_allocations: Record<string, number>;
           description: string | null;
           sq_project_ids: string[];
@@ -422,14 +578,30 @@ export type Database = {
   };
 };
 
-// Aliases de conveniencia
+// ── Aliases de conveniencia ──────────────────────────────────────────────────
+
 export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 export type Organization = Database["public"]["Tables"]["organizations"]["Row"];
 export type OrganizationMember = Database["public"]["Tables"]["organization_members"]["Row"];
 export type Project = Database["public"]["Tables"]["projects"]["Row"];
 export type MemberRole = Database["public"]["Enums"]["member_role"];
-export type Team = Database["public"]["Tables"]["teams"]["Row"];
+
+// 'teams' renombrado a 'groups' en DB. Team alias temporal para minimizar diff.
+export type Group = Database["public"]["Tables"]["groups"]["Row"];
+export type Team = Group;
+
 export type Initiative = Database["public"]["Tables"]["initiatives"]["Row"];
+
+export type OrgGroupLevelLabels = Database["public"]["Tables"]["org_group_level_labels"]["Row"];
+export type OrgCapacitySettings = Database["public"]["Tables"]["org_capacity_settings"]["Row"];
+export type CapacityAdjustment = Database["public"]["Tables"]["capacity_adjustments"]["Row"];
+export type OrgSquadConfig = Database["public"]["Tables"]["org_squad_config"]["Row"];
+export type UserWorkspaceState = Database["public"]["Tables"]["user_workspace_state"]["Row"];
+
+export type UnitType = "hours" | "days" | "sprints" | "projects_per_person" | "story_points";
+export type ConsolidationPeriod = "sprint" | "month" | "quarter";
+export type AdjustmentKind = "pct" | "people_delta";
+export type WorkspaceContext = "squad" | "cross" | "roadmap" | "dashboard";
 
 export type Comment = {
   id: string;

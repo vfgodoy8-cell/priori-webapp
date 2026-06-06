@@ -1,6 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 
-const LEVEL_LABEL_DEFAULT: Record<number, string> = {
+export const LEVEL_LABEL_DEFAULT: Record<number, string> = {
   1: "Grupo",
   2: "Subgrupo",
   3: "Equipo",

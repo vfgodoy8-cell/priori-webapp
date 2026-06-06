@@ -23,7 +23,7 @@ export function CrossHeaderRight({ orgName, teams, orgId, role, alerts }: Props)
       {role === "owner" && <IdeaButton />}
       <NotificationBell alerts={alerts} />
       <ModoSwitcher current="cross" />
-      <TeamPanelTrigger teams={teams} orgId={orgId} />
+      <TeamPanelTrigger teams={teams} orgId={orgId} role={role} />
       <span className="text-sm text-brand-gray">{orgName}</span>
       <LogoutButton />
     </div>

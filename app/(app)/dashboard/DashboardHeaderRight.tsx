@@ -19,7 +19,7 @@ export function DashboardHeaderRight({ orgName, userEmail, teams, orgId, role }:
   return (
     <div className="flex items-center gap-4">
       {role === "owner" && <IdeaButton />}
-      <TeamPanelTrigger teams={teams} orgId={orgId} />
+      <TeamPanelTrigger teams={teams} orgId={orgId} role={role} />
       <Link
         href="/settings/members"
         className="text-sm px-3 py-1.5 rounded-lg bg-white text-brand-gray hover:text-brand-black transition"

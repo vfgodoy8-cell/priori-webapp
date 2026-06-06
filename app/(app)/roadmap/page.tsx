@@ -93,7 +93,7 @@ export default async function RoadmapPage() {
             {role === "owner" && <IdeaButton />}
             <NotificationBell alerts={alerts} />
             <ModoSwitcher current="roadmap" />
-            <TeamPanelTrigger teams={teams} orgId={org.id} />
+            <TeamPanelTrigger teams={teams} orgId={org.id} role={role} />
             <span className="text-sm text-brand-gray">{org.name}</span>
             <LogoutButton />
           </div>

@@ -205,7 +205,7 @@ function TreeNode({
   return (
     <div>
       <div
-        className={`flex items-center gap-1.5 py-1.5 px-2 rounded-lg cursor-pointer transition ${
+        className={`group flex items-center gap-1.5 py-1.5 px-2 rounded-lg cursor-pointer transition ${
           selectedId === group.id ? "bg-orange-50 border border-orange-200" : "hover:bg-gray-50"
         }`}
         style={{ marginLeft: depth * 20 }}
@@ -239,21 +239,30 @@ function TreeNode({
           <input
             autoFocus
             type="number"
-            min={1}
+            min={0}
             value={personasVal}
-            onChange={(e) => setPersonasVal(parseInt(e.target.value) || 1)}
+            onChange={(e) => setPersonasVal(Math.max(0, parseInt(e.target.value) || 0))}
             onBlur={savePersonas}
-            onKeyDown={(e) => { if (e.key === "Enter") savePersonas(); if (e.key === "Escape") setEditingPersonas(false); }}
+            onKeyDown={(e) => { if (e.key === "Enter") savePersonas(); if (e.key === "Escape") { setEditingPersonas(false); setPersonasVal(group.personas); } }}
             className="w-12 text-xs border border-brand-orange rounded px-1 py-0.5 outline-none text-center"
             onClick={(e) => e.stopPropagation()}
           />
         ) : (
-          <span
-            className={`text-[10px] text-brand-gray whitespace-nowrap ${canEdit ? "cursor-pointer hover:text-brand-orange" : ""}`}
-            onDoubleClick={canEdit ? (e) => { e.stopPropagation(); setEditingPersonas(true); setPersonasVal(group.personas); } : undefined}
-            title={canEdit ? "Doble click para editar personas" : undefined}
-          >
-            {descPersonas > 0 ? `${group.personas} (+${descPersonas})` : group.personas}
+          <span className="flex items-center gap-1 text-[10px] whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+            <span
+              className={`flex items-center gap-0.5 px-1 py-0.5 rounded border ${
+                canEdit
+                  ? "cursor-pointer text-brand-gray border-transparent hover:border-gray-300 hover:bg-white"
+                  : "text-brand-gray border-transparent"
+              }`}
+              onClick={canEdit ? () => { setEditingPersonas(true); setPersonasVal(group.personas); } : undefined}
+            >
+              <span className="font-medium">{group.personas}</span>
+              {canEdit && <span className="text-[8px] opacity-0 group-hover:opacity-50 ml-0.5 leading-none">✏</span>}
+            </span>
+            {descPersonas > 0 && (
+              <span className="text-gray-400">(+{descPersonas})</span>
+            )}
           </span>
         )}
 
@@ -364,15 +373,17 @@ function CapacidadTab({
   canEdit: boolean;
   onRefresh: () => void;
 }) {
+  const [personasVal, setPersonasVal] = useState<number>(group.personas);
   const [unitVal, setUnitVal] = useState<string>(group.unit ?? "__inherit__");
   const [capacityPerPeriod, setCapacityPerPeriod] = useState<number>(group.capacity_per_period ?? 1);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    setPersonasVal(group.personas);
     setUnitVal(group.unit ?? "__inherit__");
     setCapacityPerPeriod(group.capacity_per_period ?? 1);
-  }, [group.id, group.unit, group.capacity_per_period]);
+  }, [group.id, group.personas, group.unit, group.capacity_per_period]);
 
   const ancestorsById = useMemo(() => new Map(groups.map((g) => [g.id, g])), [groups]);
   const cfgLike: OrgCapacitySettingsLike = orgSettings ?? {};
@@ -389,18 +400,19 @@ function CapacidadTab({
   const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
 
   const effPeople = useMemo(
-    () => effectivePeopleInRange(group, adjustments, monthStart, monthEnd),
-    [group.id, group.personas, adjustments, monthStart.getTime()]
+    () => effectivePeopleInRange({ ...group, personas: personasVal }, adjustments, monthStart, monthEnd),
+    [group.id, personasVal, adjustments, monthStart.getTime()]
   );
 
   const capResult = useMemo(() => {
     const patchedGroup = {
       ...group,
+      personas: personasVal,
       unit: unitVal === "__inherit__" ? null : (unitVal as Group["unit"]),
       capacity_per_period: capacityPerPeriod,
     };
     return groupCapacity(patchedGroup, ancestorsById, adjustments, cfgLike, monthStart, monthEnd);
-  }, [group, unitVal, capacityPerPeriod, adjustments, ancestorsById, cfgLike]);
+  }, [group, personasVal, unitVal, capacityPerPeriod, adjustments, ancestorsById, cfgLike]);
 
   const showCapPerPeriod = unitVal === "story_points" || unitVal === "projects_per_person";
 
@@ -408,6 +420,7 @@ function CapacidadTab({
     setSaving(true);
     const patch: Parameters<typeof updateGroupBasic>[1] = {
       unit: unitVal === "__inherit__" ? null : (unitVal as Group["unit"]),
+      personas: personasVal,
     };
     if (showCapPerPeriod) patch.capacity_per_period = capacityPerPeriod;
     const res = await updateGroupBasic(group.id, patch);
@@ -418,6 +431,18 @@ function CapacidadTab({
 
   return (
     <div className="flex flex-col gap-4">
+      <div>
+        <label className="block text-[10px] font-bold text-brand-gray uppercase tracking-wider mb-1">Personas</label>
+        <input
+          type="number"
+          min={0}
+          step={1}
+          value={personasVal}
+          onChange={(e) => setPersonasVal(Math.max(0, parseInt(e.target.value) || 0))}
+          disabled={!canEdit}
+          className={inp}
+        />
+      </div>
       <div>
         <label className="block text-[10px] font-bold text-brand-gray uppercase tracking-wider mb-1">Unidad de medida</label>
         <select
@@ -471,10 +496,10 @@ function CapacidadTab({
         <p className="text-[10px] font-bold text-brand-gray uppercase tracking-wider mb-2">Vista previa — mes actual</p>
         <div className="flex flex-col gap-1 text-xs text-brand-black">
           <span>
-            Personas efectivas: <strong>{effPeople.toFixed(1)}</strong> / {group.personas}
-            {group.personas > 0 && (
+            Personas efectivas: <strong>{effPeople.toFixed(1)}</strong> / {personasVal}
+            {personasVal > 0 && (
               <span className="text-brand-gray ml-1">
-                ({Math.round((effPeople / group.personas) * 100)}% de capacidad base)
+                ({Math.round((effPeople / personasVal) * 100)}% de capacidad base)
               </span>
             )}
           </span>
@@ -974,6 +999,12 @@ export function GroupsManagerModal({ groups: initialGroups, orgId, role, open, o
                 <div className="text-sm text-brand-gray">Cargando…</div>
               ) : activeTab === "estructura" ? (
                 <div>
+                  {rootGroups.length > 0 && (
+                    <div className="flex items-center justify-between px-2 mb-1 pb-1 border-b border-gray-100">
+                      <span className="text-[9px] font-bold text-brand-gray uppercase tracking-wider">Grupo</span>
+                      <span className="text-[9px] font-bold text-brand-gray uppercase tracking-wider">Personas</span>
+                    </div>
+                  )}
                   {rootGroups.length === 0 && (
                     <p className="text-xs text-brand-gray italic mb-4">
                       No hay grupos configurados. Creá el primero.

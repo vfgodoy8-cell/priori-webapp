@@ -1,6 +1,6 @@
 # Priori™ — Contexto del proyecto
 
-> Generado el 2026-06-02, actualizado el 2026-06-06 (sesión 4 — fases A–H) desde el código fuente real. Todo dato aquí viene del repositorio,
+> Generado el 2026-06-02, actualizado el 2026-06-06 (sesión 5 — bug jerarquía grupos + UX GroupsManagerModal) desde el código fuente real. Todo dato aquí viene del repositorio,
 > no de documentación externa ni archivos de contexto anteriores.
 
 ---
@@ -133,8 +133,14 @@ components/
                             # entityType acepta "project" | "initiative" | "product"
                             # Campo "Stakeholders afectados" en form y en cada card
     GroupsManagerModal.tsx  # Modal 4 tabs (Estructura, Capacidad, Ajustes, Configuración)
-                            # Estructura: tree CRUD con jerarquía (parent_id, level 1–4)
-                            # Capacidad: unidad de medida + preview heredado de ancestros
+                            # flattenGroupTree(groups): DFS pre-order; garantiza orden jerárquico visual;
+                            #   compartida entre tab Estructura y selectors de Capacidad/Ajustes
+                            # Estructura: tree CRUD jerárquico (parent_id, level 1–4)
+                            #   personas: click simple → chip con borde en hover + ícono ✏;
+                            #   cabecera de columna "Personas" sobre la lista
+                            # Capacidad: campo "Personas" editable (preview recalcula en vivo),
+                            #   selector de unidad de medida, preview heredado de ancestros;
+                            #   guardar incluye personas en el patch
                             # Ajustes: CRUD capacity_adjustments por rango de fechas
                             # Configuración: org_capacity_settings + labels de nivel
     IdeaButton.tsx          # Botón "💡 Tengo una idea" con modal state propio (Fase 5, owner only)
@@ -531,10 +537,6 @@ Definidas en `20260526000003_rls_consolidado.sql`:
 20260604000030_roadmap_baselines.sql         ← tabla roadmap_baselines
 20260604000031_products_visible_team_ids.sql ← products.visible_team_ids uuid[]
 20260604000032_shared_views_roadmap.sql      ← shared_views.mode += 'roadmap' + product_id
-```
-
-**Migraciones pendientes de aplicar en Supabase SQL Editor (en orden):**
-```
 20260605000033_groups_rename_and_hierarchy.sql  ← teams→groups + parent_id/level/unit
 20260605000034_org_group_level_labels.sql       ← labels de nivel configurables
 20260605000035_org_capacity_settings.sql        ← config de capacidad por org
@@ -621,6 +623,10 @@ Lógica: sin user en ruta protegida → `/login`. Con user en ruta auth → `/da
   - `lib/group-labels.ts`: `getOrgGroupLevelLabels(orgId)` con defaults {1:Grupo, 2:Subgrupo, 3:Equipo, 4:Celula}
   - `org_capacity_settings`: sprint_weeks, hours_per_day, workdays_per_week, default_unit, consolidation_period
   - `capacity_adjustments`: ajustes por rango de fechas (kind pct/people_delta); seed migra q1-q4_pct
+- **GroupsManagerModal UX personas (sesión 5):**
+  - `flattenGroupTree(groups)` — DFS pre-order con `buildChildMap`; corrige el bug donde la lista plana DB ignoraba la jerarquía real; usada en Estructura (árbol), Capacidad y Ajustes (selectors)
+  - Tab Estructura: trigger click simple para editar personas (antes doble click); chip con borde en hover + ícono `✏` (visible al hacer hover en el grupo); cabecera de columna "Personas" sobre la lista; Escape resetea el valor sin guardar; `min={0}`
+  - Tab Capacidad: campo "Personas" editable arriba del selector de unidad; `effPeople` y `capResult` recalculan en vivo con el valor editado (`personasVal`); el botón Guardar incluye `personas` en el patch a `updateGroupBasic`
 - **Squad config en DB (sesión 4):**
   - Tabla `org_squad_config`; bootstrap localStorage → DB al crear; sync DB → localStorage al cargar
   - `getSquadConfig` + `upsertSquadConfig` en `squad/actions.ts`
@@ -638,7 +644,6 @@ Lógica: sin user en ruta protegida → `/login`. Con user en ruta auth → `/da
 
 ## Pendiente
 
-- **Migraciones pendientes de aplicar en Supabase SQL Editor (en orden):** ver sección "Migraciones pendientes" en Schema.
 - **`SUPABASE_HOOK_SECRET`:** agregar en Vercel → Settings → Environment Variables para activar el hook de email auth.
 - **Dominio `priori.ar`:** confirmar propagación DNS (tilde verde en Vercel → Domains), luego actualizar `NEXT_PUBLIC_SITE_URL=https://priori.ar` en Vercel (+redeploy) y en Supabase (Authentication → URL Configuration): Site URL + Redirect URL sin borrar la de `.vercel.app`. Probar login Google + email de invitación.
 - **Modo Roadmap — pendiente de UI:** drag para redimensionar barras (`duration_sprints`), vista cross-producto de capacidad, logActivity para products (requiere ampliar CHECK de `activity_log.entity_type`), team_dependencies UI, vista comparativa de líneas base (delta actual vs snapshot).
@@ -728,3 +733,5 @@ Lógica: sin user en ruta protegida → `/login`. Con user en ruta auth → `/da
 - `SharedView.product_id` es `null` para mode squad/cross, y debe ser non-null para mode roadmap. No hay CHECK de DB que lo exija, es una convención de código.
 - `roadmap_segments.assigned_people` default 1. El SegmentPanel muestra stepper con warning si el valor supera `group.personas`.
 - `TeamPanelTrigger` ya NO abre `TeamPanel` — abre `GroupsManagerModal`. `TeamPanel.tsx` puede quedar sin uso activo.
+- `flattenGroupTree` en `GroupsManagerModal` es DFS pre-order — usar esta función (nunca sort plano por `level`) cuando se necesite la lista de grupos en orden jerárquico visual.
+- En `CapacidadTab`, el estado local `personasVal` es la fuente de verdad para la preview y el guardado. `useEffect` resetea `personasVal` cuando cambia `group.id`. La vista previa (`effPeople`, `capResult`) usa `{ ...group, personas: personasVal }` — refleja el valor editado en tiempo real antes de guardar.

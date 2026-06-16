@@ -40,11 +40,11 @@ export function computeCapacity(used: number, available: number): CapacityIndica
   if (occupancyPct >= 100) {
     status = "red";    color = "#DC2626"; bg = "#FEF2F2"; label = "Sobreocupado";
   } else if (occupancyPct >= 95) {
-    status = "orange"; color = "#E8621A"; bg = "#FFF4EE"; label = "Casi lleno";
+    status = "orange"; color = "#F59E0B"; bg = "#FFFBEB"; label = "Casi lleno";
   } else if (occupancyPct >= 90) {
     status = "yellow"; color = "#D97706"; bg = "#FFFBEB"; label = "Alta ocupación";
   } else {
-    status = "green";  color = "#1D9E75"; bg = "#F0FBF7"; label = "Con capacidad";
+    status = "green";  color = "#12A594"; bg = "#F0FAFA"; label = "Con capacidad";
   }
 
   const display = `${remaining}/${available} personas (${Math.round(availabilityPct)}%)`;
@@ -55,9 +55,9 @@ export function computeCapacity(used: number, available: number): CapacityIndica
 /** Dot indicator para usar inline en tablas o cards */
 export function capacityDotClass(status: CapacityStatus): string {
   return {
-    green:  "bg-brand-green",
+    green:  "bg-brand-teal",
     yellow: "bg-yellow-500",
-    orange: "bg-brand-orange",
+    orange: "bg-brand-amber",
     red:    "bg-red-600",
   }[status];
 }

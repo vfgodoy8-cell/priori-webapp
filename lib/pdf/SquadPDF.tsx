@@ -1,18 +1,18 @@
 ﻿import React from "react";
 import { Document, Page, View, Text, StyleSheet } from "@react-pdf/renderer";
 
-const ORANGE = "#E8621A";
-const BLACK  = "#111111";
-const GRAY   = "#6B6B6B";
-const GREEN  = "#1D9E75";
-const BLUE   = "#1E6FC5";
-const RED    = "#E24B4A";
+const BRAND  = "#1E56C4";
+const NAVY   = "#0D2240";
+const GRAY   = "#5C6B7A";
+const TEAL   = "#12A594";
+const INDIGO = "#4F46E5";
+const RED    = "#DC2626";
 
 const QUADRANT_META: Record<string, { label: string; priority: string; color: string; bg: string }> = {
-  p1: { label: "Quick Win",        priority: "P1", color: GREEN,  bg: "#F0FBF6" },
-  p2: { label: "Gran Proyecto",    priority: "P2", color: BLUE,   bg: "#EAF1FB" },
-  p3: { label: "Iniciativa Menor", priority: "P3", color: GRAY,   bg: "#F5F5F5" },
-  p0: { label: "Descartada",       priority: "P0", color: RED,    bg: "#FEF3F3" },
+  p1: { label: "Quick Win",        priority: "P1", color: TEAL,   bg: "#F0FAFA" },
+  p2: { label: "Gran Proyecto",    priority: "P2", color: INDIGO, bg: "#EEF2FF" },
+  p3: { label: "Iniciativa Menor", priority: "P3", color: GRAY,   bg: "#F4F5F6" },
+  p0: { label: "Descartada",       priority: "P0", color: RED,    bg: "#FEF2F2" },
 };
 
 export type PdfProject = {
@@ -31,7 +31,7 @@ type Props = {
 
 const s = StyleSheet.create({
   page:        { backgroundColor: "#ffffff", paddingBottom: 32 },
-  headerBar:   { backgroundColor: ORANGE, paddingHorizontal: 24, paddingVertical: 8, flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  headerBar:   { backgroundColor: BRAND, paddingHorizontal: 24, paddingVertical: 8, flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   headerTitle: { color: "#fff", fontSize: 11, fontWeight: "bold" },
   headerDate:  { color: "#fff", fontSize: 9 },
   logoRow:     { flexDirection: "row", alignItems: "center", gap: 6 },
@@ -42,7 +42,7 @@ const s = StyleSheet.create({
   body:        { paddingHorizontal: 24, paddingTop: 16 },
   statsRow:    { flexDirection: "row", gap: 10, marginBottom: 18 },
   statBox:     { flex: 1, borderRadius: 8, border: "1 solid #E5E7EB", padding: 10, alignItems: "center" },
-  statVal:     { fontSize: 18, fontWeight: "bold", color: BLACK, marginBottom: 2 },
+  statVal:     { fontSize: 18, fontWeight: "bold", color: NAVY, marginBottom: 2 },
   statLabel:   { fontSize: 8, color: GRAY, textTransform: "uppercase", letterSpacing: 0.5 },
   section:     { marginBottom: 14 },
   sectionHead: { borderRadius: 6, paddingHorizontal: 10, paddingVertical: 5, marginBottom: 6, flexDirection: "row", alignItems: "center", gap: 6 },
@@ -50,7 +50,7 @@ const s = StyleSheet.create({
   sectionLbl:  { fontSize: 10, fontWeight: "bold", color: "#fff" },
   sectionCount:{ fontSize: 8, color: "#fff", opacity: 0.8, marginLeft: "auto" },
   row:         { flexDirection: "row", alignItems: "center", paddingHorizontal: 10, paddingVertical: 6, borderBottom: "1 solid #F3F4F6", gap: 6 },
-  rowName:     { flex: 1, fontSize: 9, color: BLACK, fontWeight: "bold" },
+  rowName:     { flex: 1, fontSize: 9, color: NAVY, fontWeight: "bold" },
   rowMeta:     { fontSize: 8, color: GRAY },
   rowBadge:    { fontSize: 8, fontWeight: "bold", borderRadius: 10, paddingHorizontal: 6, paddingVertical: 2 },
   progressBg:  { width: 60, height: 5, backgroundColor: "#E5E7EB", borderRadius: 3, overflow: "hidden" },
@@ -111,7 +111,7 @@ export function SquadPDF({ orgName, date, projects, devN, devP }: Props) {
                     : 0;
                   return (
                     <View key={p.id} style={s.row}>
-                      {p.slice_label && <Text style={[s.rowMeta, { color: BLUE, flexShrink: 0 }]}>{p.slice_label}</Text>}
+                      {p.slice_label && <Text style={[s.rowMeta, { color: INDIGO, flexShrink: 0 }]}>{p.slice_label}</Text>}
                       <Text style={s.rowName}>{p.name}</Text>
                       {p.stakeholder && <Text style={s.rowMeta}>{p.stakeholder}</Text>}
                       <Text style={s.rowMeta}>{p.effort_sprints}sp</Text>

@@ -19,17 +19,17 @@ export default async function AISettingsPage() {
           <div className="flex items-center gap-4">
             <Link href="/dashboard" className="flex items-center gap-3">
               <div className="flex flex-col gap-1">
-                <div className="h-1.5 w-8 rounded-full bg-brand-orange" />
-                <div className="h-1.5 w-5 rounded-full bg-brand-orange opacity-65" />
-                <div className="h-1.5 w-3 rounded-full bg-brand-orange opacity-30" />
+                <div className="h-1.5 w-8 rounded-full bg-brand-blue" />
+                <div className="h-1.5 w-5 rounded-full bg-brand-blue opacity-65" />
+                <div className="h-1.5 w-3 rounded-full bg-brand-blue opacity-30" />
               </div>
-              <span className="font-bold text-brand-black text-lg">priori</span>
+              <span className="font-bold text-brand-navy text-lg">priori</span>
             </Link>
             <span className="text-gray-200">|</span>
-            <span className="text-sm font-medium text-brand-black">Configuracion IA</span>
+            <span className="text-sm font-medium text-brand-navy">Configuracion IA</span>
           </div>
           <div className="flex items-center gap-3">
-            <Link href="/settings/members" className="text-sm text-brand-gray hover:text-brand-black transition">
+            <Link href="/settings/members" className="text-sm text-brand-gray hover:text-brand-navy transition">
               Equipo
             </Link>
             <LogoutButton />
@@ -39,7 +39,7 @@ export default async function AISettingsPage() {
 
       <main className="max-w-3xl mx-auto px-6 py-10">
         <div className="mb-7">
-          <h1 className="text-xl font-bold text-brand-black mb-1">Configuracion de IA</h1>
+          <h1 className="text-xl font-bold text-brand-navy mb-1">Configuracion de IA</h1>
           <p className="text-sm text-brand-gray">
             Configura el proveedor de IA que usara Priori AI para analisis y asistencia de carga.
             La API key se guarda de forma segura y nunca se expone al cliente.

@@ -125,7 +125,7 @@ export default async function DashboardPage() {
   });
 
   function capColor(pct: number) {
-    return pct >= 100 ? "#E24B4A" : pct >= 95 ? "#E8621A" : pct >= 90 ? "#EF9F27" : "#1D9E75";
+    return pct >= 100 ? "#DC2626" : pct >= 95 ? "#F59E0B" : pct >= 90 ? "#FBBF24" : "#12A594";
   }
 
   const greeting = firstName ? `Hola, ${firstName}` : "Bienvenido";
@@ -139,12 +139,12 @@ export default async function DashboardPage() {
         <div className="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="flex flex-col gap-1">
-              <div className="h-1.5 w-8 rounded-full bg-brand-orange" />
-              <div className="h-1.5 w-5 rounded-full bg-brand-orange opacity-65" />
-              <div className="h-1.5 w-3 rounded-full bg-brand-orange opacity-30" />
+              <div className="h-1.5 w-8 rounded-full bg-brand-blue" />
+              <div className="h-1.5 w-5 rounded-full bg-brand-blue opacity-65" />
+              <div className="h-1.5 w-3 rounded-full bg-brand-blue opacity-30" />
             </div>
             <div className="flex flex-col gap-0.5">
-              <span className="font-bold text-brand-black text-lg leading-none">priori</span>
+              <span className="font-bold text-brand-navy text-lg leading-none">priori</span>
               <span className="uppercase text-brand-gray leading-none" style={{ fontSize: 10, letterSpacing: "0.08em" }}>Transparencia Estratégica</span>
             </div>
           </div>
@@ -158,7 +158,7 @@ export default async function DashboardPage() {
         <div className="flex items-start justify-between">
           <div className="flex flex-col gap-1">
             <p className="text-xs text-brand-gray">{timeGreeting} ·</p>
-            <h1 className="text-2xl font-bold text-brand-black">{greeting}</h1>
+            <h1 className="text-2xl font-bold text-brand-navy">{greeting}</h1>
             <div className="flex items-center gap-2 mt-0.5">
               <span className="text-sm text-brand-gray">{org.name}</span>
               <span className="text-gray-200">·</span>
@@ -173,19 +173,19 @@ export default async function DashboardPage() {
           <div className="flex gap-2">
             <Link
               href="/roadmap"
-              className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-lg bg-brand-orange text-white hover:brightness-95 transition"
+              className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-lg bg-brand-blue text-white hover:brightness-95 transition"
             >
               <IconTimeline size={15} strokeWidth={2} /> Modo Roadmap
             </Link>
             <Link
               href="/cross"
-              className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-lg bg-brand-orange/65 text-brand-black hover:brightness-95 transition"
+              className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-lg bg-brand-blue/65 text-brand-navy hover:brightness-95 transition"
             >
               <IconCalendarStats size={15} strokeWidth={2} /> Modo Cross
             </Link>
             <Link
               href="/squad"
-              className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-lg bg-brand-orange/30 text-brand-black hover:brightness-95 transition"
+              className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-lg bg-brand-blue/30 text-brand-navy hover:brightness-95 transition"
             >
               <IconLayoutKanban size={15} strokeWidth={2} /> Modo Squad
             </Link>
@@ -198,25 +198,25 @@ export default async function DashboardPage() {
             label="Proyectos activos"
             value={projects.length}
             sub={`${enCurso} en curso · ${enBacklog} en backlog`}
-            color="#E8621A"
+            color=”#1E56C4”
           />
           <StatCard
-            label="En curso ahora"
+            label=”En curso ahora”
             value={enCurso}
-            sub={projects.length > 0 ? `${Math.round((enCurso / projects.length) * 100)}% del total activo` : "â€”"}
-            color="#1D9E75"
+            sub={projects.length > 0 ? `${Math.round((enCurso / projects.length) * 100)}% del total activo` : “â€””}
+            color=”#12A594”
           />
           <StatCard
-            label="Iniciativas del programa"
+            label=”Iniciativas del programa”
             value={initiatives.length}
             sub={`${onTimeline} en timeline · ${inBacklog} sin asignar`}
-            color="#1E6FC5"
+            color=”#4F46E5”
           />
           <StatCard
-            label="Equipos configurados"
+            label=”Equipos configurados”
             value={teams.length}
-            sub={teams.length > 0 ? teams.map((t) => t.name.split(" ")[0]).slice(0, 3).join(", ") : "Sin equipos aún"}
-            color="#6B6B6B"
+            sub={teams.length > 0 ? teams.map((t) => t.name.split(“ “)[0]).slice(0, 3).join(“, “) : “Sin equipos aún”}
+            color=”#5C6B7A”
           />
         </div>
 
@@ -226,8 +226,8 @@ export default async function DashboardPage() {
           {/* Squad â€” cuadrantes */}
           <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
             <div className="px-5 py-3.5 bg-gray-50 border-b border-gray-100 flex items-center justify-between">
-              <span className="text-sm font-bold text-brand-black">Distribución Squad</span>
-              <Link href="/squad" className="text-xs text-brand-gray hover:text-brand-orange transition">Ver canvas →</Link>
+              <span className="text-sm font-bold text-brand-navy">Distribución Squad</span>
+              <Link href="/squad" className="text-xs text-brand-gray hover:text-brand-blue transition">Ver canvas →</Link>
             </div>
             <div className="p-5 flex flex-col gap-3">
               {projects.length === 0 ? (
@@ -251,7 +251,7 @@ export default async function DashboardPage() {
                           style={{ width: count > 0 ? `${Math.max(4, pct)}%` : "0%", background: meta.color }}
                         />
                       </div>
-                      <span className="text-xs font-bold text-brand-black w-5 text-right flex-shrink-0">{count}</span>
+                      <span className="text-xs font-bold text-brand-navy w-5 text-right flex-shrink-0">{count}</span>
                     </div>
                   );
                 })
@@ -262,8 +262,8 @@ export default async function DashboardPage() {
           {/* Cross â€” capacidad */}
           <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
             <div className="px-5 py-3.5 bg-gray-50 border-b border-gray-100 flex items-center justify-between">
-              <span className="text-sm font-bold text-brand-black">Capacidad del Programa</span>
-              <Link href="/cross" className="text-xs text-brand-gray hover:text-brand-orange transition">Ver timeline →</Link>
+              <span className="text-sm font-bold text-brand-navy">Capacidad del Programa</span>
+              <Link href="/cross" className="text-xs text-brand-gray hover:text-brand-blue transition">Ver timeline →</Link>
             </div>
             <div className="p-5 flex flex-col gap-3">
               {teams.length === 0 ? (
@@ -294,8 +294,8 @@ export default async function DashboardPage() {
           {/* Roadmap — productos por canal */}
           <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
             <div className="px-5 py-3.5 bg-gray-50 border-b border-gray-100 flex items-center justify-between">
-              <span className="text-sm font-bold text-brand-black">Productos del Roadmap</span>
-              <Link href="/roadmap" className="text-xs text-brand-gray hover:text-brand-orange transition">Ver roadmap →</Link>
+              <span className="text-sm font-bold text-brand-navy">Productos del Roadmap</span>
+              <Link href="/roadmap" className="text-xs text-brand-gray hover:text-brand-blue transition">Ver roadmap →</Link>
             </div>
             <div className="p-5 flex flex-col gap-3">
               {totalRmProducts === 0 ? (
@@ -313,7 +313,7 @@ export default async function DashboardPage() {
                             style={{ width: `${Math.max(4, pct)}%`, background: "#9333EA" }}
                           />
                         </div>
-                        <span className="text-xs font-bold text-brand-black w-5 text-right flex-shrink-0">{count}</span>
+                        <span className="text-xs font-bold text-brand-navy w-5 text-right flex-shrink-0">{count}</span>
                       </div>
                     );
                   })}
@@ -330,7 +330,7 @@ export default async function DashboardPage() {
         {initiatives.length > 0 && (
           <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
             <div className="px-5 py-3.5 bg-gray-50 border-b border-gray-100">
-              <span className="text-sm font-bold text-brand-black">Timeline del programa</span>
+              <span className="text-sm font-bold text-brand-navy">Timeline del programa</span>
             </div>
             <div className="p-5">
               <div className="grid grid-cols-4 gap-2">
@@ -347,7 +347,7 @@ export default async function DashboardPage() {
                           <span className="text-[10px] text-gray-300 mt-1">vacío</span>
                         ) : (
                           <>
-                            <span className="text-xl font-bold text-brand-orange">{inQ.length}</span>
+                            <span className="text-xl font-bold text-brand-blue">{inQ.length}</span>
                             <span className="text-[10px] text-brand-gray">iniciativa{inQ.length !== 1 ? "s" : ""}</span>
                           </>
                         )}
@@ -358,7 +358,7 @@ export default async function DashboardPage() {
               </div>
               {inBacklog > 0 && (
                 <p className="text-xs text-brand-gray mt-3 text-center">
-                  + <span className="font-semibold text-brand-black">{inBacklog}</span> iniciativa{inBacklog !== 1 ? "s" : ""} sin asignar en el backlog
+                  + <span className="font-semibold text-brand-navy">{inBacklog}</span> iniciativa{inBacklog !== 1 ? "s" : ""} sin asignar en el backlog
                 </p>
               )}
             </div>
@@ -369,7 +369,7 @@ export default async function DashboardPage() {
         {deadlineAlerts.length > 0 && (
           <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
             <div className="px-5 py-3.5 bg-gray-50 border-b border-gray-100">
-              <span className="text-sm font-bold text-brand-black">Alertas de vencimiento</span>
+              <span className="text-sm font-bold text-brand-navy">Alertas de vencimiento</span>
             </div>
             <div className="divide-y divide-gray-50">
               {(["red", "orange", "yellow"] as DeadlineSeverity[]).map((sev) => {
@@ -396,7 +396,7 @@ export default async function DashboardPage() {
                           className="flex items-center gap-3 px-5 py-3 hover:bg-gray-50 transition"
                         >
                           <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: SEVERITY_COLOR[sev] }} />
-                          <span className="flex-1 text-sm font-medium text-brand-black truncate">{a.name}</span>
+                          <span className="flex-1 text-sm font-medium text-brand-navy truncate">{a.name}</span>
                           <span className="text-xs text-brand-gray flex-shrink-0">{MODE_LABEL[a.mode]}</span>
                           <span className="text-xs font-semibold flex-shrink-0" style={{ color: SEVERITY_COLOR[sev] }}>
                             {d} {MONTHS[m - 1]}
@@ -415,7 +415,7 @@ export default async function DashboardPage() {
         {recentActivity.length > 0 && (
           <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
             <div className="px-5 py-3.5 bg-gray-50 border-b border-gray-100">
-              <span className="text-sm font-bold text-brand-black">Actividad reciente</span>
+              <span className="text-sm font-bold text-brand-navy">Actividad reciente</span>
             </div>
             <div className="p-5 flex flex-col gap-0">
               {recentActivity.map((entry, i) => (
@@ -432,28 +432,28 @@ export default async function DashboardPage() {
             icon={<IconUsers size={22} strokeWidth={1.5} />}
             title="Modo Squad"
             description="Canvas de priorización por Impacto vs Esfuerzo"
-            color="#E8621A"
+            color="#1E56C4"
           />
           <QuickLink
             href="/cross"
             icon={<IconCalendarStats size={22} strokeWidth={1.5} />}
             title="Modo Cross"
-            description="Timeline Q1—Q4 con capacidad por equipo"
-            color="#1E6FC5"
+            description="Timeline Q1-Q4 con capacidad por equipo"
+            color="#4F46E5"
           />
           <QuickLink
             href="/roadmap"
             icon={<IconTimeline size={22} strokeWidth={1.5} />}
             title="Modo Roadmap"
             description="Gantt por producto con reflow automático"
-            color="#9333EA"
+            color="#12A594"
           />
           <QuickLink
             href="/settings/members"
             icon={<IconSettings size={22} strokeWidth={1.5} />}
             title="Equipo"
             description="Miembros, roles e invitaciones"
-            color="#6B6B6B"
+            color="#5C6B7A"
           />
         </div>
       </main>
@@ -465,7 +465,7 @@ function StatCard({ label, value, sub, color }: { label: string; value: number; 
   return (
     <div className="bg-white rounded-xl border border-gray-100 p-4 flex flex-col gap-1.5">
       <span className="text-xs font-semibold text-brand-gray uppercase tracking-wide">{label}</span>
-      <span className="text-3xl font-bold text-brand-black leading-none">{value}</span>
+      <span className="text-3xl font-bold text-brand-navy leading-none">{value}</span>
       <span className="text-[11px] text-brand-gray leading-tight">{sub}</span>
       <div className="h-0.5 rounded-full mt-1" style={{ background: color, width: "24px" }} />
     </div>
@@ -481,7 +481,7 @@ function QuickLink({ href, icon, title, description, color }: { href: string; ic
     >
       <span className="text-xl mt-0.5">{icon}</span>
       <div className="flex flex-col gap-0.5">
-        <span className="text-sm font-bold text-brand-black group-hover:text-brand-orange transition">{title}</span>
+        <span className="text-sm font-bold text-brand-navy group-hover:text-brand-blue transition">{title}</span>
         <span className="text-xs text-brand-gray leading-snug">{description}</span>
       </div>
     </Link>
@@ -489,13 +489,13 @@ function QuickLink({ href, icon, title, description, color }: { href: string; ic
 }
 
 const ACTION_COLOR: Record<string, string> = {
-  created: "#1D9E75", updated: "#1E6FC5", deleted: "#E24B4A",
-  placed: "#E8621A", unplaced: "#6B6B6B", discarded: "#E24B4A",
-  restored: "#1D9E75", commented: "#6B6B6B",
+  created: "#12A594", updated: "#4F46E5", deleted: "#DC2626",
+  placed: "#1E56C4", unplaced: "#5C6B7A", discarded: "#DC2626",
+  restored: "#12A594", commented: "#5C6B7A",
 };
 
 function DashActivityRow({ entry, isLast }: { entry: ActivityLog; isLast: boolean }) {
-  const color = ACTION_COLOR[entry.action] ?? "#6B6B6B";
+  const color = ACTION_COLOR[entry.action] ?? "#5C6B7A";
   const label = ACTION_LABEL[entry.action as ActivityAction] ?? entry.action;
   const actor = entry.actor?.full_name ?? "Alguien";
   const initials = actor.split(" ").slice(0, 2).map((w) => w[0]?.toUpperCase() ?? "").join("");
@@ -505,7 +505,7 @@ function DashActivityRow({ entry, isLast }: { entry: ActivityLog; isLast: boolea
         {initials || "?"}
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-xs text-brand-black leading-snug">
+        <p className="text-xs text-brand-navy leading-snug">
           <span className="font-semibold">{actor}</span>{" "}
           <span className="text-brand-gray">{label}</span>{" "}
           <span className="font-medium">{entry.entity_name}</span>
@@ -534,7 +534,7 @@ function EmptyState({ text, cta }: { text: string; cta: { href: string; label: s
   return (
     <div className="flex flex-col items-center gap-2 py-4">
       <p className="text-xs text-gray-400">{text}</p>
-      <Link href={cta.href} className="text-xs font-semibold text-brand-orange hover:text-orange-600 transition">
+      <Link href={cta.href} className="text-xs font-semibold text-brand-blue hover:text-blue-800 transition">
         {cta.label}
       </Link>
     </div>

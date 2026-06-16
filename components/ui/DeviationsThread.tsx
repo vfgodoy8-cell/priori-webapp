@@ -83,20 +83,20 @@ export function DeviationsThread({ entityType, entityId, entityName, canWrite }:
             className={`rounded-lg border p-3 flex flex-col gap-1.5 ${
               d.status === "resolved"
                 ? "border-gray-100 bg-gray-50 opacity-60"
-                : "border-orange-100 bg-orange-50/40"
+                : "border-blue-100 bg-blue-50/40"
             }`}
           >
             <div className="flex items-center justify-between gap-2">
-              <span className="text-[11px] font-semibold text-brand-black">{fmtDate(d.date)}</span>
+              <span className="text-[11px] font-semibold text-brand-navy">{fmtDate(d.date)}</span>
               <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
                 d.status === "open"
-                  ? "bg-orange-100 text-brand-orange"
-                  : "bg-green-100 text-brand-green"
+                  ? "bg-blue-100 text-brand-blue"
+                  : "bg-green-100 text-brand-teal"
               }`}>
                 {d.status === "open" ? "Abierto" : "Resuelto"}
               </span>
             </div>
-            <p className="text-xs text-brand-black leading-snug">{d.reason}</p>
+            <p className="text-xs text-brand-navy leading-snug">{d.reason}</p>
             {d.blocking_dependency && (
               <p className="text-[11px] text-brand-gray">
                 <span className="font-semibold">Bloqueado por:</span> {d.blocking_dependency}
@@ -121,7 +121,7 @@ export function DeviationsThread({ entityType, entityId, entityName, canWrite }:
                   {d.status === "open" && (
                     <button
                       onClick={() => handleResolve(d.id)}
-                      className="text-[10px] font-semibold text-brand-green hover:underline"
+                      className="text-[10px] font-semibold text-brand-teal hover:underline"
                     >
                       Resolver
                     </button>
@@ -147,7 +147,7 @@ export function DeviationsThread({ entityType, entityId, entityName, canWrite }:
           type="date"
           value={date}
           onChange={e => setDate(e.target.value)}
-          className="w-full rounded-lg border border-gray-200 px-3 py-1.5 text-xs text-brand-black focus:outline-none focus:ring-2 focus:ring-brand-orange"
+          className="w-full rounded-lg border border-gray-200 px-3 py-1.5 text-xs text-brand-navy focus:outline-none focus:ring-2 focus:ring-brand-blue"
         />
         <textarea
           value={reason}
@@ -155,31 +155,31 @@ export function DeviationsThread({ entityType, entityId, entityName, canWrite }:
           placeholder="Razón del desvío o bloqueo… *"
           rows={2}
           required
-          className="w-full rounded-lg border border-gray-200 px-3 py-2 text-xs text-brand-black placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-orange resize-none"
+          className="w-full rounded-lg border border-gray-200 px-3 py-2 text-xs text-brand-navy placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-blue resize-none"
         />
         <input
           value={blockingDep}
           onChange={e => setBlockingDep(e.target.value)}
           placeholder="¿Qué dependencia lo bloqueó? (opcional)"
-          className="w-full rounded-lg border border-gray-200 px-3 py-1.5 text-xs text-brand-black placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-orange"
+          className="w-full rounded-lg border border-gray-200 px-3 py-1.5 text-xs text-brand-navy placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-blue"
         />
         <input
           value={affectedDep}
           onChange={e => setAffectedDep(e.target.value)}
           placeholder="¿Qué podría verse afectado? (opcional)"
-          className="w-full rounded-lg border border-gray-200 px-3 py-1.5 text-xs text-brand-black placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-orange"
+          className="w-full rounded-lg border border-gray-200 px-3 py-1.5 text-xs text-brand-navy placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-blue"
         />
         <input
           value={affectedStakeholders}
           onChange={e => setAffectedStakeholders(e.target.value)}
           placeholder="Stakeholders afectados (opcional)"
-          className="w-full rounded-lg border border-gray-200 px-3 py-1.5 text-xs text-brand-black placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-orange"
+          className="w-full rounded-lg border border-gray-200 px-3 py-1.5 text-xs text-brand-navy placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-blue"
         />
         {error && <p className="text-[11px] text-red-500">{error}</p>}
         <button
           type="submit"
           disabled={submitting || !reason.trim()}
-          className="self-end px-4 py-1.5 text-xs font-bold rounded-lg bg-brand-orange hover:bg-orange-600 disabled:opacity-50 text-white transition"
+          className="self-end px-4 py-1.5 text-xs font-bold rounded-lg bg-brand-blue hover:bg-blue-800 disabled:opacity-50 text-white transition"
         >
           {submitting ? "Guardando…" : "Reportar"}
         </button>

@@ -71,12 +71,12 @@ export default async function RoadmapPage() {
           <div className="flex items-center gap-4">
             <Link href="/dashboard" className="flex items-center gap-3 group">
               <div className="flex flex-col gap-1">
-                <div className="h-1.5 w-8 rounded-full bg-brand-orange" />
-                <div className="h-1.5 w-5 rounded-full bg-brand-orange opacity-65" />
-                <div className="h-1.5 w-3 rounded-full bg-brand-orange opacity-30" />
+                <div className="h-1.5 w-8 rounded-full bg-brand-blue" />
+                <div className="h-1.5 w-5 rounded-full bg-brand-blue opacity-65" />
+                <div className="h-1.5 w-3 rounded-full bg-brand-blue opacity-30" />
               </div>
               <div className="flex flex-col gap-0.5">
-                <span className="font-bold text-brand-black text-lg leading-none">priori</span>
+                <span className="font-bold text-brand-navy text-lg leading-none">priori</span>
                 <span
                   className="uppercase text-brand-gray leading-none"
                   style={{ fontSize: 10, letterSpacing: "0.08em" }}
@@ -86,7 +86,7 @@ export default async function RoadmapPage() {
               </div>
             </Link>
             <span className="text-gray-200">|</span>
-            <span className="text-sm font-medium text-brand-black">Modo Roadmap</span>
+            <span className="text-sm font-medium text-brand-navy">Modo Roadmap</span>
           </div>
 
           <div className="flex items-center gap-4">
@@ -104,12 +104,12 @@ export default async function RoadmapPage() {
       <main className="max-w-7xl mx-auto px-6 py-8">
         <div className="flex items-start justify-between mb-6">
           <div>
-            <h1 className="text-xl font-bold text-brand-black">Modo Roadmap</h1>
+            <h1 className="text-xl font-bold text-brand-navy">Modo Roadmap</h1>
             <p className="text-xs text-brand-gray mt-0.5">
               Gantt por producto · Reflow automático por dependencias · {new Date().getFullYear()}
             </p>
           </div>
-          <span className="text-xs font-bold px-4 py-1.5 rounded-full bg-orange-50 text-brand-orange border border-orange-200">
+          <span className="text-xs font-bold px-4 py-1.5 rounded-full bg-blue-50 text-brand-blue border border-blue-200">
             Beta
           </span>
         </div>

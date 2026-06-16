@@ -22,7 +22,7 @@ function teamUsed(initiatives: Initiative[], teamId: string, q: number): number 
 }
 
 function capColor(pct: number): string {
-  return pct >= 100 ? "#E24B4A" : pct >= 95 ? "#E8621A" : pct >= 90 ? "#EF9F27" : "#1D9E75";
+  return pct >= 100 ? "#DC2626" : pct >= 95 ? "#F59E0B" : pct >= 90 ? "#FBBF24" : "#12A594";
 }
 
 type Props = {
@@ -48,7 +48,7 @@ export function CrossReadOnly({ initiatives, teams }: Props) {
         <div className="grid grid-cols-4 bg-gray-50 border-b border-gray-200">
           {Q_LABELS.map((q, qi) => (
             <div key={q} className={`px-4 py-3 flex flex-col gap-0.5 ${qi < 3 ? "border-r border-gray-200" : ""}`}>
-              <span className="text-sm font-bold text-brand-black">{q}</span>
+              <span className="text-sm font-bold text-brand-navy">{q}</span>
               <span className="text-xs text-brand-gray">{Q_SUB[qi]}</span>
             </div>
           ))}
@@ -92,7 +92,7 @@ export function CrossReadOnly({ initiatives, teams }: Props) {
                 }}
               >
                 <div className="flex items-start justify-between gap-1">
-                  <div className="text-xs font-bold text-brand-black leading-snug">
+                  <div className="text-xs font-bold text-brand-navy leading-snug">
                     {qd.priority} {ini.name}
                   </div>
                   {ini.duration_quarters > 1 && (
@@ -123,7 +123,7 @@ export function CrossReadOnly({ initiatives, teams }: Props) {
       {teams.length > 0 && (
         <div className="border border-gray-200 rounded-xl overflow-hidden">
           <div className="px-4 py-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
-            <span className="text-sm font-bold text-brand-black">Capacidad por equipo</span>
+            <span className="text-sm font-bold text-brand-navy">Capacidad por equipo</span>
             <span className="text-xs text-brand-gray">Verde &lt;90% · Amarillo 90-95% · Naranja 95-99% · Rojo ≥100%</span>
           </div>
           <div className="overflow-x-auto">
@@ -139,7 +139,7 @@ export function CrossReadOnly({ initiatives, teams }: Props) {
               <tbody>
                 {teams.map((team) => (
                   <tr key={team.id}>
-                    <td className="px-4 py-2 text-xs font-semibold text-brand-black border-b border-gray-50">{team.name}</td>
+                    <td className="px-4 py-2 text-xs font-semibold text-brand-navy border-b border-gray-50">{team.name}</td>
                     {[0, 1, 2, 3].map((q) => {
                       const cap = teamCap(team, q);
                       const used = teamUsed(initiatives, team.id, q);
@@ -168,7 +168,7 @@ export function CrossReadOnly({ initiatives, teams }: Props) {
       {backlog.length > 0 && (
         <div className="border border-gray-200 rounded-xl overflow-hidden">
           <div className="px-4 py-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
-            <span className="text-sm font-bold text-brand-black">Backlog del Programa</span>
+            <span className="text-sm font-bold text-brand-navy">Backlog del Programa</span>
             <span className="text-xs text-brand-gray">{backlog.length} sin asignar</span>
           </div>
           <div className="px-4 py-3 flex flex-wrap gap-2">

@@ -104,13 +104,13 @@ export function AIChatPanel({ open, onClose, context }: Props) {
       {open && <div className="fixed inset-0 z-[250] bg-black/20" onClick={onClose} />}
       <div className={`fixed top-0 left-0 z-[300] h-full w-[400px] bg-white border-r border-gray-100 shadow-2xl flex flex-col transition-transform duration-300 ${open ? "translate-x-0" : "-translate-x-full"}`}>
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3.5 border-b border-gray-100 bg-gradient-to-r from-orange-50 to-white">
+        <div className="flex items-center justify-between px-4 py-3.5 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-white">
           <div className="flex items-center gap-2">
-            <IconSparkles size={16} className="text-brand-orange" />
-            <h3 className="text-[15px] font-bold text-brand-black">Priori AI</h3>
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-100 text-brand-orange uppercase tracking-wide">Beta</span>
+            <IconSparkles size={16} className="text-brand-blue" />
+            <h3 className="text-[15px] font-bold text-brand-navy">Priori AI</h3>
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-brand-blue uppercase tracking-wide">Beta</span>
           </div>
-          <button onClick={onClose} className="text-brand-gray hover:text-brand-black transition">
+          <button onClick={onClose} className="text-brand-gray hover:text-brand-navy transition">
             <IconX size={18} />
           </button>
         </div>
@@ -125,7 +125,7 @@ export function AIChatPanel({ open, onClose, context }: Props) {
               <div className="flex flex-col gap-2">
                 {suggestions.map(s => (
                   <button key={s} onClick={() => send(s)}
-                    className="text-left text-xs px-3 py-2 rounded-lg border border-gray-200 hover:border-brand-orange hover:bg-orange-50 text-brand-gray hover:text-brand-black transition">
+                    className="text-left text-xs px-3 py-2 rounded-lg border border-gray-200 hover:border-brand-blue hover:bg-blue-50 text-brand-gray hover:text-brand-navy transition">
                     {s}
                   </button>
                 ))}
@@ -136,14 +136,14 @@ export function AIChatPanel({ open, onClose, context }: Props) {
           {messages.map(m => (
             <div key={m.id} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
               {m.role === "assistant" && (
-                <div className="w-6 h-6 rounded-full bg-orange-100 flex items-center justify-center flex-shrink-0 mr-2 mt-0.5">
-                  <IconSparkles size={12} className="text-brand-orange" />
+                <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0 mr-2 mt-0.5">
+                  <IconSparkles size={12} className="text-brand-blue" />
                 </div>
               )}
               <div className={`max-w-[82%] px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap ${
                 m.role === "user"
-                  ? "bg-brand-orange text-white rounded-tr-sm"
-                  : "bg-gray-100 text-brand-black rounded-tl-sm"
+                  ? "bg-brand-blue text-white rounded-tr-sm"
+                  : "bg-gray-100 text-brand-navy rounded-tl-sm"
               }`}>
                 {m.content || (loading && m.role === "assistant" && (
                   <span className="flex gap-1 items-center py-0.5">
@@ -176,10 +176,10 @@ export function AIChatPanel({ open, onClose, context }: Props) {
               placeholder="Preguntale a Priori AI... (Enter para enviar)"
               rows={2}
               disabled={loading}
-              className="flex-1 resize-none rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-brand-black placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-orange disabled:opacity-60"
+              className="flex-1 resize-none rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-brand-navy placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-blue disabled:opacity-60"
             />
             <button onClick={() => send(input)} disabled={loading || !input.trim()}
-              className="p-2.5 rounded-xl bg-brand-orange hover:bg-orange-600 disabled:opacity-50 text-white transition flex-shrink-0">
+              className="p-2.5 rounded-xl bg-brand-blue hover:bg-blue-800 disabled:opacity-50 text-white transition flex-shrink-0">
               <IconSend size={16} />
             </button>
           </div>

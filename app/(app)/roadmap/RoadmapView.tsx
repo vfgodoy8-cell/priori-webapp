@@ -37,9 +37,9 @@ import { ShareModal } from "@/components/ui/ShareModal";
 // ── Paleta de segmentos ───────────────────────────────────────────────────────
 
 const PALETTE = [
-  { bg: "#EAF1FB", border: "#BDD5F5", text: "#1E6FC5" },
-  { bg: "#F0FBF7", border: "#BBE8D8", text: "#1D9E75" },
-  { bg: "#FFF4EE", border: "#FDDCB5", text: "#E8621A" },
+  { bg: "#EEF2FF", border: "#C7D2FE", text: "#4F46E5" },
+  { bg: "#F0FAFA", border: "#A3DDD8", text: "#12A594" },
+  { bg: "#FFFBEB", border: "#FDE68A", text: "#D97706" },
   { bg: "#F5EBF9", border: "#E5BFFB", text: "#9333EA" },
   { bg: "#FEF9C3", border: "#FDE68A", text: "#CA8A04" },
   { bg: "#FCE7F3", border: "#F9A8D4", text: "#DB2777" },
@@ -52,9 +52,9 @@ function segmentColor(idx: number) {
 // ── Paleta de quarters ────────────────────────────────────────────────────────
 
 const QUARTER_COLORS = [
-  { bg: "#EAF1FB", border: "#BDD5F5", text: "#1E6FC5" },
+  { bg: "#EDF2FC", border: "#B8CEEF", text: "#1E56C4" },
   { bg: "#F0F4F8", border: "#D5DDED", text: "#64748B" },
-  { bg: "#EAF1FB", border: "#BDD5F5", text: "#1E6FC5" },
+  { bg: "#EDF2FC", border: "#B8CEEF", text: "#1E56C4" },
   { bg: "#F0F4F8", border: "#D5DDED", text: "#64748B" },
 ];
 
@@ -350,7 +350,7 @@ export function RoadmapView({ orgId, currentUserId, initialProducts, teams: init
         <select
           value={selectedChannelId}
           onChange={(e) => setSelectedChannelId(e.target.value)}
-          className="text-sm font-medium border border-gray-200 rounded-lg px-3 py-1.5 bg-white text-brand-black focus:outline-none focus:ring-2 focus:ring-brand-orange/20"
+          className="text-sm font-medium border border-gray-200 rounded-lg px-3 py-1.5 bg-white text-brand-navy focus:outline-none focus:ring-2 focus:ring-brand-blue/20"
         >
           <option value="">Todos los canales</option>
           {channels.map((ch) => (
@@ -363,7 +363,7 @@ export function RoadmapView({ orgId, currentUserId, initialProducts, teams: init
           <select
             value={selectedId ?? ""}
             onChange={(e) => handleSelectProduct(e.target.value)}
-            className="text-sm font-medium border border-gray-200 rounded-lg px-3 py-1.5 bg-white text-brand-black focus:outline-none focus:ring-2 focus:ring-brand-orange/20"
+            className="text-sm font-medium border border-gray-200 rounded-lg px-3 py-1.5 bg-white text-brand-navy focus:outline-none focus:ring-2 focus:ring-brand-blue/20"
           >
             {filteredProducts.map((p) => (
               <option key={p.id} value={p.id}>{p.name}</option>
@@ -375,7 +375,7 @@ export function RoadmapView({ orgId, currentUserId, initialProducts, teams: init
         <select
           value={selectedYear}
           onChange={(e) => handleYearChange(Number(e.target.value))}
-          className="text-sm font-medium border border-gray-200 rounded-lg px-3 py-1.5 bg-white text-brand-black focus:outline-none focus:ring-2 focus:ring-brand-orange/20"
+          className="text-sm font-medium border border-gray-200 rounded-lg px-3 py-1.5 bg-white text-brand-navy focus:outline-none focus:ring-2 focus:ring-brand-blue/20"
         >
           {availableYears.map((y) => (
             <option key={y} value={y}>{y}</option>
@@ -385,7 +385,7 @@ export function RoadmapView({ orgId, currentUserId, initialProducts, teams: init
         {canEdit && (
           <button
             onClick={() => setShowProductForm((v) => !v)}
-            className="text-sm px-3 py-1.5 rounded-lg border border-dashed border-gray-300 text-brand-gray hover:border-brand-orange hover:text-brand-orange transition-colors"
+            className="text-sm px-3 py-1.5 rounded-lg border border-dashed border-gray-300 text-brand-gray hover:border-brand-blue hover:text-brand-blue transition-colors"
           >
             + Nuevo producto
           </button>
@@ -396,8 +396,8 @@ export function RoadmapView({ orgId, currentUserId, initialProducts, teams: init
             onClick={() => setShowChannelPanel((v) => !v)}
             className={`text-sm px-3 py-1.5 rounded-lg border transition-colors ${
               showChannelPanel
-                ? "border-brand-orange text-brand-orange bg-orange-50"
-                : "border-gray-200 text-brand-gray hover:border-brand-orange hover:text-brand-orange"
+                ? "border-brand-blue text-brand-blue bg-blue-50"
+                : "border-gray-200 text-brand-gray hover:border-brand-blue hover:text-brand-blue"
             }`}
           >
             Canales
@@ -408,7 +408,7 @@ export function RoadmapView({ orgId, currentUserId, initialProducts, teams: init
           {selectedProduct?.target_launch_date && (
             <div
               className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium"
-              style={{ backgroundColor: "#FFF4EE", border: "1px solid #FDDCB5", color: "#E8621A" }}
+              style={{ backgroundColor: "#FFFBEB", border: "1px solid #FDE68A", color: "#D97706" }}
             >
               Salida: {fmtDate(parseProductDate(selectedProduct.target_launch_date))}
             </div>
@@ -423,7 +423,7 @@ export function RoadmapView({ orgId, currentUserId, initialProducts, teams: init
           {selectedProduct && (
             <button
               onClick={() => setShowShareModal(true)}
-              className="text-xs px-3 py-1.5 rounded-lg border border-gray-200 text-brand-gray hover:border-brand-orange hover:text-brand-orange transition-colors"
+              className="text-xs px-3 py-1.5 rounded-lg border border-gray-200 text-brand-gray hover:border-brand-blue hover:text-brand-blue transition-colors"
             >
               Compartir
             </button>
@@ -475,7 +475,7 @@ export function RoadmapView({ orgId, currentUserId, initialProducts, teams: init
           ) : localTeams.length === 0 ? (
             <div className="p-12 text-center text-brand-gray text-sm">
               Configurá equipos en{" "}
-              <a href="/cross" className="text-brand-orange hover:underline">Modo Cross</a> primero.
+              <a href="/cross" className="text-brand-blue hover:underline">Modo Cross</a> primero.
             </div>
           ) : (
             <GanttGrid
@@ -593,10 +593,10 @@ function ChannelPanel({
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-4">
       <div className="flex items-center justify-between mb-3">
-        <p className="text-sm font-semibold text-brand-black">Canales</p>
+        <p className="text-sm font-semibold text-brand-navy">Canales</p>
         <button
           onClick={() => setShowNew((v) => !v)}
-          className="text-xs px-2.5 py-1 rounded-lg border border-dashed border-gray-300 text-brand-gray hover:border-brand-orange hover:text-brand-orange transition-colors"
+          className="text-xs px-2.5 py-1 rounded-lg border border-dashed border-gray-300 text-brand-gray hover:border-brand-blue hover:text-brand-blue transition-colors"
         >
           + Canal
         </button>
@@ -609,7 +609,7 @@ function ChannelPanel({
               <>
                 <input
                   autoFocus
-                  className="flex-1 text-sm border border-brand-orange/40 rounded-lg px-2.5 py-1 focus:outline-none focus:ring-2 focus:ring-brand-orange/20"
+                  className="flex-1 text-sm border border-brand-blue/40 rounded-lg px-2.5 py-1 focus:outline-none focus:ring-2 focus:ring-brand-blue/20"
                   value={editValue}
                   onChange={(e) => setEditValue(e.target.value)}
                   onKeyDown={(e) => {
@@ -620,23 +620,23 @@ function ChannelPanel({
                 <button
                   onClick={() => handleSaveRename(ch.id)}
                   disabled={isPending}
-                  className="text-xs px-2.5 py-1 rounded-lg bg-brand-orange text-white font-medium hover:opacity-90 disabled:opacity-50 transition-opacity"
+                  className="text-xs px-2.5 py-1 rounded-lg bg-brand-blue text-white font-medium hover:opacity-90 disabled:opacity-50 transition-opacity"
                 >
                   Guardar
                 </button>
                 <button
                   onClick={() => setEditingId(null)}
-                  className="text-xs px-2 py-1 rounded-lg border border-gray-200 text-brand-gray hover:text-brand-black transition-colors"
+                  className="text-xs px-2 py-1 rounded-lg border border-gray-200 text-brand-gray hover:text-brand-navy transition-colors"
                 >
                   Cancelar
                 </button>
               </>
             ) : (
               <>
-                <span className="flex-1 text-sm text-brand-black">{ch.name}</span>
+                <span className="flex-1 text-sm text-brand-navy">{ch.name}</span>
                 <button
                   onClick={() => startEdit(ch)}
-                  className="text-xs text-brand-gray hover:text-brand-black transition-colors"
+                  className="text-xs text-brand-gray hover:text-brand-navy transition-colors"
                 >
                   Renombrar
                 </button>
@@ -660,7 +660,7 @@ function ChannelPanel({
           <div className="flex items-center gap-2 pt-1 border-t border-gray-100 mt-1">
             <input
               ref={newInputRef}
-              className="flex-1 text-sm border border-gray-200 rounded-lg px-2.5 py-1 focus:outline-none focus:ring-2 focus:ring-brand-orange/20"
+              className="flex-1 text-sm border border-gray-200 rounded-lg px-2.5 py-1 focus:outline-none focus:ring-2 focus:ring-brand-blue/20"
               placeholder="Nombre del canal"
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
@@ -672,13 +672,13 @@ function ChannelPanel({
             <button
               onClick={handleCreate}
               disabled={isPending || !newName.trim()}
-              className="text-xs px-2.5 py-1 rounded-lg bg-brand-orange text-white font-medium hover:opacity-90 disabled:opacity-50 transition-opacity"
+              className="text-xs px-2.5 py-1 rounded-lg bg-brand-blue text-white font-medium hover:opacity-90 disabled:opacity-50 transition-opacity"
             >
               Agregar
             </button>
             <button
               onClick={() => { setShowNew(false); setNewName(""); }}
-              className="text-xs px-2 py-1 rounded-lg border border-gray-200 text-brand-gray hover:text-brand-black transition-colors"
+              className="text-xs px-2 py-1 rounded-lg border border-gray-200 text-brand-gray hover:text-brand-navy transition-colors"
             >
               Cancelar
             </button>
@@ -892,7 +892,7 @@ function GanttGrid({
         >
           <span className="text-xs text-brand-gray font-medium uppercase tracking-wide flex-1">Equipo</span>
           {showBadge && (
-            <span className="text-[10px] font-semibold text-brand-orange bg-orange-50 border border-orange-200 px-1.5 py-0.5 rounded-full whitespace-nowrap">
+            <span className="text-[10px] font-semibold text-brand-blue bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded-full whitespace-nowrap">
               {teams.length}/{allTeams.length}
             </span>
           )}
@@ -903,8 +903,8 @@ function GanttGrid({
                 title="Configurar equipos visibles"
                 className={`text-[11px] px-1.5 py-0.5 rounded border transition-colors ${
                   visibleTeamIds !== null
-                    ? "border-brand-orange text-brand-orange bg-orange-50"
-                    : "border-gray-200 text-brand-gray hover:border-brand-orange hover:text-brand-orange"
+                    ? "border-brand-blue text-brand-blue bg-blue-50"
+                    : "border-gray-200 text-brand-gray hover:border-brand-blue hover:text-brand-blue"
                 }`}
               >
                 ▼
@@ -916,7 +916,7 @@ function GanttGrid({
                   <div className="p-2 border-b border-gray-100 flex flex-col gap-1">
                     <button
                       onClick={setShortcutWithTasks}
-                      className="text-left text-xs px-2 py-1.5 rounded-lg hover:bg-orange-50 hover:text-brand-orange text-brand-gray transition-colors"
+                      className="text-left text-xs px-2 py-1.5 rounded-lg hover:bg-blue-50 hover:text-brand-blue text-brand-gray transition-colors"
                     >
                       Con tareas en este producto
                     </button>
@@ -936,7 +936,7 @@ function GanttGrid({
                       placeholder="Buscar equipo…"
                       value={filterSearch}
                       onChange={(e) => setFilterSearch(e.target.value)}
-                      className="w-full text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand-orange/20 placeholder:text-gray-400"
+                      className="w-full text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand-blue/20 placeholder:text-gray-400"
                     />
                   </div>
 
@@ -949,17 +949,17 @@ function GanttGrid({
                       .map((t) => (
                         <label
                           key={t.id}
-                          className="flex items-center gap-2 text-xs text-brand-black px-2 py-1 rounded-lg hover:bg-gray-50 cursor-pointer"
+                          className="flex items-center gap-2 text-xs text-brand-navy px-2 py-1 rounded-lg hover:bg-gray-50 cursor-pointer"
                         >
                           <input
                             type="checkbox"
                             checked={draftIds.includes(t.id)}
                             onChange={() => toggleDraft(t.id)}
-                            className="accent-brand-orange"
+                            className="accent-brand-blue"
                           />
                           <span className="flex-1 truncate">{t.name}</span>
                           {segmentTeamIds.has(t.id) && (
-                            <span className="text-[9px] font-bold text-brand-orange">●</span>
+                            <span className="text-[9px] font-bold text-brand-blue">●</span>
                           )}
                         </label>
                       ))}
@@ -975,13 +975,13 @@ function GanttGrid({
                     <button
                       onClick={applyFilter}
                       disabled={draftIds.length === 0}
-                      className="flex-1 text-xs py-1.5 rounded-lg bg-brand-orange text-white font-semibold hover:opacity-90 disabled:opacity-40 transition-opacity"
+                      className="flex-1 text-xs py-1.5 rounded-lg bg-brand-blue text-white font-semibold hover:opacity-90 disabled:opacity-40 transition-opacity"
                     >
                       Aplicar
                     </button>
                     <button
                       onClick={() => setShowFilter(false)}
-                      className="flex-1 text-xs py-1.5 rounded-lg border border-gray-200 text-brand-gray hover:text-brand-black transition-colors"
+                      className="flex-1 text-xs py-1.5 rounded-lg border border-gray-200 text-brand-gray hover:text-brand-navy transition-colors"
                     >
                       Cancelar
                     </button>
@@ -1028,7 +1028,7 @@ function GanttGrid({
             onDrop={(e)      => handleDrop(e, team.id)}
             onDragEnd={handleDragEnd}
             className={`flex border-b border-gray-100 last:border-b-0 h-14 transition-opacity ${rowBg} ${isDragging ? "opacity-40" : ""}`}
-            style={isDropTarget ? { boxShadow: "inset 0 2px 0 0 #E8621A" } : undefined}
+            style={isDropTarget ? { boxShadow: "inset 0 2px 0 0 #1E56C4" } : undefined}
           >
             <div
               className={`flex-shrink-0 flex items-center gap-2 px-4 border-r border-gray-100 ${rowBg} ${onReorderTeams ? "cursor-grab active:cursor-grabbing" : ""}`}
@@ -1037,7 +1037,7 @@ function GanttGrid({
               {onReorderTeams && (
                 <span className="text-gray-300 text-xs select-none flex-shrink-0">⠿</span>
               )}
-              <span className="text-sm font-medium text-brand-black truncate">
+              <span className="text-sm font-medium text-brand-navy truncate">
                 {team.name}
               </span>
             </div>
@@ -1084,7 +1084,7 @@ function GanttGrid({
                 </button>
               ) : onAddSegment ? (
                 <button
-                  className="absolute inset-y-2 inset-x-3 rounded-lg border border-dashed border-gray-200 text-xs text-brand-gray hover:border-brand-orange hover:text-brand-orange transition-colors flex items-center justify-center gap-1"
+                  className="absolute inset-y-2 inset-x-3 rounded-lg border border-dashed border-gray-200 text-xs text-brand-gray hover:border-brand-blue hover:text-brand-blue transition-colors flex items-center justify-center gap-1"
                   onClick={() => onAddSegment(team.id)}
                   disabled={isPending}
                 >
@@ -1182,12 +1182,12 @@ function SegmentPanel({
                 </span>
               ) : null;
             })()}
-            <span className="text-sm font-semibold text-brand-black truncate">{team.name}</span>
+            <span className="text-sm font-semibold text-brand-navy truncate">{team.name}</span>
           </div>
         </div>
         <button
           onClick={onClose}
-          className="text-brand-gray hover:text-brand-black text-xl leading-none flex-shrink-0"
+          className="text-brand-gray hover:text-brand-navy text-xl leading-none flex-shrink-0"
         >
           ×
         </button>
@@ -1197,7 +1197,7 @@ function SegmentPanel({
         <div>
           <label className="text-xs text-brand-gray block mb-1">Etiqueta</label>
           <input
-            className="w-full text-sm border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand-orange/20 disabled:bg-gray-50"
+            className="w-full text-sm border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand-blue/20 disabled:bg-gray-50"
             value={label}
             onChange={(e) => setLabel(e.target.value)}
             placeholder="Descripción del segmento"
@@ -1207,11 +1207,11 @@ function SegmentPanel({
 
         <div>
           <label className="text-xs text-brand-gray block mb-1">
-            Duración — <span className="text-brand-black font-medium">{duration * 2} semanas</span>
+            Duración — <span className="text-brand-navy font-medium">{duration * 2} semanas</span>
           </label>
           <div className="flex items-center gap-2">
             <StepButton onClick={() => setDuration((d) => Math.max(1, d - 1))} disabled={!canEdit}>−</StepButton>
-            <span className="text-sm font-semibold text-brand-black w-12 text-center">
+            <span className="text-sm font-semibold text-brand-navy w-12 text-center">
               {duration} sp
             </span>
             <StepButton onClick={() => setDuration((d) => Math.min(52, d + 1))} disabled={!canEdit}>+</StepButton>
@@ -1221,19 +1221,19 @@ function SegmentPanel({
         <div>
           <label className="text-xs text-brand-gray block mb-1">
             Personas asignadas —{" "}
-            <span className="text-brand-black font-medium">
+            <span className="text-brand-navy font-medium">
               {assignedPeople} de {team.personas}
             </span>
           </label>
           <div className="flex items-center gap-2">
             <StepButton onClick={() => setAssignedPeople((n) => Math.max(1, n - 1))} disabled={!canEdit}>−</StepButton>
-            <span className="text-sm font-semibold text-brand-black w-12 text-center">
+            <span className="text-sm font-semibold text-brand-navy w-12 text-center">
               {assignedPeople}
             </span>
             <StepButton onClick={() => setAssignedPeople((n) => n + 1)} disabled={!canEdit}>+</StepButton>
           </div>
           {assignedPeople > team.personas && (
-            <p className="text-[10px] text-brand-orange mt-1">
+            <p className="text-[10px] text-brand-blue mt-1">
               Supera la dotación del grupo ({team.personas} pers.)
             </p>
           )}
@@ -1243,19 +1243,19 @@ function SegmentPanel({
           <label className="text-xs text-brand-gray block mb-1">Inicio (opcional)</label>
           <input
             type="date"
-            className="w-full text-sm border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand-orange/20 disabled:bg-gray-50"
+            className="w-full text-sm border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand-blue/20 disabled:bg-gray-50"
             value={anchorDate}
             onChange={(e) => setAnchorDate(e.target.value)}
             disabled={!canEdit}
           />
           {anchorDate ? (
-            <p className="text-xs text-brand-orange mt-1">
+            <p className="text-xs text-brand-blue mt-1">
               Posición fija — ignora el reflow automático.
             </p>
           ) : computedStartDate ? (
             <p className="text-xs text-brand-gray mt-1">
               Inicio calculado:{" "}
-              <span className="font-medium text-brand-black">{fmtDate(computedStartDate)}</span>
+              <span className="font-medium text-brand-navy">{fmtDate(computedStartDate)}</span>
             </p>
           ) : null}
         </div>
@@ -1265,7 +1265,7 @@ function SegmentPanel({
             <label className="text-xs text-brand-gray block mb-1">Sprint de inicio</label>
             <div className="flex items-center gap-2">
               <StepButton onClick={() => setManualStart((d) => Math.max(0, d - 1))} disabled={!canEdit}>−</StepButton>
-              <span className="text-sm font-semibold text-brand-black w-12 text-center">
+              <span className="text-sm font-semibold text-brand-navy w-12 text-center">
                 {manualStart}
               </span>
               <StepButton onClick={() => setManualStart((d) => d + 1)} disabled={!canEdit}>+</StepButton>
@@ -1289,7 +1289,7 @@ function SegmentPanel({
                 return (
                   <label
                     key={s.id}
-                    className="flex items-center gap-2 text-xs text-brand-black cursor-pointer"
+                    className="flex items-center gap-2 text-xs text-brand-navy cursor-pointer"
                   >
                     <input
                       type="checkbox"
@@ -1302,7 +1302,7 @@ function SegmentPanel({
                         )
                       }
                       disabled={!canEdit}
-                      className="accent-brand-orange"
+                      className="accent-brand-blue"
                     />
                     <span>{teamName}<span className="text-brand-gray">{segLabel}</span></span>
                   </label>
@@ -1317,7 +1317,7 @@ function SegmentPanel({
             <button
               onClick={handleSave}
               disabled={isPending}
-              className="w-full text-sm py-2 rounded-lg bg-brand-orange text-white font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
+              className="w-full text-sm py-2 rounded-lg bg-brand-blue text-white font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
             >
               Guardar
             </button>
@@ -1350,7 +1350,7 @@ function StepButton({
     <button
       onClick={onClick}
       disabled={disabled}
-      className="w-8 h-8 rounded-lg border border-gray-200 flex items-center justify-center text-brand-gray hover:border-brand-orange hover:text-brand-orange disabled:opacity-40 transition-colors"
+      className="w-8 h-8 rounded-lg border border-gray-200 flex items-center justify-center text-brand-gray hover:border-brand-blue hover:text-brand-blue disabled:opacity-40 transition-colors"
     >
       {children}
     </button>
@@ -1445,7 +1445,7 @@ function ProductPanel({
       {/* Header */}
       <div className="px-4 py-3 border-b border-gray-100">
         <p className="text-xs text-brand-gray">Producto</p>
-        <p className="text-sm font-semibold text-brand-black truncate">{product.name}</p>
+        <p className="text-sm font-semibold text-brand-navy truncate">{product.name}</p>
       </div>
 
       {/* Nueva tarea */}
@@ -1454,7 +1454,7 @@ function ProductPanel({
           {!showAddForm ? (
             <button
               onClick={() => { setShowAddForm(true); setNewTeamId(availableTeams[0]?.id ?? ""); }}
-              className="w-full flex items-center gap-1.5 px-4 py-2.5 text-xs font-semibold text-brand-orange hover:bg-orange-50 transition-colors"
+              className="w-full flex items-center gap-1.5 px-4 py-2.5 text-xs font-semibold text-brand-blue hover:bg-blue-50 transition-colors"
             >
               <span className="text-base leading-none">+</span> Nueva tarea
             </button>
@@ -1470,7 +1470,7 @@ function ProductPanel({
                   <select
                     value={newTeamId}
                     onChange={(e) => setNewTeamId(e.target.value)}
-                    className="w-full text-sm border border-gray-200 rounded-lg px-3 py-1.5 bg-white text-brand-black focus:outline-none focus:ring-2 focus:ring-brand-orange/20"
+                    className="w-full text-sm border border-gray-200 rounded-lg px-3 py-1.5 bg-white text-brand-navy focus:outline-none focus:ring-2 focus:ring-brand-blue/20"
                   >
                     {availableTeams.map((t) => (
                       <option key={t.id} value={t.id}>
@@ -1487,13 +1487,13 @@ function ProductPanel({
                 <button
                   onClick={handleAddSubmit}
                   disabled={!newTeamId || availableTeams.length === 0}
-                  className="flex-1 text-xs py-1.5 rounded-lg bg-brand-orange text-white font-semibold hover:opacity-90 disabled:opacity-40 transition-opacity"
+                  className="flex-1 text-xs py-1.5 rounded-lg bg-brand-blue text-white font-semibold hover:opacity-90 disabled:opacity-40 transition-opacity"
                 >
                   Agregar
                 </button>
                 <button
                   onClick={() => setShowAddForm(false)}
-                  className="flex-1 text-xs py-1.5 rounded-lg border border-gray-200 text-brand-gray hover:text-brand-black transition-colors"
+                  className="flex-1 text-xs py-1.5 rounded-lg border border-gray-200 text-brand-gray hover:text-brand-navy transition-colors"
                 >
                   Cancelar
                 </button>
@@ -1509,8 +1509,8 @@ function ProductPanel({
           onClick={() => setTab("deviations")}
           className={`flex-1 text-xs py-2 font-semibold transition-colors ${
             tab === "deviations"
-              ? "text-brand-orange border-b-2 border-brand-orange"
-              : "text-brand-gray hover:text-brand-black"
+              ? "text-brand-blue border-b-2 border-brand-blue"
+              : "text-brand-gray hover:text-brand-navy"
           }`}
         >
           ⚠️ Desvíos
@@ -1519,8 +1519,8 @@ function ProductPanel({
           onClick={() => setTab("baselines")}
           className={`flex-1 text-xs py-2 font-semibold transition-colors ${
             tab === "baselines"
-              ? "text-brand-orange border-b-2 border-brand-orange"
-              : "text-brand-gray hover:text-brand-black"
+              ? "text-brand-blue border-b-2 border-brand-blue"
+              : "text-brand-gray hover:text-brand-navy"
           }`}
         >
           📐 Línea base
@@ -1549,7 +1549,7 @@ function ProductPanel({
                   value={baselineName}
                   onChange={e => setBaselineName(e.target.value)}
                   placeholder="Nombre (opcional, ej: Baseline Q2)"
-                  className="w-full rounded-lg border border-gray-200 px-3 py-1.5 text-xs text-brand-black placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-orange"
+                  className="w-full rounded-lg border border-gray-200 px-3 py-1.5 text-xs text-brand-navy placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-blue"
                 />
                 {captureError && (
                   <p className="text-[11px] text-red-500">{captureError}</p>
@@ -1557,7 +1557,7 @@ function ProductPanel({
                 <button
                   onClick={handleCapture}
                   disabled={capturing || segments.length === 0}
-                  className="self-start px-4 py-1.5 text-xs font-bold rounded-lg bg-brand-orange hover:bg-orange-600 disabled:opacity-50 text-white transition"
+                  className="self-start px-4 py-1.5 text-xs font-bold rounded-lg bg-brand-blue hover:bg-blue-800 disabled:opacity-50 text-white transition"
                 >
                   {capturing ? "Guardando…" : "Guardar snapshot"}
                 </button>
@@ -1589,7 +1589,7 @@ function ProductPanel({
                 >
                   <div className="flex items-start justify-between gap-1">
                     <div className="flex flex-col gap-0.5">
-                      <span className="text-xs font-semibold text-brand-black">
+                      <span className="text-xs font-semibold text-brand-navy">
                         {b.name ?? fmtBaselineDate(b.captured_at)}
                       </span>
                       {b.name && (
@@ -1718,14 +1718,14 @@ function ProductForm({
   }
 
   return (
-    <div className="bg-white rounded-xl border border-brand-orange/20 p-4">
+    <div className="bg-white rounded-xl border border-brand-blue/20 p-4">
       <form onSubmit={handleSubmit} className="space-y-3">
         <div className="flex items-center justify-between">
-          <p className="text-sm font-semibold text-brand-black">Nuevo producto</p>
+          <p className="text-sm font-semibold text-brand-navy">Nuevo producto</p>
           <button
             type="button"
             onClick={onCancel}
-            className="text-brand-gray hover:text-brand-black text-xl leading-none"
+            className="text-brand-gray hover:text-brand-navy text-xl leading-none"
           >
             ×
           </button>
@@ -1734,7 +1734,7 @@ function ProductForm({
         {error && <p className="text-xs text-red-600">{error}</p>}
 
         <input
-          className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-orange/20"
+          className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-blue/20"
           placeholder="Nombre del producto *"
           value={name}
           onChange={(e) => setName(e.target.value)}
@@ -1745,7 +1745,7 @@ function ProductForm({
         {/* Select de canal */}
         {!showNewChannel ? (
           <select
-            className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-brand-orange/20"
+            className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-brand-blue/20"
             value={channelId}
             onChange={(e) => handleChannelSelect(e.target.value)}
           >
@@ -1759,7 +1759,7 @@ function ProductForm({
           <div className="flex items-center gap-2">
             <input
               ref={newChannelRef}
-              className="flex-1 text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-orange/20"
+              className="flex-1 text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-blue/20"
               placeholder="Nombre del canal"
               value={newChannelName}
               onChange={(e) => setNewChannelName(e.target.value)}
@@ -1772,14 +1772,14 @@ function ProductForm({
               type="button"
               onClick={handleAddChannel}
               disabled={isPending || !newChannelName.trim()}
-              className="text-sm px-3 py-2 rounded-lg bg-brand-orange text-white font-medium hover:opacity-90 disabled:opacity-50 transition-opacity"
+              className="text-sm px-3 py-2 rounded-lg bg-brand-blue text-white font-medium hover:opacity-90 disabled:opacity-50 transition-opacity"
             >
               OK
             </button>
             <button
               type="button"
               onClick={() => { setShowNewChannel(false); setNewChannelName(""); }}
-              className="text-sm px-3 py-2 rounded-lg border border-gray-200 text-brand-gray hover:text-brand-black transition-colors"
+              className="text-sm px-3 py-2 rounded-lg border border-gray-200 text-brand-gray hover:text-brand-navy transition-colors"
             >
               Cancelar
             </button>
@@ -1791,7 +1791,7 @@ function ProductForm({
             <label className="text-xs text-brand-gray block mb-1">Inicio *</label>
             <input
               type="date"
-              className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-orange/20"
+              className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-blue/20"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
               required
@@ -1801,7 +1801,7 @@ function ProductForm({
             <label className="text-xs text-brand-gray block mb-1">Salida a producción</label>
             <input
               type="date"
-              className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-orange/20"
+              className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-blue/20"
               value={targetLaunchDate}
               onChange={(e) => setTargetLaunchDate(e.target.value)}
             />
@@ -1812,14 +1812,14 @@ function ProductForm({
           <button
             type="submit"
             disabled={isPending || !name.trim()}
-            className="flex-1 text-sm py-2 rounded-lg bg-brand-orange text-white font-medium hover:opacity-90 disabled:opacity-50 transition-opacity"
+            className="flex-1 text-sm py-2 rounded-lg bg-brand-blue text-white font-medium hover:opacity-90 disabled:opacity-50 transition-opacity"
           >
             {isPending ? "Creando..." : "Crear producto"}
           </button>
           <button
             type="button"
             onClick={onCancel}
-            className="text-sm py-2 px-4 rounded-lg border border-gray-200 text-brand-gray hover:text-brand-black transition-colors"
+            className="text-sm py-2 px-4 rounded-lg border border-gray-200 text-brand-gray hover:text-brand-navy transition-colors"
           >
             Cancelar
           </button>
@@ -1845,7 +1845,7 @@ function ManualModeToggle({
         role="switch"
         aria-checked={active}
         onClick={onToggle}
-        className={`relative w-9 h-5 rounded-full transition-colors ${active ? "bg-brand-orange" : "bg-gray-200"}`}
+        className={`relative w-9 h-5 rounded-full transition-colors ${active ? "bg-brand-blue" : "bg-gray-200"}`}
       >
         <span
           className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${active ? "translate-x-4" : ""}`}
@@ -1860,14 +1860,14 @@ function ManualModeToggle({
 function EmptyState({ canEdit, onAdd }: { canEdit: boolean; onAdd: () => void }) {
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-16 text-center">
-      <p className="text-brand-black font-semibold mb-1">Sin productos todavía</p>
+      <p className="text-brand-navy font-semibold mb-1">Sin productos todavía</p>
       <p className="text-sm text-brand-gray mb-6">
         Cada producto tiene su propio Gantt de equipos con reflow automático.
       </p>
       {canEdit && (
         <button
           onClick={onAdd}
-          className="text-sm px-5 py-2 rounded-lg bg-brand-orange text-white font-medium hover:opacity-90 transition-opacity"
+          className="text-sm px-5 py-2 rounded-lg bg-brand-blue text-white font-medium hover:opacity-90 transition-opacity"
         >
           Crear primer producto
         </button>

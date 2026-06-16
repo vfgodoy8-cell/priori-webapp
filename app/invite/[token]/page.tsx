@@ -41,20 +41,20 @@ export default async function InvitePage({ params }: { params: { token: string }
         {/* Logo */}
         <div className="flex items-center gap-3">
           <div className="flex flex-col gap-1">
-            <div className="h-1.5 w-8 rounded-full bg-brand-orange" />
-            <div className="h-1.5 w-5 rounded-full bg-brand-orange opacity-65" />
-            <div className="h-1.5 w-3 rounded-full bg-brand-orange opacity-30" />
+            <div className="h-1.5 w-8 rounded-full bg-brand-blue" />
+            <div className="h-1.5 w-5 rounded-full bg-brand-blue opacity-65" />
+            <div className="h-1.5 w-3 rounded-full bg-brand-blue opacity-30" />
           </div>
-          <span className="font-bold text-brand-black text-lg">priori</span>
+          <span className="font-bold text-brand-navy text-lg">priori</span>
         </div>
 
         <div className="flex flex-col gap-2">
-          <h1 className="text-xl font-bold text-brand-black">Invitación al equipo</h1>
+          <h1 className="text-xl font-bold text-brand-navy">Invitación al equipo</h1>
           <p className="text-sm text-brand-gray">
             Fuiste invitado a unirte a{" "}
-            <span className="font-semibold text-brand-black">{org?.name ?? "un equipo"}</span>
+            <span className="font-semibold text-brand-navy">{org?.name ?? "un equipo"}</span>
             {" "}como{" "}
-            <span className="font-semibold text-brand-black">
+            <span className="font-semibold text-brand-navy">
               {roleLabels[invitation.role as keyof typeof roleLabels]}
             </span>.
           </p>
@@ -67,13 +67,13 @@ export default async function InvitePage({ params }: { params: { token: string }
             <p className="text-xs text-brand-gray">Inicia sesión o crea una cuenta para aceptar esta invitación.</p>
             <Link
               href={`/login?redirect=/invite/${params.token}`}
-              className="w-full py-3 text-sm font-bold rounded-lg bg-brand-orange hover:bg-orange-600 text-white transition text-center"
+              className="w-full py-3 text-sm font-bold rounded-lg bg-brand-blue hover:bg-blue-800 text-white transition text-center"
             >
               Iniciar sesión
             </Link>
             <Link
               href={`/signup?redirect=/invite/${params.token}`}
-              className="w-full py-3 text-sm font-semibold rounded-lg border border-gray-200 hover:border-brand-orange text-brand-gray hover:text-brand-black transition text-center"
+              className="w-full py-3 text-sm font-semibold rounded-lg border border-gray-200 hover:border-brand-blue text-brand-gray hover:text-brand-navy transition text-center"
             >
               Crear cuenta
             </Link>

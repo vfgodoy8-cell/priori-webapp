@@ -8,9 +8,9 @@ const LABEL_W   = 160;
 const SPRINT_PX = 40;
 
 const PALETTE = [
-  { bg: "#EAF1FB", border: "#BDD5F5", text: "#1E6FC5" },
-  { bg: "#F0FBF7", border: "#BBE8D8", text: "#1D9E75" },
-  { bg: "#FFF4EE", border: "#FDDCB5", text: "#E8621A" },
+  { bg: "#EEF2FF", border: "#C7D2FE", text: "#4F46E5" },
+  { bg: "#F0FAFA", border: "#A3DDD8", text: "#12A594" },
+  { bg: "#FFFBEB", border: "#FDE68A", text: "#D97706" },
   { bg: "#F5EBF9", border: "#E5BFFB", text: "#9333EA" },
   { bg: "#FEF9C3", border: "#FDE68A", text: "#CA8A04" },
   { bg: "#FCE7F3", border: "#F9A8D4", text: "#DB2777" },
@@ -21,9 +21,9 @@ function segmentColor(idx: number) {
 }
 
 const QUARTER_COLORS = [
-  { bg: "#EAF1FB", border: "#BDD5F5", text: "#1E6FC5" },
+  { bg: "#EDF2FC", border: "#B8CEEF", text: "#1E56C4" },
   { bg: "#F0F4F8", border: "#D5DDED", text: "#64748B" },
-  { bg: "#EAF1FB", border: "#BDD5F5", text: "#1E6FC5" },
+  { bg: "#EDF2FC", border: "#B8CEEF", text: "#1E56C4" },
   { bg: "#F0F4F8", border: "#D5DDED", text: "#64748B" },
 ];
 
@@ -110,7 +110,7 @@ export function GanttReadOnly({ teams, segments, layoutMap, monthHeaders, totalS
                 className={`flex-shrink-0 flex items-center px-4 border-r border-gray-100 ${rowBg}`}
                 style={{ width: LABEL_W }}
               >
-                <span className="text-sm font-medium text-brand-black truncate">{team.name}</span>
+                <span className="text-sm font-medium text-brand-navy truncate">{team.name}</span>
               </div>
 
               <div className="flex-1 relative overflow-hidden">

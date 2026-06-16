@@ -110,9 +110,9 @@ export function ShareModal({ mode, productId, onClose }: Props) {
       >
         <div className="bg-white rounded-2xl border border-gray-100 max-w-[480px] w-full my-auto shadow-xl overflow-hidden">
           {/* Header */}
-          <div className="flex items-center justify-between px-5 py-4 bg-orange-50 border-b border-orange-100">
-            <h3 className="text-sm font-bold text-brand-orange">Compartir / Exportar</h3>
-            <button onClick={onClose} className="text-brand-gray hover:text-brand-black text-xl leading-none">×</button>
+          <div className="flex items-center justify-between px-5 py-4 bg-blue-50 border-b border-blue-100">
+            <h3 className="text-sm font-bold text-brand-blue">Compartir / Exportar</h3>
+            <button onClick={onClose} className="text-brand-gray hover:text-brand-navy text-xl leading-none">×</button>
           </div>
 
           <div className="p-5 flex flex-col gap-4">
@@ -130,7 +130,7 @@ export function ShareModal({ mode, productId, onClose }: Props) {
                   />
                   <button
                     onClick={copyPublicLink}
-                    className="px-4 py-2 text-xs font-bold rounded-lg bg-brand-orange hover:bg-orange-600 text-white transition"
+                    className="px-4 py-2 text-xs font-bold rounded-lg bg-brand-blue hover:bg-blue-800 text-white transition"
                   >
                     Copiar
                   </button>
@@ -142,14 +142,14 @@ export function ShareModal({ mode, productId, onClose }: Props) {
                       type="checkbox"
                       checked={expireIn7Days}
                       onChange={(e) => setExpireIn7Days(e.target.checked)}
-                      className="accent-brand-orange"
+                      className="accent-brand-blue"
                     />
                     Expira en 7 días
                   </label>
                   <button
                     onClick={generateLink}
                     disabled={generatingLink}
-                    className="w-full py-2.5 text-sm font-bold rounded-lg bg-brand-orange hover:bg-orange-600 disabled:opacity-60 text-white transition flex items-center justify-center gap-2"
+                    className="w-full py-2.5 text-sm font-bold rounded-lg bg-brand-blue hover:bg-blue-800 disabled:opacity-60 text-white transition flex items-center justify-center gap-2"
                   >
                     {generatingLink ? "Generando…" : "Generar link público"}
                   </button>
@@ -181,11 +181,11 @@ export function ShareModal({ mode, productId, onClose }: Props) {
                     <button
                       key={ch.name}
                       onClick={ch.action}
-                      className="flex items-center gap-3 px-3 py-3 rounded-xl border border-gray-100 hover:border-brand-orange hover:bg-orange-50 transition text-left"
+                      className="flex items-center gap-3 px-3 py-3 rounded-xl border border-gray-100 hover:border-brand-blue hover:bg-blue-50 transition text-left"
                     >
                       <span className="text-xl">{ch.icon}</span>
                       <div>
-                        <div className="text-xs font-bold text-brand-black">{ch.name}</div>
+                        <div className="text-xs font-bold text-brand-navy">{ch.name}</div>
                         <div className="text-[10px] text-brand-gray">{ch.desc}</div>
                       </div>
                     </button>
@@ -204,15 +204,15 @@ export function ShareModal({ mode, productId, onClose }: Props) {
                     <button
                       onClick={exportPDF}
                       disabled={pdfProgress}
-                      className="flex flex-col items-center gap-1 px-3 py-3 rounded-xl border border-gray-100 hover:border-brand-orange hover:bg-orange-50 transition disabled:opacity-60"
+                      className="flex flex-col items-center gap-1 px-3 py-3 rounded-xl border border-gray-100 hover:border-brand-blue hover:bg-blue-50 transition disabled:opacity-60"
                     >
                       <IconFileTypePdf size={22} />
-                      <span className="text-xs font-bold text-brand-black">Vista actual</span>
+                      <span className="text-xs font-bold text-brand-navy">Vista actual</span>
                       <span className="text-[10px] text-brand-gray">{modeLabel}</span>
                     </button>
                   </div>
                   {pdfProgress && (
-                    <p className="text-xs text-brand-orange font-semibold text-center mt-2">Generando PDF…</p>
+                    <p className="text-xs text-brand-blue font-semibold text-center mt-2">Generando PDF…</p>
                   )}
                 </div>
               </>
@@ -223,7 +223,7 @@ export function ShareModal({ mode, productId, onClose }: Props) {
 
       {/* Toast */}
       {toast && (
-        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-[600] bg-brand-black text-white text-xs font-semibold px-4 py-2 rounded-full shadow-lg whitespace-nowrap pointer-events-none">
+        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-[600] bg-brand-navy text-white text-xs font-semibold px-4 py-2 rounded-full shadow-lg whitespace-nowrap pointer-events-none">
           {toast}
         </div>
       )}

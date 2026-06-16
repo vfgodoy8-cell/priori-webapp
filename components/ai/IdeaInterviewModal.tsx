@@ -26,7 +26,7 @@ type Message = { role: "user" | "assistant"; content: string };
 
 type Props = { onClose: () => void };
 
-const inp = "w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-brand-black focus:outline-none focus:ring-2 focus:ring-brand-orange";
+const inp = "w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-brand-navy focus:outline-none focus:ring-2 focus:ring-brand-blue";
 
 const TYPE_LABELS: Record<IdeaSuggestedType, string> = {
   mejora: "Mejora de proceso existente",
@@ -121,23 +121,23 @@ export function IdeaInterviewModal({ onClose }: Props) {
       <div className="relative z-10 w-full max-w-[520px] bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden flex flex-col max-h-[90vh]">
 
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 bg-gradient-to-r from-orange-50 to-white border-b border-gray-100">
+        <div className="flex items-center justify-between px-5 py-4 bg-gradient-to-r from-blue-50 to-white border-b border-gray-100">
           <div className="flex items-center gap-2">
-            <IconBulb size={16} className="text-brand-orange" />
-            <span className="font-bold text-brand-black text-sm">Tengo una idea</span>
+            <IconBulb size={16} className="text-brand-blue" />
+            <span className="font-bold text-brand-navy text-sm">Tengo una idea</span>
           </div>
           {!complete && !savedId && (
             <div className="flex items-center gap-3">
               <span className="text-xs text-brand-gray">Pregunta {step + 1} de {IDEAS_QUESTIONS.length}</span>
               <div className="h-1.5 w-20 bg-gray-100 rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-brand-orange rounded-full transition-all"
+                  className="h-full bg-brand-blue rounded-full transition-all"
                   style={{ width: `${((step + 1) / IDEAS_QUESTIONS.length) * 100}%` }}
                 />
               </div>
             </div>
           )}
-          <button onClick={onClose} className="text-brand-gray hover:text-brand-black">
+          <button onClick={onClose} className="text-brand-gray hover:text-brand-navy">
             <IconX size={18} />
           </button>
         </div>
@@ -150,8 +150,8 @@ export function IdeaInterviewModal({ onClose }: Props) {
                 <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
                   <div className={`max-w-[85%] px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed ${
                     m.role === "user"
-                      ? "bg-brand-orange text-white rounded-tr-sm"
-                      : "bg-gray-100 text-brand-black rounded-tl-sm"
+                      ? "bg-brand-blue text-white rounded-tr-sm"
+                      : "bg-gray-100 text-brand-navy rounded-tl-sm"
                   }`}>
                     {m.content}
                   </div>
@@ -179,12 +179,12 @@ export function IdeaInterviewModal({ onClose }: Props) {
                 disabled={loading}
                 placeholder="Tu respuesta…"
                 onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
-                className="flex-1 resize-none rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange"
+                className="flex-1 resize-none rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue"
               />
               <button
                 onClick={handleSend}
                 disabled={loading || !answer.trim()}
-                className="px-4 rounded-xl bg-brand-orange hover:bg-orange-600 disabled:opacity-50 text-white transition flex items-center flex-shrink-0"
+                className="px-4 rounded-xl bg-brand-blue hover:bg-blue-800 disabled:opacity-50 text-white transition flex items-center flex-shrink-0"
               >
                 <IconChevronRight size={16} />
               </button>
@@ -196,7 +196,7 @@ export function IdeaInterviewModal({ onClose }: Props) {
         {complete && !savedId && (
           <div className="flex flex-col flex-1 overflow-hidden">
             <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-4">
-              <div className="flex items-center gap-2 text-brand-green">
+              <div className="flex items-center gap-2 text-brand-teal">
                 <IconCheck size={18} />
                 <span className="text-sm font-bold">Entrevista completa. Revisá y ajustá:</span>
               </div>
@@ -225,13 +225,13 @@ export function IdeaInterviewModal({ onClose }: Props) {
               {error && <p className="text-xs text-red-500">{error}</p>}
             </div>
             <div className="px-5 py-4 border-t border-gray-100 flex gap-2">
-              <button onClick={onClose} className="px-4 py-2.5 text-sm text-brand-gray border border-gray-200 rounded-lg hover:text-brand-black transition">
+              <button onClick={onClose} className="px-4 py-2.5 text-sm text-brand-gray border border-gray-200 rounded-lg hover:text-brand-navy transition">
                 Cancelar
               </button>
               <button
                 onClick={handleSave}
                 disabled={saving || !extracted.title?.trim()}
-                className="flex-1 py-2.5 text-sm font-bold rounded-lg bg-brand-orange hover:bg-orange-600 disabled:opacity-60 text-white transition"
+                className="flex-1 py-2.5 text-sm font-bold rounded-lg bg-brand-blue hover:bg-blue-800 disabled:opacity-60 text-white transition"
               >
                 {saving ? "Guardando…" : "Guardar idea"}
               </button>
@@ -242,28 +242,28 @@ export function IdeaInterviewModal({ onClose }: Props) {
         {/* Éxito */}
         {savedId && (
           <div className="p-6 flex flex-col gap-4">
-            <div className="flex items-center gap-2 text-brand-green">
+            <div className="flex items-center gap-2 text-brand-teal">
               <IconCheck size={20} />
               <span className="font-bold">Idea guardada</span>
             </div>
             <div className="bg-gray-50 rounded-lg p-3 border border-gray-100">
-              <p className="text-sm font-semibold text-brand-black">{extracted.title}</p>
+              <p className="text-sm font-semibold text-brand-navy">{extracted.title}</p>
               {extracted.problem && <p className="text-xs text-brand-gray mt-1 line-clamp-2">{extracted.problem}</p>}
             </div>
             <div className="flex flex-col gap-2">
               <button
                 onClick={() => router.push(`/squad?idea=${savedId}`)}
-                className="w-full py-2.5 text-sm font-bold rounded-lg bg-brand-orange hover:bg-orange-600 text-white transition"
+                className="w-full py-2.5 text-sm font-bold rounded-lg bg-brand-blue hover:bg-blue-800 text-white transition"
               >
                 Convertir en proyecto →
               </button>
               <button
                 onClick={() => { router.push("/ideas"); onClose(); }}
-                className="w-full py-2.5 text-sm font-semibold rounded-lg border border-gray-200 text-brand-gray hover:text-brand-black transition"
+                className="w-full py-2.5 text-sm font-semibold rounded-lg border border-gray-200 text-brand-gray hover:text-brand-navy transition"
               >
                 Ver todas las ideas
               </button>
-              <button onClick={onClose} className="text-xs text-brand-gray hover:text-brand-black py-1">
+              <button onClick={onClose} className="text-xs text-brand-gray hover:text-brand-navy py-1">
                 Cerrar
               </button>
             </div>

@@ -103,21 +103,21 @@ export function AIInterviewModal({ mode, onConfirm, onClose }: Props) {
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
       <div className="relative z-10 w-full max-w-[520px] bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden flex flex-col max-h-[90vh]">
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 bg-gradient-to-r from-orange-50 to-white border-b border-gray-100">
+        <div className="flex items-center justify-between px-5 py-4 bg-gradient-to-r from-blue-50 to-white border-b border-gray-100">
           <div className="flex items-center gap-2">
-            <IconSparkles size={16} className="text-brand-orange" />
-            <span className="font-bold text-brand-black text-sm">Cargar con Priori AI</span>
+            <IconSparkles size={16} className="text-brand-blue" />
+            <span className="font-bold text-brand-navy text-sm">Cargar con Priori AI</span>
           </div>
           {!complete && (
             <div className="flex items-center gap-3">
               <span className="text-xs text-brand-gray">Pregunta {step + 1} de {questions.length}</span>
               <div className="h-1.5 w-20 bg-gray-100 rounded-full overflow-hidden">
-                <div className="h-full bg-brand-orange rounded-full transition-all"
+                <div className="h-full bg-brand-blue rounded-full transition-all"
                   style={{ width: `${((step + 1) / questions.length) * 100}%` }} />
               </div>
             </div>
           )}
-          <button onClick={onClose} className="text-brand-gray hover:text-brand-black">
+          <button onClick={onClose} className="text-brand-gray hover:text-brand-navy">
             <IconX size={18} />
           </button>
         </div>
@@ -130,8 +130,8 @@ export function AIInterviewModal({ mode, onConfirm, onClose }: Props) {
                 <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
                   <div className={`max-w-[85%] px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed ${
                     m.role === "user"
-                      ? "bg-brand-orange text-white rounded-tr-sm"
-                      : "bg-gray-100 text-brand-black rounded-tl-sm"
+                      ? "bg-brand-blue text-white rounded-tr-sm"
+                      : "bg-gray-100 text-brand-navy rounded-tl-sm"
                   }`}>
                     {m.content}
                   </div>
@@ -155,9 +155,9 @@ export function AIInterviewModal({ mode, onConfirm, onClose }: Props) {
               <textarea value={answer} onChange={e => setAnswer(e.target.value)} rows={2} disabled={loading}
                 placeholder="Tu respuesta..."
                 onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
-                className="flex-1 resize-none rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-orange" />
+                className="flex-1 resize-none rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue" />
               <button onClick={handleSend} disabled={loading || !answer.trim()}
-                className="px-4 rounded-xl bg-brand-orange hover:bg-orange-600 disabled:opacity-50 text-white transition flex items-center gap-1 text-sm font-semibold flex-shrink-0">
+                className="px-4 rounded-xl bg-brand-blue hover:bg-blue-800 disabled:opacity-50 text-white transition flex items-center gap-1 text-sm font-semibold flex-shrink-0">
                 <IconChevronRight size={16} />
               </button>
             </div>
@@ -166,18 +166,18 @@ export function AIInterviewModal({ mode, onConfirm, onClose }: Props) {
           /* Confirmation screen */
           <div className="flex flex-col flex-1 overflow-hidden">
             <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-4">
-              <div className="flex items-center gap-2 text-brand-green">
+              <div className="flex items-center gap-2 text-brand-teal">
                 <IconCheck size={18} />
                 <span className="text-sm font-bold">Entrevista completa. Revisa y ajusta los datos:</span>
               </div>
               <ExtractedForm mode={mode} data={extracted} onChange={setExtracted} />
             </div>
             <div className="px-5 py-4 border-t border-gray-100 flex gap-2">
-              <button onClick={onClose} className="px-4 py-2.5 text-sm text-brand-gray border border-gray-200 rounded-lg hover:text-brand-black transition">
+              <button onClick={onClose} className="px-4 py-2.5 text-sm text-brand-gray border border-gray-200 rounded-lg hover:text-brand-navy transition">
                 Cancelar
               </button>
               <button onClick={() => onConfirm(extracted)}
-                className="flex-1 py-2.5 text-sm font-bold rounded-lg bg-brand-orange hover:bg-orange-600 text-white transition">
+                className="flex-1 py-2.5 text-sm font-bold rounded-lg bg-brand-blue hover:bg-blue-800 text-white transition">
                 Crear ${mode === "squad" ? "proyecto" : "iniciativa"}
               </button>
             </div>
@@ -188,7 +188,7 @@ export function AIInterviewModal({ mode, onConfirm, onClose }: Props) {
   );
 }
 
-const inp = "w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-brand-black focus:outline-none focus:ring-2 focus:ring-brand-orange";
+const inp = "w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-brand-navy focus:outline-none focus:ring-2 focus:ring-brand-blue";
 const Q_LABELS = ["Q1", "Q2", "Q3", "Q4"];
 
 function ExtractedForm({ mode, data, onChange }: { mode: "squad" | "cross"; data: Extracted; onChange: (d: Extracted) => void }) {

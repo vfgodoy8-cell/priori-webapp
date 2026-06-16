@@ -21,7 +21,7 @@ function SubmitBtn({ label }: { label: string }) {
     <button
       type="submit"
       disabled={pending}
-      className="flex-1 py-2.5 text-sm font-bold rounded-lg bg-brand-orange hover:bg-orange-600 disabled:opacity-60 text-white transition"
+      className="flex-1 py-2.5 text-sm font-bold rounded-lg bg-brand-blue hover:bg-blue-800 disabled:opacity-60 text-white transition"
     >
       {pending ? "Guardando…" : label}
     </button>
@@ -132,7 +132,7 @@ export function AnalystPanel({ projects, orgId, config, onConfigChange, forceEdi
       {/* FAB */}
       <button
         onClick={() => setOpen(true)}
-        className="fixed bottom-7 right-7 z-[200] w-12 h-12 rounded-full bg-brand-orange hover:bg-orange-600 text-white text-2xl flex items-center justify-center shadow-lg transition"
+        className="fixed bottom-7 right-7 z-[200] w-12 h-12 rounded-full bg-brand-blue hover:bg-blue-800 text-white text-2xl flex items-center justify-center shadow-lg transition"
         title="Panel del analista"
       >
         ⚙
@@ -151,9 +151,9 @@ export function AnalystPanel({ projects, orgId, config, onConfigChange, forceEdi
         className={`fixed top-0 right-0 z-[300] h-full w-[420px] bg-white border-l border-gray-100 shadow-2xl flex flex-col transition-transform duration-300 ${open ? "translate-x-0" : "translate-x-full"}`}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3.5 bg-orange-50 border-b-2 border-brand-orange">
-          <h3 className="text-[15px] font-bold text-brand-orange">Panel del analista</h3>
-          <button onClick={() => { setOpen(false); cancelEdit(); }} className="text-brand-gray hover:text-brand-black text-xl leading-none">×</button>
+        <div className="flex items-center justify-between px-4 py-3.5 bg-blue-50 border-b-2 border-brand-blue">
+          <h3 className="text-[15px] font-bold text-brand-blue">Panel del analista</h3>
+          <button onClick={() => { setOpen(false); cancelEdit(); }} className="text-brand-gray hover:text-brand-navy text-xl leading-none">×</button>
         </div>
 
         {/* Tabs */}
@@ -162,7 +162,7 @@ export function AnalystPanel({ projects, orgId, config, onConfigChange, forceEdi
             <button
               key={t}
               onClick={() => setTab(t)}
-              className={`flex-1 py-2.5 text-[13px] font-semibold transition border-b-2 ${tab === t ? "text-brand-orange border-brand-orange" : "text-brand-gray border-transparent hover:text-brand-black"}`}
+              className={`flex-1 py-2.5 text-[13px] font-semibold transition border-b-2 ${tab === t ? "text-brand-blue border-brand-blue" : "text-brand-gray border-transparent hover:text-brand-navy"}`}
             >
               {t === "form" ? "Formulario" : t === "items" ? "Proyectos" : "Config"}
             </button>
@@ -170,7 +170,7 @@ export function AnalystPanel({ projects, orgId, config, onConfigChange, forceEdi
           {editProject && (
             <button
               onClick={() => setTab("comments")}
-              className={`flex-1 py-2.5 text-[13px] font-semibold transition border-b-2 ${tab === "comments" ? "text-brand-orange border-brand-orange" : "text-brand-gray border-transparent hover:text-brand-black"}`}
+              className={`flex-1 py-2.5 text-[13px] font-semibold transition border-b-2 ${tab === "comments" ? "text-brand-blue border-brand-blue" : "text-brand-gray border-transparent hover:text-brand-navy"}`}
             >
               💬
             </button>
@@ -178,7 +178,7 @@ export function AnalystPanel({ projects, orgId, config, onConfigChange, forceEdi
           {editProject && (
             <button
               onClick={() => setTab("history")}
-              className={`flex-1 py-2.5 text-[13px] font-semibold transition border-b-2 ${tab === "history" ? "text-brand-orange border-brand-orange" : "text-brand-gray border-transparent hover:text-brand-black"}`}
+              className={`flex-1 py-2.5 text-[13px] font-semibold transition border-b-2 ${tab === "history" ? "text-brand-blue border-brand-blue" : "text-brand-gray border-transparent hover:text-brand-navy"}`}
             >
               📋
             </button>
@@ -186,7 +186,7 @@ export function AnalystPanel({ projects, orgId, config, onConfigChange, forceEdi
           {editProject && (
             <button
               onClick={() => setTab("deviations")}
-              className={`flex-1 py-2.5 text-[13px] font-semibold transition border-b-2 ${tab === "deviations" ? "text-brand-orange border-brand-orange" : "text-brand-gray border-transparent hover:text-brand-black"}`}
+              className={`flex-1 py-2.5 text-[13px] font-semibold transition border-b-2 ${tab === "deviations" ? "text-brand-blue border-brand-blue" : "text-brand-gray border-transparent hover:text-brand-navy"}`}
               title="Desvíos"
             >
               ⚠️
@@ -204,7 +204,7 @@ export function AnalystPanel({ projects, orgId, config, onConfigChange, forceEdi
               {/* Slice creation form */}
               {sliceParent && (
                 <>
-                  <div className="flex items-center gap-2 px-3 py-2 bg-blue-50 border border-blue-100 rounded-lg text-xs text-brand-blue font-semibold">
+                  <div className="flex items-center gap-2 px-3 py-2 bg-blue-50 border border-blue-100 rounded-lg text-xs text-brand-indigo font-semibold">
                     ⑂ <span>Slice de: {sliceParent.name}</span>
                   </div>
                   <div className="text-xs font-bold text-brand-gray uppercase tracking-wider">Nuevo slice</div>
@@ -229,7 +229,7 @@ export function AnalystPanel({ projects, orgId, config, onConfigChange, forceEdi
                       <p className="text-xs text-red-600 bg-red-50 rounded px-3 py-2">{sliceState.error}</p>
                     )}
                     <div className="flex gap-2 pt-1">
-                      <button type="button" onClick={() => setSliceParent(null)} className="px-4 py-2.5 text-sm text-brand-gray border border-gray-200 rounded-lg hover:text-brand-black transition">
+                      <button type="button" onClick={() => setSliceParent(null)} className="px-4 py-2.5 text-sm text-brand-gray border border-gray-200 rounded-lg hover:text-brand-navy transition">
                         Cancelar
                       </button>
                       <SubmitBtn label="Crear slice" />
@@ -245,13 +245,13 @@ export function AnalystPanel({ projects, orgId, config, onConfigChange, forceEdi
                     <button
                       type="button"
                       onClick={() => setAiInterview(true)}
-                      className="flex items-center justify-center gap-2 w-full py-2 text-[13px] font-semibold text-brand-orange border border-orange-200 rounded-lg hover:bg-orange-50 bg-orange-50/50 transition mb-1"
+                      className="flex items-center justify-center gap-2 w-full py-2 text-[13px] font-semibold text-brand-blue border border-blue-200 rounded-lg hover:bg-blue-50 bg-blue-50/50 transition mb-1"
                     >
                       <IconSparkles size={14} /> Cargar con IA
                     </button>
                   )}
                   {editProject && (
-                    <div className="flex items-center gap-2 px-3 py-2 bg-orange-50 border border-orange-100 rounded-lg text-xs text-brand-orange font-semibold">
+                    <div className="flex items-center gap-2 px-3 py-2 bg-blue-50 border border-blue-100 rounded-lg text-xs text-brand-blue font-semibold">
                       ✏️ <span>Editando: {editProject.name}</span>
                     </div>
                   )}
@@ -342,7 +342,7 @@ export function AnalystPanel({ projects, orgId, config, onConfigChange, forceEdi
 
                     <div className="flex gap-2 pt-1">
                       {editProject && (
-                        <button type="button" onClick={cancelEdit} className="px-4 py-2.5 text-sm text-brand-gray border border-gray-200 rounded-lg hover:text-brand-black transition">
+                        <button type="button" onClick={cancelEdit} className="px-4 py-2.5 text-sm text-brand-gray border border-gray-200 rounded-lg hover:text-brand-navy transition">
                           Cancelar
                         </button>
                       )}
@@ -355,7 +355,7 @@ export function AnalystPanel({ projects, orgId, config, onConfigChange, forceEdi
                     <button
                       type="button"
                       onClick={() => setSliceParent(editProject)}
-                      className="flex items-center justify-center gap-2 w-full py-2 text-[13px] font-semibold text-brand-blue border border-blue-200 rounded-lg hover:bg-blue-50 transition"
+                      className="flex items-center justify-center gap-2 w-full py-2 text-[13px] font-semibold text-brand-indigo border border-blue-200 rounded-lg hover:bg-blue-50 transition"
                     >
                       ⑂ Crear slice
                     </button>
@@ -455,18 +455,18 @@ export function AnalystPanel({ projects, orgId, config, onConfigChange, forceEdi
                 <div className="text-sm font-bold text-brand-gray uppercase tracking-wider mb-3">Criterios de la Matriz</div>
                 <div className="flex flex-col gap-3">
                   <div>
-                    <div className="text-[13px] font-semibold text-brand-black mb-2">Métrica de impacto</div>
+                    <div className="text-[13px] font-semibold text-brand-navy mb-2">Métrica de impacto</div>
                     <div className="flex gap-2">
                       {(["money", "clients"] as const).map(m => (
                         <button key={m} onClick={() => { const c = { ...config, metric: m }; onConfigChange(c); saveConfig(orgId, c); }}
-                          className={`flex-1 py-1.5 text-[13px] rounded-lg border font-semibold transition ${config.metric === m ? "bg-brand-orange text-white border-brand-orange" : "bg-white text-brand-gray border-gray-200 hover:border-brand-orange"}`}>
+                          className={`flex-1 py-1.5 text-[13px] rounded-lg border font-semibold transition ${config.metric === m ? "bg-brand-blue text-white border-brand-blue" : "bg-white text-brand-gray border-gray-200 hover:border-brand-blue"}`}>
                           {m === "money" ? "💰 Ventas ($)" : "👥 Clientes"}
                         </button>
                       ))}
                     </div>
                   </div>
                   <div>
-                    <div className="text-[13px] font-semibold text-brand-black mb-2">Umbrales de impacto</div>
+                    <div className="text-[13px] font-semibold text-brand-navy mb-2">Umbrales de impacto</div>
                     <ThrRow label="Alto ≥" badge="Alto" badgeColor="#0d6e52" badgeBg="rgba(29,158,117,.15)">
                       <input type="number" min="0" value={config.iHigh}
                         onChange={e => { const c = { ...config, iHigh: parseFloat(e.target.value) || 0 }; onConfigChange(c); saveConfig(orgId, c); }}
@@ -479,7 +479,7 @@ export function AnalystPanel({ projects, orgId, config, onConfigChange, forceEdi
                     </ThrRow>
                   </div>
                   <div>
-                    <div className="text-[13px] font-semibold text-brand-black mb-2">Umbrales de esfuerzo (sprints)</div>
+                    <div className="text-[13px] font-semibold text-brand-navy mb-2">Umbrales de esfuerzo (sprints)</div>
                     <ThrRow label="Alto ≥" badge="Alto" badgeColor="#8a1f1f" badgeBg="rgba(226,75,74,.12)">
                       <input type="number" min="1" max="24" value={config.eHigh}
                         onChange={e => { const c = { ...config, eHigh: parseInt(e.target.value) || 1 }; onConfigChange(c); saveConfig(orgId, c); }}
@@ -535,7 +535,7 @@ function ProjectRow({ p, editProject, onEdit, indent, hasSlices }: { p: Project;
 
   return (
     <div
-      className={`flex items-center gap-2 px-3 py-2.5 rounded-lg border ${isEd ? "border-brand-orange bg-orange-50" : "border-gray-100 bg-gray-50"}`}
+      className={`flex items-center gap-2 px-3 py-2.5 rounded-lg border ${isEd ? "border-brand-blue bg-blue-50" : "border-gray-100 bg-gray-50"}`}
       style={indent ? { marginLeft: 16, borderLeft: `2px solid ${m.color}44` } : undefined}
     >
       {indent ? (
@@ -544,9 +544,9 @@ function ProjectRow({ p, editProject, onEdit, indent, hasSlices }: { p: Project;
         <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: m.color }} />
       )}
       <div className="flex-1 min-w-0">
-        <div className="text-[13px] font-semibold text-brand-black truncate">
-          {p.slice_label && <span className="text-brand-blue mr-1">{p.slice_label}</span>}
-          {p.name} {isEd && <span className="text-brand-orange">✏️</span>}
+        <div className="text-[13px] font-semibold text-brand-navy truncate">
+          {p.slice_label && <span className="text-brand-indigo mr-1">{p.slice_label}</span>}
+          {p.name} {isEd && <span className="text-brand-blue">✏️</span>}
           {hasSlices && <span className="text-[10px] text-brand-gray ml-1">⑂</span>}
         </div>
         <div className="text-xs text-brand-gray">
@@ -557,9 +557,9 @@ function ProjectRow({ p, editProject, onEdit, indent, hasSlices }: { p: Project;
         {m.priority}
       </span>
       <div className="flex gap-1 flex-shrink-0">
-        <button onClick={() => onEdit(p)} className="text-xs text-gray-400 hover:text-brand-orange px-1 transition" title="Editar">✏️</button>
+        <button onClick={() => onEdit(p)} className="text-xs text-gray-400 hover:text-brand-blue px-1 transition" title="Editar">✏️</button>
         <form action={discardWithId} style={{ display: "inline" }}>
-          <button type="submit" className="text-xs text-gray-400 hover:text-brand-orange px-1 transition" title="Descartar">📥</button>
+          <button type="submit" className="text-xs text-gray-400 hover:text-brand-blue px-1 transition" title="Descartar">📥</button>
         </form>
         <form action={deleteWithId} style={{ display: "inline" }}>
           <button type="submit" className="text-xs text-gray-400 hover:text-red-600 px-1 transition" title="Eliminar">🗑️</button>
@@ -599,4 +599,4 @@ function ThrRow({ label, badge, badgeColor, badgeBg, children }: { label: string
   );
 }
 
-const inp = "w-full rounded-lg border border-gray-200 px-2.5 py-2 text-sm text-brand-black placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-orange focus:border-transparent bg-white";
+const inp = "w-full rounded-lg border border-gray-200 px-2.5 py-2 text-sm text-brand-navy placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-transparent bg-white";

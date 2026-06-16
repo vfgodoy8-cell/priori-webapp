@@ -204,16 +204,16 @@ export default async function SharePage({ params }: Props) {
         <div className="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="flex flex-col gap-1">
-              <div className="h-1.5 w-8 rounded-full bg-brand-orange" />
-              <div className="h-1.5 w-5 rounded-full bg-brand-orange opacity-65" />
-              <div className="h-1.5 w-3 rounded-full bg-brand-orange opacity-30" />
+              <div className="h-1.5 w-8 rounded-full bg-brand-blue" />
+              <div className="h-1.5 w-5 rounded-full bg-brand-blue opacity-65" />
+              <div className="h-1.5 w-3 rounded-full bg-brand-blue opacity-30" />
             </div>
-            <span className="font-bold text-brand-black text-lg leading-none">priori</span>
+            <span className="font-bold text-brand-navy text-lg leading-none">priori</span>
           </div>
 
           <div className="flex items-center gap-3">
             <span className="text-sm font-medium text-brand-gray">{org.name}</span>
-            <span className="text-xs font-bold px-3 py-1 rounded-full bg-orange-50 text-brand-orange border border-orange-200">
+            <span className="text-xs font-bold px-3 py-1 rounded-full bg-blue-50 text-brand-blue border border-blue-200">
               Vista compartida
             </span>
           </div>
@@ -224,7 +224,7 @@ export default async function SharePage({ params }: Props) {
       <main className="max-w-7xl mx-auto px-6 py-8 flex-1 w-full">
         <div className="flex items-start justify-between mb-6">
           <div>
-            <h1 className="text-xl font-bold text-brand-black">{modeLabel}</h1>
+            <h1 className="text-xl font-bold text-brand-navy">{modeLabel}</h1>
             <p className="text-xs text-brand-gray mt-0.5">{subtitle}</p>
           </div>
           <span className="text-xs font-bold px-4 py-1.5 rounded-full bg-gray-100 text-brand-gray">
@@ -245,7 +245,7 @@ export default async function SharePage({ params }: Props) {
           <span>
             Vista de solo lectura compartida por <strong>{org.name}</strong> · Generada el {createdAt}
           </span>
-          <span className="font-semibold text-brand-orange">
+          <span className="font-semibold text-brand-blue">
             Powered by priori™
           </span>
         </div>

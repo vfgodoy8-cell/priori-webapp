@@ -1,12 +1,12 @@
 ﻿import React from "react";
 import { Document, Page, View, Text, StyleSheet } from "@react-pdf/renderer";
 
-const ORANGE = "#E8621A";
-const BLACK  = "#111111";
-const GRAY   = "#6B6B6B";
-const GREEN  = "#1D9E75";
-const BLUE   = "#1E6FC5";
-const RED    = "#E24B4A";
+const BRAND  = "#1E56C4";
+const NAVY   = "#0D2240";
+const GRAY   = "#5C6B7A";
+const TEAL   = "#12A594";
+const INDIGO = "#4F46E5";
+const RED    = "#DC2626";
 
 const Q_LABELS = ["Q1", "Q2", "Q3", "Q4"];
 const Q_SUB    = ["Ene-Mar", "Abr-Jun", "Jul-Sep", "Oct-Dic"];
@@ -22,7 +22,7 @@ export type PdfInitiative = {
   team_ids: string[]; quadrant: "p0" | "p1" | "p2" | "p3";
 };
 
-const QUAD_COLOR: Record<string, string> = { p1: GREEN, p2: BLUE, p3: GRAY, p0: RED };
+const QUAD_COLOR: Record<string, string> = { p1: TEAL, p2: INDIGO, p3: GRAY, p0: RED };
 const QUAD_LABEL: Record<string, string> = { p1: "P1", p2: "P2", p3: "P3", p0: "P0" };
 
 type Props = { orgName: string; date: string; teams: PdfTeam[]; initiatives: PdfInitiative[] };
@@ -40,12 +40,12 @@ function teamUsed(initiatives: PdfInitiative[], teamId: string, q: number) {
 }
 
 function capColor(pct: number) {
-  return pct >= 100 ? RED : pct >= 95 ? ORANGE : pct >= 90 ? "#EF9F27" : GREEN;
+  return pct >= 100 ? RED : pct >= 95 ? "#F59E0B" : pct >= 90 ? "#FBBF24" : TEAL;
 }
 
 const s = StyleSheet.create({
   page:          { backgroundColor: "#ffffff", paddingBottom: 32 },
-  headerBar:     { backgroundColor: ORANGE, paddingHorizontal: 24, paddingVertical: 8, flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  headerBar:     { backgroundColor: BRAND, paddingHorizontal: 24, paddingVertical: 8, flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   headerTitle:   { color: "#fff", fontSize: 11, fontWeight: "bold" },
   headerDate:    { color: "#fff", fontSize: 9 },
   logoRow:       { flexDirection: "row", alignItems: "center", gap: 6 },
@@ -57,18 +57,18 @@ const s = StyleSheet.create({
   sectionTitle:  { fontSize: 9, fontWeight: "bold", color: GRAY, textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 8 },
   timelineHead:  { flexDirection: "row", marginBottom: 2 },
   qCol:          { flex: 1, alignItems: "center", paddingVertical: 5, backgroundColor: "#F9FAFB", border: "1 solid #E5E7EB" },
-  qLabel:        { fontSize: 9, fontWeight: "bold", color: BLACK },
+  qLabel:        { fontSize: 9, fontWeight: "bold", color: NAVY },
   qSub:          { fontSize: 7, color: GRAY },
   iniRow:        { flexDirection: "row", minHeight: 28, marginBottom: 3 },
   iniCard:       { borderRadius: 4, padding: 4, justifyContent: "center" },
-  iniName:       { fontSize: 8, fontWeight: "bold", color: BLACK },
+  iniName:       { fontSize: 8, fontWeight: "bold", color: NAVY },
   iniMeta:       { fontSize: 7, color: GRAY },
   capTable:      { marginTop: 16 },
   capHeadRow:    { flexDirection: "row", backgroundColor: "#F9FAFB", borderTop: "1 solid #E5E7EB", borderLeft: "1 solid #E5E7EB" },
   capRow:        { flexDirection: "row", borderLeft: "1 solid #E5E7EB" },
   capTeamCell:   { width: 110, padding: 5, borderRight: "1 solid #E5E7EB", borderBottom: "1 solid #E5E7EB" },
   capQCell:      { flex: 1, padding: 5, alignItems: "center", borderRight: "1 solid #E5E7EB", borderBottom: "1 solid #E5E7EB" },
-  capTxt:        { fontSize: 8, color: BLACK },
+  capTxt:        { fontSize: 8, color: NAVY },
   capHeadTxt:    { fontSize: 8, fontWeight: "bold", color: GRAY },
   progressBg:    { width: 40, height: 4, backgroundColor: "#E5E7EB", borderRadius: 2, overflow: "hidden", marginBottom: 2 },
   progressFg:    { height: 4, borderRadius: 2 },

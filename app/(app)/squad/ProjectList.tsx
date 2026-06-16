@@ -24,7 +24,7 @@ export function ProjectList({ projects, discarded, onEdit, onNew, readOnly }: Pr
         {!readOnly && (
           <button
             onClick={onNew}
-            className="bg-brand-orange hover:bg-orange-600 text-white font-semibold rounded-lg px-4 py-2 text-sm transition"
+            className="bg-brand-blue hover:bg-blue-800 text-white font-semibold rounded-lg px-4 py-2 text-sm transition"
           >
             + Nuevo proyecto
           </button>
@@ -99,7 +99,7 @@ function ProjectRow({
 
   return (
     <tr className="hover:bg-gray-50 transition group">
-      <td className="px-4 py-3 font-medium text-brand-black max-w-[200px] truncate">
+      <td className="px-4 py-3 font-medium text-brand-navy max-w-[200px] truncate">
         {p.name}
       </td>
       <td className="px-4 py-3">
@@ -110,12 +110,12 @@ function ProjectRow({
           {meta.priority} {meta.label}
         </span>
       </td>
-      <td className="px-4 py-3 text-right text-brand-black tabular-nums">
+      <td className="px-4 py-3 text-right text-brand-navy tabular-nums">
         {p.impact_metric === "revenue"
           ? `$${Number(p.impact_value).toLocaleString("es-AR")}`
           : `${Number(p.impact_value).toLocaleString("es-AR")} cli.`}
       </td>
-      <td className="px-4 py-3 text-right text-brand-black tabular-nums">
+      <td className="px-4 py-3 text-right text-brand-navy tabular-nums">
         {p.effort_sprints} sp
       </td>
       <td className="px-4 py-3 text-right text-brand-gray tabular-nums">
@@ -138,14 +138,14 @@ function ProjectRow({
           <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition">
             <button
               onClick={() => onEdit(p)}
-              className="text-xs text-brand-gray hover:text-brand-black px-2 py-1 rounded hover:bg-gray-100 transition"
+              className="text-xs text-brand-gray hover:text-brand-navy px-2 py-1 rounded hover:bg-gray-100 transition"
             >
               Editar
             </button>
             <form action={discardWithId}>
               <button
                 type="submit"
-                className="text-xs text-brand-gray hover:text-brand-orange px-2 py-1 rounded hover:bg-orange-50 transition"
+                className="text-xs text-brand-gray hover:text-brand-blue px-2 py-1 rounded hover:bg-blue-50 transition"
               >
                 Descartar
               </button>
@@ -168,7 +168,7 @@ function ProjectRow({
 function DiscardedSection({ discarded, readOnly }: { discarded: Project[]; readOnly?: boolean }) {
   return (
     <details className="group">
-      <summary className="flex items-center gap-2 cursor-pointer text-sm text-brand-gray hover:text-brand-black transition list-none">
+      <summary className="flex items-center gap-2 cursor-pointer text-sm text-brand-gray hover:text-brand-navy transition list-none">
         <span className="text-xs">▶</span>
         <span>Descartados ({discarded.length})</span>
       </summary>
@@ -191,7 +191,7 @@ function DiscardedRow({ project: p, readOnly }: { project: Project; readOnly?: b
 
   return (
     <tr className="hover:bg-gray-50 transition group opacity-60 hover:opacity-100">
-      <td className="px-4 py-3 font-medium text-brand-black line-through">
+      <td className="px-4 py-3 font-medium text-brand-navy line-through">
         {p.name}
       </td>
       {!readOnly && (
@@ -200,7 +200,7 @@ function DiscardedRow({ project: p, readOnly }: { project: Project; readOnly?: b
             <form action={restoreWithId}>
               <button
                 type="submit"
-                className="text-xs text-brand-green hover:underline px-2 py-1 rounded hover:bg-green-50 transition"
+                className="text-xs text-brand-teal hover:underline px-2 py-1 rounded hover:bg-green-50 transition"
               >
                 Restaurar
               </button>
@@ -226,7 +226,7 @@ function EmptyState({ onAdd }: { onAdd: () => void }) {
       <p className="text-brand-gray text-sm">No hay proyectos todavía.</p>
       <button
         onClick={onAdd}
-        className="text-sm text-brand-orange font-medium hover:underline"
+        className="text-sm text-brand-blue font-medium hover:underline"
       >
         Crear el primero
       </button>

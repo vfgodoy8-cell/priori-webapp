@@ -61,20 +61,20 @@ export function RoadmapReadOnly({
       <div className="bg-white rounded-xl border border-gray-200 p-5">
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div className="flex flex-col gap-1">
-            <h2 className="text-lg font-bold text-brand-black">{productName}</h2>
+            <h2 className="text-lg font-bold text-brand-navy">{productName}</h2>
             {channelName && (
-              <span className="text-xs text-brand-gray">Canal: <span className="font-medium text-brand-black">{channelName}</span></span>
+              <span className="text-xs text-brand-gray">Canal: <span className="font-medium text-brand-navy">{channelName}</span></span>
             )}
           </div>
           <div className="flex items-center gap-4 flex-wrap">
             <div className="flex flex-col items-end gap-0.5">
               <span className="text-[10px] text-brand-gray uppercase tracking-wide">Inicio</span>
-              <span className="text-sm font-semibold text-brand-black">{fmtDateShort(startDate)}</span>
+              <span className="text-sm font-semibold text-brand-navy">{fmtDateShort(startDate)}</span>
             </div>
             {estimatedEnd && (
               <div className="flex flex-col items-end gap-0.5">
                 <span className="text-[10px] text-brand-gray uppercase tracking-wide">Publicación estimada</span>
-                <span className="text-sm font-semibold text-brand-orange">{fmtDate(estimatedEnd)}</span>
+                <span className="text-sm font-semibold text-brand-blue">{fmtDate(estimatedEnd)}</span>
               </div>
             )}
           </div>
@@ -97,7 +97,7 @@ export function RoadmapReadOnly({
 
       {/* Desvíos */}
       <div className="flex flex-col gap-3">
-        <h3 className="text-sm font-bold text-brand-black">
+        <h3 className="text-sm font-bold text-brand-navy">
           Desvíos
           {deviations.length > 0 && (
             <span className="ml-2 text-xs font-normal text-brand-gray">({deviations.length})</span>
@@ -116,20 +116,20 @@ export function RoadmapReadOnly({
                 className={`rounded-xl border p-4 flex flex-col gap-2 ${
                   d.status === "resolved"
                     ? "border-gray-100 bg-gray-50 opacity-70"
-                    : "border-orange-100 bg-orange-50/40"
+                    : "border-blue-100 bg-blue-50/40"
                 }`}
               >
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-xs font-semibold text-brand-black">{fmtDateShort(d.date)}</span>
+                  <span className="text-xs font-semibold text-brand-navy">{fmtDateShort(d.date)}</span>
                   <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
                     d.status === "open"
-                      ? "bg-orange-100 text-brand-orange"
-                      : "bg-green-100 text-brand-green"
+                      ? "bg-blue-100 text-brand-blue"
+                      : "bg-green-100 text-brand-teal"
                   }`}>
                     {d.status === "open" ? "Abierto" : "Resuelto"}
                   </span>
                 </div>
-                <p className="text-sm text-brand-black leading-snug">{d.reason}</p>
+                <p className="text-sm text-brand-navy leading-snug">{d.reason}</p>
                 {d.affected_stakeholders && (
                   <p className="text-xs text-brand-gray">
                     <span className="font-semibold">Stakeholders afectados:</span> {d.affected_stakeholders}

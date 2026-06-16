@@ -19,16 +19,16 @@ const ACTION_ICON: Record<ActivityAction, string> = {
 };
 
 const ACTION_COLOR: Record<ActivityAction, string> = {
-  created:   "#1D9E75",
-  updated:   "#1E6FC5",
-  deleted:   "#E24B4A",
-  placed:    "#E8621A",
-  unplaced:  "#6B6B6B",
-  discarded: "#E24B4A",
-  restored:  "#1D9E75",
-  commented: "#6B6B6B",
-  blocked:   "#E24B4A",
-  unblocked: "#1D9E75",
+  created:   "#12A594",
+  updated:   "#4F46E5",
+  deleted:   "#DC2626",
+  placed:    "#1E56C4",
+  unplaced:  "#5C6B7A",
+  discarded: "#DC2626",
+  restored:  "#12A594",
+  commented: "#5C6B7A",
+  blocked:   "#DC2626",
+  unblocked: "#12A594",
 };
 
 type Props = {
@@ -61,7 +61,7 @@ export function ActivityFeed({ entityId }: Props) {
 
 function ActivityEntry({ entry, isLast }: { entry: ActivityLog; isLast: boolean }) {
   const action = entry.action as ActivityAction;
-  const color = ACTION_COLOR[action] ?? "#6B6B6B";
+  const color = ACTION_COLOR[action] ?? "#5C6B7A";
   const icon = ACTION_ICON[action] ?? "·";
   const label = ACTION_LABEL[action] ?? entry.action;
   const actor = entry.actor?.full_name ?? "Alguien";
@@ -82,14 +82,14 @@ function ActivityEntry({ entry, isLast }: { entry: ActivityLog; isLast: boolean 
       {/* Content */}
       <div className="flex-1 pb-3 min-w-0">
         <div className="flex items-baseline gap-1 flex-wrap">
-          <span className="text-[11px] font-semibold text-brand-black">{actor}</span>
+          <span className="text-[11px] font-semibold text-brand-navy">{actor}</span>
           <span className="text-[11px] text-brand-gray">{label}</span>
-          <span className="text-[11px] font-medium text-brand-black truncate max-w-[140px]">{entry.entity_name}</span>
+          <span className="text-[11px] font-medium text-brand-navy truncate max-w-[140px]">{entry.entity_name}</span>
         </div>
         <div className="flex items-center gap-2 mt-0.5">
           <span className="text-[10px] text-gray-400">{timeAgo(entry.created_at)}</span>
           {typeof entry.metadata?.q === "string" && (
-            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-orange-50 text-brand-orange">{entry.metadata.q}</span>
+            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-50 text-brand-blue">{entry.metadata.q}</span>
           )}
         </div>
       </div>

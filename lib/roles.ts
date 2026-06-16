@@ -7,21 +7,21 @@ export const ROLE_LABEL: Record<AppRole, string> = {
 };
 
 export const ROLE_COLOR: Record<AppRole, string> = {
-  owner: "#E8621A",
-  admin: "#1E6FC5",
-  member: "#6B6B6B",
+  owner:  "#1E56C4",
+  admin:  "#4F46E5",
+  member: "#5C6B7A",
 };
 
 export const ROLE_BG: Record<AppRole, string> = {
-  owner: "#FFF4EE",
-  admin: "#EAF1FB",
-  member: "#F5F5F5",
+  owner:  "#EDF2FC",
+  admin:  "#EEF2FF",
+  member: "#F4F5F6",
 };
 
 export const ROLE_BORDER: Record<AppRole, string> = {
-  owner: "#FDDCB5",
-  admin: "#BDD5F5",
-  member: "#E5E5E5",
+  owner:  "#B8CEEF",
+  admin:  "#C7D2FE",
+  member: "#D1D8DE",
 };
 
 export function canWrite(role: AppRole): boolean {

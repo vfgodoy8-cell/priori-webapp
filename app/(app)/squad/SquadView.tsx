@@ -112,13 +112,13 @@ export function SquadView({ projects, discarded, p0Projects, allActive, orgId, r
       {/* Cross drill-down filter banner */}
       {filterInitiative && (
         <div className="flex items-center gap-3 px-4 py-2.5 mb-3 bg-blue-50 border border-blue-100 rounded-lg text-xs">
-          <span className="text-brand-blue font-semibold">
+          <span className="text-brand-indigo font-semibold">
             Mostrando proyectos de: <strong>{filterInitiative.name}</strong>
           </span>
-          <a href="/cross" className="text-brand-blue underline hover:text-blue-700 ml-auto flex-shrink-0">← Ver en Cross</a>
+          <a href="/cross" className="text-brand-indigo underline hover:text-blue-700 ml-auto flex-shrink-0">← Ver en Cross</a>
           <button
             onClick={() => router.push("/squad")}
-            className="text-gray-400 hover:text-brand-black flex-shrink-0"
+            className="text-gray-400 hover:text-brand-navy flex-shrink-0"
             title="Limpiar filtro"
           >
             ✕ Limpiar
@@ -131,20 +131,20 @@ export function SquadView({ projects, discarded, p0Projects, allActive, orgId, r
         <span className="text-xs font-bold text-brand-gray uppercase tracking-wide">Compartir vista</span>
         <button
           onClick={() => setShowShare(true)}
-          className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg bg-brand-orange hover:bg-orange-600 text-white transition"
+          className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg bg-brand-blue hover:bg-blue-800 text-white transition"
         >
           ↗ Compartir / Exportar
         </button>
         <button
           onClick={() => setShowTour(true)}
-          className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-gray-200 text-brand-gray hover:text-brand-black hover:border-gray-300 transition"
+          className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-gray-200 text-brand-gray hover:text-brand-navy hover:border-gray-300 transition"
           title="Ver tour de introducción"
         >
           ? Ayuda
         </button>
         <button
           onClick={() => setAiOpen(true)}
-          className="flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-orange-200 bg-orange-50 text-brand-orange hover:bg-orange-100 transition"
+          className="flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-blue-200 bg-blue-50 text-brand-blue hover:bg-blue-100 transition"
         >
           <IconSparkles size={13} /> Priori AI
         </button>
@@ -165,7 +165,7 @@ export function SquadView({ projects, discarded, p0Projects, allActive, orgId, r
       {/* Title + view toggle */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-xl font-bold text-brand-black">Modo Squad</h1>
+          <h1 className="text-xl font-bold text-brand-navy">Modo Squad</h1>
           <p className="text-xs text-brand-gray mt-0.5">
             {allActive.length} proyecto{allActive.length !== 1 ? "s" : ""} activo
             {allActive.length !== 1 ? "s" : ""}
@@ -177,8 +177,8 @@ export function SquadView({ projects, discarded, p0Projects, allActive, orgId, r
               onClick={() => setView("canvas")}
               className={`px-3 py-1.5 text-sm rounded-md transition ${
                 view === "canvas"
-                  ? "bg-white text-brand-black font-medium shadow-sm"
-                  : "text-brand-gray hover:text-brand-black"
+                  ? "bg-white text-brand-navy font-medium shadow-sm"
+                  : "text-brand-gray hover:text-brand-navy"
               }`}
             >
               Canvas
@@ -187,8 +187,8 @@ export function SquadView({ projects, discarded, p0Projects, allActive, orgId, r
               onClick={() => setView("list")}
               className={`px-3 py-1.5 text-sm rounded-md transition ${
                 view === "list"
-                  ? "bg-white text-brand-black font-medium shadow-sm"
-                  : "text-brand-gray hover:text-brand-black"
+                  ? "bg-white text-brand-navy font-medium shadow-sm"
+                  : "text-brand-gray hover:text-brand-navy"
               }`}
             >
               Lista
@@ -198,7 +198,7 @@ export function SquadView({ projects, discarded, p0Projects, allActive, orgId, r
             <label className="flex items-center gap-2 cursor-pointer select-none">
               <span className="text-xs font-semibold text-brand-gray">Vista Q</span>
               <div
-                className={`relative w-9 h-5 rounded-full transition-colors duration-200 ${quarterOverlay ? "bg-brand-orange" : "bg-gray-300"}`}
+                className={`relative w-9 h-5 rounded-full transition-colors duration-200 ${quarterOverlay ? "bg-brand-blue" : "bg-gray-300"}`}
                 onClick={() => setQuarterOverlay((q) => !q)}
               >
                 <div

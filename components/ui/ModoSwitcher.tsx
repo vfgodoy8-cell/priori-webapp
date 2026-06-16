@@ -30,7 +30,7 @@ export function ModoSwitcher({ current }: { current: Mode }) {
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-1.5 text-sm font-semibold px-3.5 py-1.5 rounded-lg bg-white text-brand-gray hover:text-brand-orange transition"
+        className="flex items-center gap-1.5 text-sm font-semibold px-3.5 py-1.5 rounded-lg bg-white text-brand-gray hover:text-brand-blue transition"
         style={{ border: "1.5px solid #E5E5E5", borderRadius: 8 }}
       >
         Cambiar modo
@@ -50,7 +50,7 @@ export function ModoSwitcher({ current }: { current: Mode }) {
                 key={m}
                 href={mode.href}
                 onClick={() => setOpen(false)}
-                className="flex items-center gap-2 px-3.5 py-2 text-sm font-semibold text-brand-gray hover:text-brand-orange hover:bg-orange-50 transition"
+                className="flex items-center gap-2 px-3.5 py-2 text-sm font-semibold text-brand-gray hover:text-brand-blue hover:bg-blue-50 transition"
               >
                 {mode.icon}
                 {mode.label}

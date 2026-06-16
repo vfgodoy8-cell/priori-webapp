@@ -27,7 +27,7 @@ function SubmitBtn({ label }: { label: string }) {
     <button
       type="submit"
       disabled={pending}
-      className="px-4 py-2 text-sm font-bold rounded-lg bg-brand-orange hover:bg-orange-600 disabled:opacity-60 text-white transition"
+      className="px-4 py-2 text-sm font-bold rounded-lg bg-brand-blue hover:bg-blue-800 disabled:opacity-60 text-white transition"
     >
       {pending ? "Enviando…" : label}
     </button>
@@ -149,7 +149,7 @@ export function MembersView({ members, invitations: initialInvitations, currentU
                   type="email"
                   required
                   placeholder="correo@empresa.com"
-                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-brand-black placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-orange focus:border-transparent bg-white"
+                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-brand-navy placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-transparent bg-white"
                 />
               </div>
               <div className="flex flex-col gap-1">
@@ -157,7 +157,7 @@ export function MembersView({ members, invitations: initialInvitations, currentU
                 <select
                   name="role"
                   defaultValue="member"
-                  className="rounded-lg border border-gray-200 px-3 py-2 text-sm text-brand-black bg-white focus:outline-none focus:ring-2 focus:ring-brand-orange"
+                  className="rounded-lg border border-gray-200 px-3 py-2 text-sm text-brand-navy bg-white focus:outline-none focus:ring-2 focus:ring-brand-blue"
                 >
                   <option value="owner">{localRoleLabels.owner}</option>
                   <option value="admin">{localRoleLabels.admin}</option>
@@ -170,7 +170,7 @@ export function MembersView({ members, invitations: initialInvitations, currentU
               <p className="text-xs text-red-600 bg-red-50 rounded px-3 py-2">{inviteState.error}</p>
             )}
             {inviteState.error === null && inviteState.success && (
-              <p className="text-xs text-brand-green bg-green-50 rounded px-3 py-2">
+              <p className="text-xs text-brand-teal bg-green-50 rounded px-3 py-2">
                 Invitación enviada por email. El destinatario recibirá un enlace para unirse.
               </p>
             )}
@@ -236,11 +236,11 @@ function MemberRow({
         <div className="flex items-center gap-3">
           <div
             className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
-            style={{ background: "#E8621A" }}
+            style={{ background: "#1E56C4" }}
           >
             {initials || "?"}
           </div>
-          <span className="font-medium text-brand-black text-sm">
+          <span className="font-medium text-brand-navy text-sm">
             {displayName}
             {isCurrentUser && (
               <span className="ml-2 text-[10px] text-brand-gray font-normal">(tú)</span>
@@ -276,7 +276,7 @@ function RoleSelect({ memberId, currentRole, roleLabels }: { memberId: string; c
     <select
       defaultValue={currentRole}
       onChange={(e) => updateMemberRole(memberId, e.target.value as AppRole)}
-      className="text-xs rounded border border-gray-200 px-1.5 py-1 bg-white text-brand-gray focus:outline-none focus:ring-1 focus:ring-brand-orange"
+      className="text-xs rounded border border-gray-200 px-1.5 py-1 bg-white text-brand-gray focus:outline-none focus:ring-1 focus:ring-brand-blue"
     >
       <option value="owner">{roleLabels.owner}</option>
       <option value="admin">{roleLabels.admin}</option>
@@ -353,7 +353,7 @@ function RoleLabelRow({
         <>
           <input
             autoFocus
-            className="flex-1 text-sm border border-brand-orange/40 rounded-lg px-2.5 py-1 focus:outline-none focus:ring-2 focus:ring-brand-orange/20"
+            className="flex-1 text-sm border border-brand-blue/40 rounded-lg px-2.5 py-1 focus:outline-none focus:ring-2 focus:ring-brand-blue/20"
             value={value}
             maxLength={40}
             onChange={(e) => setValue(e.target.value)}
@@ -365,23 +365,23 @@ function RoleLabelRow({
           <button
             onClick={handleSave}
             disabled={isPending || !value.trim()}
-            className="text-xs px-2.5 py-1 rounded-lg bg-brand-orange text-white font-medium hover:opacity-90 disabled:opacity-50 transition-opacity"
+            className="text-xs px-2.5 py-1 rounded-lg bg-brand-blue text-white font-medium hover:opacity-90 disabled:opacity-50 transition-opacity"
           >
             Guardar
           </button>
           <button
             onClick={() => { setValue(currentLabel); setEditing(false); }}
-            className="text-xs px-2 py-1 rounded-lg border border-gray-200 text-brand-gray hover:text-brand-black transition-colors"
+            className="text-xs px-2 py-1 rounded-lg border border-gray-200 text-brand-gray hover:text-brand-navy transition-colors"
           >
             Cancelar
           </button>
         </>
       ) : (
         <>
-          <span className="flex-1 text-sm text-brand-black">{currentLabel}</span>
+          <span className="flex-1 text-sm text-brand-navy">{currentLabel}</span>
           <button
             onClick={() => setEditing(true)}
-            className="text-xs text-brand-gray hover:text-brand-black transition-colors"
+            className="text-xs text-brand-gray hover:text-brand-navy transition-colors"
           >
             Renombrar
           </button>
@@ -389,7 +389,7 @@ function RoleLabelRow({
             <button
               onClick={handleReset}
               disabled={isPending}
-              className="text-xs text-brand-gray hover:text-brand-black transition-colors disabled:opacity-40"
+              className="text-xs text-brand-gray hover:text-brand-navy transition-colors disabled:opacity-40"
             >
               Restablecer ({defaultLabel})
             </button>

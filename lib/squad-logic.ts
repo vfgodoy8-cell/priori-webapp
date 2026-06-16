@@ -151,14 +151,14 @@ export function deadlineStatus(date: string | null): DlLevel | null {
 }
 
 export const DL_COLOR: Record<DlLevel, string> = {
-  ok: "#1D9E75",
-  caution: "#EF9F27",
-  danger: "#E24B4A",
+  ok: "#12A594",
+  caution: "#FBBF24",
+  danger: "#DC2626",
 };
 
-// Verde <90% · Amarillo 90-95% · Naranja 95-99% · Rojo ≥100%
+// Teal <90% · Amarillo 90-95% · Ámbar 95-99% · Rojo ≥100%
 export const CAP_COLOR = (pct: number) =>
-  pct >= 100 ? "#E24B4A" : pct >= 95 ? "#E8621A" : pct >= 90 ? "#EF9F27" : "#1D9E75";
+  pct >= 100 ? "#DC2626" : pct >= 95 ? "#F59E0B" : pct >= 90 ? "#FBBF24" : "#12A594";
 
 export type SquadConfig = {
   devN: number;

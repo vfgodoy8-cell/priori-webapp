@@ -37,7 +37,7 @@ const Q_SUB = ["Ene – Mar", "Abr – Jun", "Jul – Sep", "Oct – Dic"];
 const CURRENT_YEAR = new Date().getFullYear();
 
 function capColor(pct: number): string {
-  return pct >= 100 ? "#E24B4A" : pct >= 95 ? "#E8621A" : pct >= 90 ? "#EF9F27" : "#1D9E75";
+  return pct >= 100 ? "#DC2626" : pct >= 95 ? "#F59E0B" : pct >= 90 ? "#FBBF24" : "#12A594";
 }
 
 function SubmitBtn({ label }: { label: string }) {
@@ -46,7 +46,7 @@ function SubmitBtn({ label }: { label: string }) {
     <button
       type="submit"
       disabled={pending}
-      className="flex-1 py-2.5 text-sm font-bold rounded-lg bg-brand-orange hover:bg-orange-600 disabled:opacity-60 text-white transition"
+      className="flex-1 py-2.5 text-sm font-bold rounded-lg bg-brand-blue hover:bg-blue-800 disabled:opacity-60 text-white transition"
     >
       {pending ? "Guardando…" : label}
     </button>
@@ -237,13 +237,13 @@ export function CrossView({ orgId, initialTeams, initialInitiatives, squadProjec
         <span className="text-xs font-bold text-brand-gray uppercase tracking-wide">Compartir vista</span>
         <button
           onClick={() => setShowShare(true)}
-          className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg bg-brand-orange hover:bg-orange-600 text-white transition"
+          className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg bg-brand-blue hover:bg-blue-800 text-white transition"
         >
           ↗ Compartir / Exportar
         </button>
         <button
           onClick={() => setAiOpen(true)}
-          className="flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-orange-200 bg-orange-50 text-brand-orange hover:bg-orange-100 transition"
+          className="flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-blue-200 bg-blue-50 text-brand-blue hover:bg-blue-100 transition"
         >
           <IconSparkles size={13} /> Priori AI
         </button>
@@ -276,7 +276,7 @@ export function CrossView({ orgId, initialTeams, initialInitiatives, squadProjec
         <div className="grid grid-cols-4 bg-gray-50 border-b border-gray-200">
           {Q_LABELS.map((q, qi) => (
             <div key={q} className={`px-4 py-3 flex flex-col gap-0.5 ${qi < 3 ? "border-r border-gray-200" : ""}`}>
-              <span className="text-sm font-bold text-brand-black">{q}</span>
+              <span className="text-sm font-bold text-brand-navy">{q}</span>
               <span className="text-xs text-brand-gray">{Q_SUB[qi]}</span>
             </div>
           ))}
@@ -303,7 +303,7 @@ export function CrossView({ orgId, initialTeams, initialInitiatives, squadProjec
               style={{
                 left: `${q * 25}%`,
                 width: "25%",
-                background: dragOverQ === q ? "rgba(232,98,26,0.06)" : "transparent",
+                background: dragOverQ === q ? "rgba(30,86,196,0.06)" : "transparent",
                 borderRight: q < 3 ? "1px solid #E5E7EB" : undefined,
                 transition: "background 0.15s",
               }}
@@ -349,7 +349,7 @@ export function CrossView({ orgId, initialTeams, initialInitiatives, squadProjec
                   <div className="flex items-start gap-1.5 p-2.5">
                     {/* Left — title, meta, teams */}
                     <div className="flex-1 min-w-0">
-                      <div className="text-xs font-bold text-brand-black leading-snug">{qd.priority} {ini.name}</div>
+                      <div className="text-xs font-bold text-brand-navy leading-snug">{qd.priority} {ini.name}</div>
                       <div className="text-[10px] text-brand-gray mt-1">{ini.stakeholder} · {ini.effort_sprints}sp</div>
                       {ini.start_date && (
                         <div className="text-[10px] text-brand-gray">{ini.start_date} → {ini.end_date ?? "…"}</div>
@@ -372,7 +372,7 @@ export function CrossView({ orgId, initialTeams, initialInitiatives, squadProjec
                       {Array.isArray(ini.sq_project_ids) && ini.sq_project_ids.length > 0 && (
                         <a
                           href={`/squad?ini=${ini.id}`}
-                          className="flex items-center gap-0.5 text-[10px] font-semibold text-brand-blue hover:underline whitespace-nowrap"
+                          className="flex items-center gap-0.5 text-[10px] font-semibold text-brand-indigo hover:underline whitespace-nowrap"
                           title={`Ver proyectos vinculados en Modo Squad`}
                         >
                           👥 {ini.sq_project_ids.length} proyecto{ini.sq_project_ids.length !== 1 ? "s" : ""} Squad
@@ -380,8 +380,8 @@ export function CrossView({ orgId, initialTeams, initialInitiatives, squadProjec
                       )}
                       {!readOnly && (
                         <div className="flex gap-0.5 mt-auto">
-                          <button onClick={() => openEdit(ini)} className="text-[10px] text-gray-400 hover:text-brand-orange px-0.5" title="Editar">✏️</button>
-                          <button onClick={() => handleUnplace(ini)} className="text-[10px] text-gray-400 hover:text-brand-orange px-0.5" title="Quitar del Quarter">✕</button>
+                          <button onClick={() => openEdit(ini)} className="text-[10px] text-gray-400 hover:text-brand-blue px-0.5" title="Editar">✏️</button>
+                          <button onClick={() => handleUnplace(ini)} className="text-[10px] text-gray-400 hover:text-brand-blue px-0.5" title="Quitar del Quarter">✕</button>
                         </div>
                       )}
                     </div>
@@ -393,10 +393,10 @@ export function CrossView({ orgId, initialTeams, initialInitiatives, squadProjec
       </div>
 
       {warnMsg && (
-        <div className="flex items-center gap-2 px-4 py-2.5 bg-orange-50 border border-orange-200 rounded-lg text-xs text-brand-orange">
+        <div className="flex items-center gap-2 px-4 py-2.5 bg-blue-50 border border-blue-200 rounded-lg text-xs text-brand-blue">
           <span className="flex-shrink-0">⚠</span>
           <span>{warnMsg}</span>
-          <button onClick={() => setWarnMsg(null)} className="ml-auto text-gray-400 hover:text-brand-orange">×</button>
+          <button onClick={() => setWarnMsg(null)} className="ml-auto text-gray-400 hover:text-brand-blue">×</button>
         </div>
       )}
 
@@ -404,7 +404,7 @@ export function CrossView({ orgId, initialTeams, initialInitiatives, squadProjec
       {teams.length > 0 && (
         <div className="border border-gray-200 rounded-xl overflow-hidden">
           <div className="px-4 py-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
-            <span className="text-sm font-bold text-brand-black">Capacidad por grupo</span>
+            <span className="text-sm font-bold text-brand-navy">Capacidad por grupo</span>
             <span className="text-xs text-brand-gray">Verde &lt;90% · Amarillo 90-95% · Naranja 95-99% · Rojo ≥100%</span>
           </div>
           <div className="overflow-x-auto">
@@ -423,7 +423,7 @@ export function CrossView({ orgId, initialTeams, initialInitiatives, squadProjec
                   const teamAdjs = capacityAdjustments.filter((a) => a.group_id === team.id);
                   return (
                     <tr key={team.id}>
-                      <td className="px-4 py-2 text-xs font-semibold text-brand-black border-b border-gray-50">
+                      <td className="px-4 py-2 text-xs font-semibold text-brand-navy border-b border-gray-50">
                         {team.level > 1 && (
                           <span className="inline-block mr-1 opacity-30" style={{ width: (team.level - 1) * 12 }} />
                         )}
@@ -462,7 +462,7 @@ export function CrossView({ orgId, initialTeams, initialInitiatives, squadProjec
       {/* Backlog */}
       <div className="border border-gray-200 rounded-xl overflow-hidden">
         <div className="px-4 py-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
-          <span className="text-sm font-bold text-brand-black">Backlog del Programa</span>
+          <span className="text-sm font-bold text-brand-navy">Backlog del Programa</span>
           <span className="text-xs text-brand-gray">{backlog.length} sin asignar</span>
         </div>
         <div
@@ -503,14 +503,14 @@ export function CrossView({ orgId, initialTeams, initialInitiatives, squadProjec
         <div className="fixed bottom-7 right-7 z-[200] flex flex-col items-center gap-2">
           <button
             onClick={() => setInterviewOpen(true)}
-            className="w-10 h-10 rounded-full bg-white border-2 border-brand-orange text-brand-orange flex items-center justify-center shadow-md hover:bg-orange-50 transition"
+            className="w-10 h-10 rounded-full bg-white border-2 border-brand-blue text-brand-blue flex items-center justify-center shadow-md hover:bg-blue-50 transition"
             title="Cargar con IA"
           >
             <IconSparkles size={16} />
           </button>
           <button
             onClick={() => { setPanelOpen(true); setEditIni(undefined); }}
-            className="w-12 h-12 rounded-full bg-brand-orange hover:bg-orange-600 text-white text-2xl flex items-center justify-center shadow-lg transition"
+            className="w-12 h-12 rounded-full bg-brand-blue hover:bg-blue-800 text-white text-2xl flex items-center justify-center shadow-lg transition"
             title="Nueva iniciativa"
           >
             +
@@ -525,14 +525,14 @@ export function CrossView({ orgId, initialTeams, initialInitiatives, squadProjec
 
       {!readOnly && (
         <div className={`fixed top-0 right-0 z-[300] h-full w-[400px] bg-white border-l border-gray-100 shadow-2xl flex flex-col transition-transform duration-300 ${panelOpen ? "translate-x-0" : "translate-x-full"}`}>
-          <div className="flex items-center justify-between px-4 py-3.5 bg-orange-50 border-b-2 border-brand-orange">
-            <h3 className="text-sm font-bold text-brand-orange">Panel del programa</h3>
-            <button onClick={() => setPanelOpen(false)} className="text-brand-gray hover:text-brand-black text-xl leading-none">×</button>
+          <div className="flex items-center justify-between px-4 py-3.5 bg-blue-50 border-b-2 border-brand-blue">
+            <h3 className="text-sm font-bold text-brand-blue">Panel del programa</h3>
+            <button onClick={() => setPanelOpen(false)} className="text-brand-gray hover:text-brand-navy text-xl leading-none">×</button>
           </div>
 
           <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3">
             {editIni && (
-              <div className="flex items-center gap-2 px-3 py-2 bg-orange-50 border border-orange-100 rounded-lg text-xs text-brand-orange font-semibold">
+              <div className="flex items-center gap-2 px-3 py-2 bg-blue-50 border border-blue-100 rounded-lg text-xs text-brand-blue font-semibold">
                 ✏️ Editando: {editIni.name}
               </div>
             )}
@@ -572,7 +572,7 @@ export function CrossView({ orgId, initialTeams, initialInitiatives, squadProjec
                     placeholder="1–24" className={inp}
                     onChange={(e) => setPrevSp(parseInt(e.target.value) || 0)} />
                   {prevSp > 0 && (
-                    <span style={{ fontSize: 11, color: "#6B6B6B" }}>
+                    <span style={{ fontSize: 11, color: "#5C6B7A" }}>
                       ↔ {autoCalcDuration}Q (calculado)
                     </span>
                   )}
@@ -605,7 +605,7 @@ export function CrossView({ orgId, initialTeams, initialInitiatives, squadProjec
               {/* Quarter range from dates (when both are set) */}
               {startDate && endDate && (
                 <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-50 border border-blue-100">
-                  <span className="text-xs font-bold text-brand-blue">
+                  <span className="text-xs font-bold text-brand-indigo">
                     {Q_LABELS[dateToQuarter(startDate)]} → {Q_LABELS[dateToQuarter(endDate)]}
                   </span>
                   <span className="text-xs text-brand-gray">
@@ -653,7 +653,7 @@ export function CrossView({ orgId, initialTeams, initialInitiatives, squadProjec
 
               <div className="flex gap-2 pt-1">
                 {editIni && (
-                  <button type="button" onClick={() => setEditIni(undefined)} className="px-4 py-2.5 text-sm text-brand-gray border border-gray-200 rounded-lg hover:text-brand-black transition">
+                  <button type="button" onClick={() => setEditIni(undefined)} className="px-4 py-2.5 text-sm text-brand-gray border border-gray-200 rounded-lg hover:text-brand-navy transition">
                     Cancelar
                   </button>
                 )}
@@ -690,11 +690,11 @@ export function CrossView({ orgId, initialTeams, initialInitiatives, squadProjec
                   return (
                     <div
                       key={ini.id}
-                      className={`flex items-center gap-2 px-3 py-2.5 rounded-lg border ${isEd ? "border-brand-orange bg-orange-50" : "border-gray-100 bg-gray-50"}`}
+                      className={`flex items-center gap-2 px-3 py-2.5 rounded-lg border ${isEd ? "border-brand-blue bg-blue-50" : "border-gray-100 bg-gray-50"}`}
                     >
                       <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: qd.color }} />
                       <div className="flex-1 min-w-0">
-                        <div className="text-xs font-semibold text-brand-black truncate">{ini.name}</div>
+                        <div className="text-xs font-semibold text-brand-navy truncate">{ini.name}</div>
                         <div className="text-[10px] text-brand-gray">
                           {ini.stakeholder} · {ini.duration_quarters}Q ·{" "}
                           {ini.q_start !== null ? Q_LABELS[ini.q_start] : "Sin asignar"}
@@ -704,10 +704,10 @@ export function CrossView({ orgId, initialTeams, initialInitiatives, squadProjec
                         {qd.priority}
                       </span>
                       {Array.isArray(ini.sq_project_ids) && ini.sq_project_ids.length > 0 && (
-                        <span className="text-[10px] font-semibold text-brand-blue flex-shrink-0">👥{ini.sq_project_ids.length}</span>
+                        <span className="text-[10px] font-semibold text-brand-indigo flex-shrink-0">👥{ini.sq_project_ids.length}</span>
                       )}
                       <div className="flex gap-1 flex-shrink-0">
-                        <button onClick={() => openEdit(ini)} className="text-[11px] text-gray-400 hover:text-brand-orange px-1 transition">✏️</button>
+                        <button onClick={() => openEdit(ini)} className="text-[11px] text-gray-400 hover:text-brand-blue px-1 transition">✏️</button>
                         <button onClick={() => handleDelete(ini.id)} className="text-[11px] text-gray-400 hover:text-red-600 px-1 transition">🗑️</button>
                       </div>
                     </div>
@@ -735,7 +735,7 @@ function CrossPanelTabs({ entityId, entityName, currentUserId, canWrite }: {
           <button
             key={t}
             onClick={() => setTab(t)}
-            className={`text-xs font-bold uppercase tracking-wider pb-0.5 border-b-2 transition ${tab === t ? "text-brand-orange border-brand-orange" : "text-brand-gray border-transparent hover:text-brand-black"}`}
+            className={`text-xs font-bold uppercase tracking-wider pb-0.5 border-b-2 transition ${tab === t ? "text-brand-blue border-brand-blue" : "text-brand-gray border-transparent hover:text-brand-navy"}`}
           >
             {t === "comments" ? "💬 Comentarios" : t === "history" ? "📋 Historial" : "⚠️ Desvíos"}
           </button>
@@ -796,17 +796,17 @@ function TeamAllocationInputs({
         return (
           <div
             key={t.id}
-            className={`rounded-lg border transition ${selected ? "border-brand-orange bg-orange-50" : "border-gray-100 bg-gray-50"}`}
+            className={`rounded-lg border transition ${selected ? "border-brand-blue bg-blue-50" : "border-gray-100 bg-gray-50"}`}
           >
             <div className="flex items-center gap-2 px-2.5 py-1.5">
               <button
                 type="button"
                 onClick={() => toggle(t.id)}
-                className={`w-4 h-4 rounded border-2 flex-shrink-0 transition flex items-center justify-center ${selected ? "border-brand-orange bg-brand-orange" : "border-gray-300 bg-white"}`}
+                className={`w-4 h-4 rounded border-2 flex-shrink-0 transition flex items-center justify-center ${selected ? "border-brand-blue bg-brand-blue" : "border-gray-300 bg-white"}`}
               >
                 {selected && <span className="text-white text-[8px] leading-none">✓</span>}
               </button>
-              <span className="text-xs font-semibold text-brand-black flex-1">{t.name}</span>
+              <span className="text-xs font-semibold text-brand-navy flex-1">{t.name}</span>
               {!selected && <span className="text-[10px] text-brand-gray">{t.personas} pers.</span>}
             </div>
             {selected && (
@@ -819,7 +819,7 @@ function TeamAllocationInputs({
                     value={n}
                     onChange={(e) => setN(t.id, parseInt(e.target.value) || 1, t.personas)}
                     onClick={(e) => e.stopPropagation()}
-                    className="w-12 text-xs px-1.5 py-0.5 border border-gray-200 rounded bg-white text-center focus:outline-none focus:ring-1 focus:ring-brand-orange"
+                    className="w-12 text-xs px-1.5 py-0.5 border border-gray-200 rounded bg-white text-center focus:outline-none focus:ring-1 focus:ring-brand-blue"
                   />
                   <span className="text-[10px] text-brand-gray">personas de {t.personas} disponibles</span>
                 </div>
@@ -860,12 +860,12 @@ function SquadProjectSelect({
             key={p.id}
             type="button"
             onClick={() => toggle(p.id)}
-            className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg border text-left transition ${checked ? "border-brand-blue bg-blue-50" : "border-gray-100 bg-gray-50 hover:border-gray-200"}`}
+            className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg border text-left transition ${checked ? "border-brand-indigo bg-blue-50" : "border-gray-100 bg-gray-50 hover:border-gray-200"}`}
           >
-            <div className={`w-3.5 h-3.5 rounded border-2 flex-shrink-0 flex items-center justify-center transition ${checked ? "border-brand-blue bg-brand-blue" : "border-gray-300 bg-white"}`}>
+            <div className={`w-3.5 h-3.5 rounded border-2 flex-shrink-0 flex items-center justify-center transition ${checked ? "border-brand-indigo bg-brand-indigo" : "border-gray-300 bg-white"}`}>
               {checked && <span className="text-white text-[7px] leading-none">✓</span>}
             </div>
-            <span className="text-[10px] font-semibold text-brand-black flex-1 truncate">{p.name}</span>
+            <span className="text-[10px] font-semibold text-brand-navy flex-1 truncate">{p.name}</span>
             <span className="text-[9px] px-1 py-0.5 rounded flex-shrink-0" style={{ background: `${qd.color}22`, color: qd.color }}>{qd.priority}</span>
           </button>
         );
@@ -883,7 +883,7 @@ function F({ label, children }: { label: string; children: React.ReactNode }) {
   );
 }
 
-const inp = "w-full rounded-lg border border-gray-200 px-2.5 py-2 text-xs text-brand-black placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-orange focus:border-transparent bg-white";
+const inp = "w-full rounded-lg border border-gray-200 px-2.5 py-2 text-xs text-brand-navy placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-transparent bg-white";
 
 // Generates subtle vertical divider lines at each internal quarter boundary for spanning cards.
 // For a 2Q card: 1 line at 50%. For 3Q: lines at 33% and 67%. For 4Q: 25%, 50%, 75%.

@@ -39,7 +39,7 @@ export function NotificationBell({ alerts }: { alerts: DeadlineAlert[] }) {
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen((v) => !v)}
-        className="relative flex items-center justify-center w-8 h-8 rounded-lg text-brand-gray hover:text-brand-black transition"
+        className="relative flex items-center justify-center w-8 h-8 rounded-lg text-brand-gray hover:text-brand-navy transition"
         style={{ border: "1.5px solid #E5E5E5" }}
         title="Alertas de vencimiento"
       >
@@ -57,7 +57,7 @@ export function NotificationBell({ alerts }: { alerts: DeadlineAlert[] }) {
       {open && (
         <div className="absolute right-0 top-full mt-1 z-50 bg-white rounded-xl shadow-lg border border-gray-100 w-72 max-h-80 overflow-y-auto">
           <div className="px-4 py-3 border-b border-gray-100">
-            <p className="text-xs font-bold text-brand-black uppercase tracking-wide">
+            <p className="text-xs font-bold text-brand-navy uppercase tracking-wide">
               Alertas de vencimiento
             </p>
           </div>
@@ -88,7 +88,7 @@ export function NotificationBell({ alerts }: { alerts: DeadlineAlert[] }) {
                         style={{ background: SEVERITY_COLOR[sev] }}
                       />
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs font-semibold text-brand-black truncate">{a.name}</p>
+                        <p className="text-xs font-semibold text-brand-navy truncate">{a.name}</p>
                         <p className="text-[10px] text-brand-gray">
                           {MODE_LABEL[a.mode]} · {fmtDate(a.dueDate)}
                         </p>

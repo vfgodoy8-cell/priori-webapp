@@ -12,7 +12,7 @@ type Props = {
   onClose: () => void;
 };
 
-const inp = "w-full rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs text-brand-black placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-orange focus:border-transparent bg-white";
+const inp = "w-full rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs text-brand-navy placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-transparent bg-white";
 
 type TeamForm = {
   name: string;
@@ -96,9 +96,9 @@ export function TeamPanel({ teams: initialTeams, open, onClose }: Props) {
       <div className="fixed inset-0 z-[250] bg-black/25" onClick={onClose} />
       <div className="fixed top-0 right-0 z-[300] h-full w-[380px] bg-white border-l border-gray-100 shadow-2xl flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3.5 bg-orange-50 border-b-2 border-brand-orange">
-          <h3 className="text-sm font-bold text-brand-orange">Gestión de Equipos</h3>
-          <button onClick={onClose} className="text-brand-gray hover:text-brand-black text-xl leading-none">×</button>
+        <div className="flex items-center justify-between px-4 py-3.5 bg-blue-50 border-b-2 border-brand-blue">
+          <h3 className="text-sm font-bold text-brand-blue">Gestión de Equipos</h3>
+          <button onClick={onClose} className="text-brand-gray hover:text-brand-navy text-xl leading-none">×</button>
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
@@ -109,15 +109,15 @@ export function TeamPanel({ teams: initialTeams, open, onClose }: Props) {
               {teams.map((t) => (
                 <div
                   key={t.id}
-                  className={`flex items-center gap-2 px-3 py-2.5 rounded-lg border transition ${editing?.id === t.id ? "border-brand-orange bg-orange-50" : "border-gray-100 bg-gray-50"}`}
+                  className={`flex items-center gap-2 px-3 py-2.5 rounded-lg border transition ${editing?.id === t.id ? "border-brand-blue bg-blue-50" : "border-gray-100 bg-gray-50"}`}
                 >
                   <div className="flex-1 min-w-0">
-                    <div className="text-xs font-semibold text-brand-black">{t.name}</div>
+                    <div className="text-xs font-semibold text-brand-navy">{t.name}</div>
                     <div className="text-[10px] text-brand-gray mt-0.5">
                       {t.personas} pers. · {t.proy_per_persona} proy/p · {t.q1_pct}/{t.q2_pct}/{t.q3_pct}/{t.q4_pct}%
                     </div>
                   </div>
-                  <button onClick={() => startEdit(t)} className="text-[11px] text-gray-400 hover:text-brand-orange px-1 transition">✏️</button>
+                  <button onClick={() => startEdit(t)} className="text-[11px] text-gray-400 hover:text-brand-blue px-1 transition">✏️</button>
                   <button onClick={() => handleDelete(t)} className="text-[11px] text-gray-400 hover:text-red-500 px-1 transition">🗑️</button>
                 </div>
               ))}
@@ -131,7 +131,7 @@ export function TeamPanel({ teams: initialTeams, open, onClose }: Props) {
                 {editing ? "Editar equipo" : "Nuevo equipo"}
               </span>
               {editing && (
-                <button onClick={startCreate} className="text-[10px] text-brand-gray hover:text-brand-orange">+ Nuevo</button>
+                <button onClick={startCreate} className="text-[10px] text-brand-gray hover:text-brand-blue">+ Nuevo</button>
               )}
             </div>
 
@@ -174,7 +174,7 @@ export function TeamPanel({ teams: initialTeams, open, onClose }: Props) {
               <div className="flex gap-2 pt-1">
                 {editing && (
                   <button type="button" onClick={() => { setEditing(null); setForm(EMPTY); setError(null); }}
-                    className="px-3 py-2 text-xs text-brand-gray border border-gray-200 rounded-lg hover:text-brand-black transition">
+                    className="px-3 py-2 text-xs text-brand-gray border border-gray-200 rounded-lg hover:text-brand-navy transition">
                     Cancelar
                   </button>
                 )}
@@ -182,7 +182,7 @@ export function TeamPanel({ teams: initialTeams, open, onClose }: Props) {
                   type="button"
                   onClick={handleSave}
                   disabled={saving}
-                  className="flex-1 py-2 text-xs font-bold rounded-lg bg-brand-orange hover:bg-orange-600 disabled:opacity-60 text-white transition"
+                  className="flex-1 py-2 text-xs font-bold rounded-lg bg-brand-blue hover:bg-blue-800 disabled:opacity-60 text-white transition"
                 >
                   {saving ? "Guardando…" : editing ? "Guardar cambios" : "Agregar equipo"}
                 </button>

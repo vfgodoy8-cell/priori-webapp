@@ -56,24 +56,24 @@ export default function LoginPage() {
       {/* Logo */}
       <div className="flex flex-col items-center mb-8 gap-3">
         <div className="flex flex-col gap-1.5">
-          <div className="h-2.5 w-16 rounded-full bg-brand-orange" />
-          <div className="h-2.5 w-10 rounded-full bg-brand-orange opacity-65" />
-          <div className="h-2.5 w-6 rounded-full bg-brand-orange opacity-30" />
+          <div className="h-2.5 w-16 rounded-full bg-brand-blue" />
+          <div className="h-2.5 w-10 rounded-full bg-brand-blue opacity-65" />
+          <div className="h-2.5 w-6 rounded-full bg-brand-blue opacity-30" />
         </div>
-        <span className="text-2xl font-bold text-brand-black tracking-tight">
+        <span className="text-2xl font-bold text-brand-navy tracking-tight">
           priori
         </span>
       </div>
 
       {/* Card */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
-        <h1 className="text-xl font-semibold text-brand-black mb-6">
+        <h1 className="text-xl font-semibold text-brand-navy mb-6">
           Ingresá a tu cuenta
         </h1>
 
         <form onSubmit={handleLogin} className="flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-brand-black" htmlFor="email">
+            <label className="text-sm font-medium text-brand-navy" htmlFor="email">
               Email
             </label>
             <input
@@ -84,12 +84,12 @@ export default function LoginPage() {
               required
               autoComplete="email"
               placeholder="tu@empresa.com"
-              className="w-full rounded-lg border border-gray-200 px-3.5 py-2.5 text-sm text-brand-black placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-orange focus:border-transparent transition"
+              className="w-full rounded-lg border border-gray-200 px-3.5 py-2.5 text-sm text-brand-navy placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-transparent transition"
             />
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-brand-black" htmlFor="password">
+            <label className="text-sm font-medium text-brand-navy" htmlFor="password">
               Contraseña
             </label>
             <input
@@ -100,7 +100,7 @@ export default function LoginPage() {
               required
               autoComplete="current-password"
               placeholder="••••••••"
-              className="w-full rounded-lg border border-gray-200 px-3.5 py-2.5 text-sm text-brand-black placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-orange focus:border-transparent transition"
+              className="w-full rounded-lg border border-gray-200 px-3.5 py-2.5 text-sm text-brand-navy placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-transparent transition"
             />
           </div>
 
@@ -113,7 +113,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-brand-orange hover:bg-orange-600 disabled:opacity-60 text-white font-semibold rounded-lg py-2.5 text-sm transition"
+            className="w-full bg-brand-blue hover:bg-blue-800 disabled:opacity-60 text-white font-semibold rounded-lg py-2.5 text-sm transition"
           >
             {loading ? "Ingresando…" : "Ingresar"}
           </button>
@@ -130,7 +130,7 @@ export default function LoginPage() {
         <button
           onClick={handleGoogle}
           disabled={googleLoading}
-          className="w-full flex items-center justify-center gap-2.5 border border-gray-200 hover:border-gray-300 hover:bg-gray-50 disabled:opacity-60 rounded-lg py-2.5 text-sm font-medium text-brand-black transition"
+          className="w-full flex items-center justify-center gap-2.5 border border-gray-200 hover:border-gray-300 hover:bg-gray-50 disabled:opacity-60 rounded-lg py-2.5 text-sm font-medium text-brand-navy transition"
         >
           <GoogleIcon />
           {googleLoading ? "Redirigiendo…" : "Continuar con Google"}
@@ -139,7 +139,7 @@ export default function LoginPage() {
 
       <p className="text-center text-sm text-brand-gray mt-6">
         ¿No tenés cuenta?{" "}
-        <Link href="/signup" className="text-brand-orange font-medium hover:underline">
+        <Link href="/signup" className="text-brand-blue font-medium hover:underline">
           Registrate
         </Link>
       </p>

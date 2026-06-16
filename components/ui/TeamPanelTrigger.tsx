@@ -17,7 +17,7 @@ export function TeamPanelTrigger({ teams, orgId, role = "member" }: Props) {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="text-sm font-semibold px-3 py-1.5 rounded-lg bg-white text-brand-gray hover:text-brand-orange hover:border-brand-orange transition"
+        className="text-sm font-semibold px-3 py-1.5 rounded-lg bg-white text-brand-gray hover:text-brand-blue hover:border-brand-blue transition"
         style={{ border: "1.5px solid #E5E5E5", borderRadius: 8 }}
       >
         ⚙ Grupos

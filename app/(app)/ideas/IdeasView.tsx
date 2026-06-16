@@ -15,10 +15,10 @@ const STATUS_LABELS: Record<IdeaStatus, string> = {
 };
 
 const STATUS_COLORS: Record<IdeaStatus, { bg: string; color: string; border: string }> = {
-  raw:       { bg: "#F5F5F5",  color: "#6B6B6B", border: "#E5E5E5" },
-  refined:   { bg: "#EFF6FF",  color: "#1E6FC5", border: "#BDD5F5" },
-  promoted:  { bg: "#F0FBF7",  color: "#1D9E75", border: "#A7E3CE" },
-  discarded: { bg: "#FFF4EE",  color: "#E8621A", border: "#FDDCB5" },
+  raw:       { bg: "#F4F5F6",  color: "#5C6B7A", border: "#D1D8DE" },
+  refined:   { bg: "#EEF2FF",  color: "#4F46E5", border: "#C7D2FE" },
+  promoted:  { bg: "#F0FAFA",  color: "#12A594", border: "#A3DDD8" },
+  discarded: { bg: "#FFFBEB",  color: "#D97706", border: "#FDE68A" },
 };
 
 const TYPE_LABELS: Record<string, string> = {
@@ -58,7 +58,7 @@ export function IdeasView({ ideas, role }: Props) {
       {/* Title row */}
       <div className="flex items-start justify-between mb-6">
         <div>
-          <h1 className="text-xl font-bold text-brand-black">Mejoras e Ideas</h1>
+          <h1 className="text-xl font-bold text-brand-navy">Mejoras e Ideas</h1>
           <p className="text-xs text-brand-gray mt-0.5">
             {ideas.length} idea{ideas.length !== 1 ? "s" : ""} registrada{ideas.length !== 1 ? "s" : ""}
           </p>
@@ -66,7 +66,7 @@ export function IdeasView({ ideas, role }: Props) {
         {role === "owner" && (
           <button
             onClick={() => setShowModal(true)}
-            className="flex items-center gap-2 px-4 py-2.5 text-sm font-bold rounded-lg bg-brand-orange hover:bg-orange-600 text-white transition"
+            className="flex items-center gap-2 px-4 py-2.5 text-sm font-bold rounded-lg bg-brand-blue hover:bg-blue-800 text-white transition"
           >
             💡 Tengo una idea
           </button>
@@ -81,8 +81,8 @@ export function IdeasView({ ideas, role }: Props) {
             onClick={() => setTab(t.key)}
             className={`px-3 py-1.5 text-sm rounded-md transition ${
               tab === t.key
-                ? "bg-white text-brand-black font-medium shadow-sm"
-                : "text-brand-gray hover:text-brand-black"
+                ? "bg-white text-brand-navy font-medium shadow-sm"
+                : "text-brand-gray hover:text-brand-navy"
             }`}
           >
             {t.label}
@@ -110,7 +110,7 @@ export function IdeasView({ ideas, role }: Props) {
                 {/* Top row */}
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-brand-black">{idea.title}</p>
+                    <p className="text-sm font-semibold text-brand-navy">{idea.title}</p>
                     {idea.problem && (
                       <p className="text-xs text-brand-gray mt-0.5 line-clamp-2">{idea.problem}</p>
                     )}
@@ -139,7 +139,7 @@ export function IdeasView({ ideas, role }: Props) {
                       <button
                         disabled={isLoading}
                         onClick={() => handleStatus(idea.id, "refined")}
-                        className="text-xs font-semibold px-2.5 py-1 rounded-lg border border-blue-200 text-brand-blue hover:bg-blue-50 disabled:opacity-50 transition"
+                        className="text-xs font-semibold px-2.5 py-1 rounded-lg border border-blue-200 text-brand-indigo hover:bg-blue-50 disabled:opacity-50 transition"
                       >
                         Marcar como refinada
                       </button>
@@ -148,14 +148,14 @@ export function IdeasView({ ideas, role }: Props) {
                       <>
                         <Link
                           href={`/squad?idea=${idea.id}`}
-                          className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-brand-orange hover:bg-orange-600 text-white transition"
+                          className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-brand-blue hover:bg-blue-800 text-white transition"
                         >
                           Convertir en proyecto →
                         </Link>
                         <button
                           disabled={isLoading}
                           onClick={() => handleStatus(idea.id, "promoted")}
-                          className="text-xs font-semibold px-2.5 py-1 rounded-lg border border-green-200 text-brand-green hover:bg-green-50 disabled:opacity-50 transition"
+                          className="text-xs font-semibold px-2.5 py-1 rounded-lg border border-green-200 text-brand-teal hover:bg-green-50 disabled:opacity-50 transition"
                         >
                           Marcar como promovida
                         </button>
@@ -174,7 +174,7 @@ export function IdeasView({ ideas, role }: Props) {
                       <button
                         disabled={isLoading}
                         onClick={() => handleStatus(idea.id, "raw")}
-                        className="text-xs text-brand-gray hover:text-brand-black px-2 py-1 disabled:opacity-50 transition"
+                        className="text-xs text-brand-gray hover:text-brand-navy px-2 py-1 disabled:opacity-50 transition"
                       >
                         Restaurar
                       </button>

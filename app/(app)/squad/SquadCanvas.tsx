@@ -29,7 +29,7 @@ const QUADRANT_EMOJI: Record<Quadrant, string> = {
   p1: "🚀", p2: "🏗", p3: "💡", p0: "🚫",
 };
 
-const Q_BAND_COLORS = ["#1E6FC5", "#1D9E75", "#E8621A", "#6B6B6B"];
+const Q_BAND_COLORS = ["#1E56C4", "#12A594", "#4F46E5", "#5C6B7A"];
 const Q_BAND_LABELS = ["Q1 Ene–Mar", "Q2 Abr–Jun", "Q3 Jul–Sep", "Q4 Oct–Dic"];
 const YEAR = new Date().getFullYear();
 const QUARTER_DATES = [`${YEAR}-01-01`, `${YEAR}-04-01`, `${YEAR}-07-01`, `${YEAR}-10-01`];
@@ -43,10 +43,10 @@ function formatDate(d: string): string {
 function urgencyLabel(date: string | null): { text: string; color: string } | null {
   if (!date) return null;
   const diff = Math.round((new Date(date).getTime() - Date.now()) / 86400000);
-  if (diff < 0) return { text: "Vencida", color: "#E24B4A" };
-  if (diff <= 14) return { text: "Urgente", color: "#E24B4A" };
-  if (diff <= 30) return { text: "Pronto", color: "#EF9F27" };
-  return { text: "OK", color: "#1D9E75" };
+  if (diff < 0) return { text: "Vencida", color: "#DC2626" };
+  if (diff <= 14) return { text: "Urgente", color: "#DC2626" };
+  if (diff <= 30) return { text: "Pronto", color: "#FBBF24" };
+  return { text: "OK", color: "#12A594" };
 }
 
 function computePositions(
@@ -430,11 +430,11 @@ export function SquadCanvas({ projects, discarded, p0Projects, config, onEdit, q
             width: dynamicZoneR * 2,
             height: dynamicZoneR * 2,
             borderRadius: "50%",
-            border: `2.5px dashed ${isOverLimit ? "#E24B4A" : isDragOver ? "#1D9E75" : "#ccc"}`,
+            border: `2.5px dashed ${isOverLimit ? "#DC2626" : isDragOver ? "#12A594" : "#ccc"}`,
             background: isOverLimit
-              ? "rgba(226,75,74,0.06)"
+              ? "rgba(220,38,38,0.06)"
               : isDragOver
-              ? "rgba(29,158,117,0.07)"
+              ? "rgba(18,165,148,0.07)"
               : "#F4F4F4",
             transition: "all 0.4s ease",
           }}
@@ -578,8 +578,8 @@ export function SquadCanvas({ projects, discarded, p0Projects, config, onEdit, q
       </div>
 
       {/* Info bar */}
-      <div className="flex items-center gap-2 px-4 py-2.5 bg-orange-50 border border-orange-100 rounded-lg text-xs text-brand-gray min-h-[36px]">
-        <span className="text-brand-orange flex-shrink-0">ℹ</span>
+      <div className="flex items-center gap-2 px-4 py-2.5 bg-blue-50 border border-blue-100 rounded-lg text-xs text-brand-gray min-h-[36px]">
+        <span className="text-brand-blue flex-shrink-0">ℹ</span>
         <span dangerouslySetInnerHTML={{ __html: infoMsg }} />
       </div>
 
@@ -620,7 +620,7 @@ function DiscardedChip({ project: p, isExplicit }: { project: Project; isExplici
       style={{
         background: isExplicit ? "#FEF3F3" : "#F4F4F4",
         border: `1px solid ${isExplicit ? "#FDDCDC" : "#E5E5E5"}`,
-        color: isExplicit ? "#E24B4A" : "#6B6B6B",
+        color: isExplicit ? "#DC2626" : "#5C6B7A",
       }}
     >
       {p.name}
@@ -686,7 +686,7 @@ function BubbleTooltip({
         opacity: pos.visible ? 1 : 0,
         width: TOOLTIP_W,
         zIndex: 9999,
-        background: "#111111",
+        background: "#0D2240",
         color: "#fff",
         borderRadius: 8,
         padding: "10px 14px",
@@ -728,10 +728,10 @@ function BubbleTooltip({
           {aggregate
             ? `${aggregate.completed} / ${aggregate.total} sp (agregado de ${aggregate.count} slice${aggregate.count !== 1 ? "s" : ""})`
             : `${effCompleted} / ${effTotal} sprints completados`}
-          {progress >= 1 && <span style={{ color: "#1D9E75", marginLeft: 4 }}>✓ Completado</span>}
+          {progress >= 1 && <span style={{ color: "#12A594", marginLeft: 4 }}>✓ Completado</span>}
         </div>
         <div style={{ height: 4, background: "#333", borderRadius: 2, overflow: "hidden" }}>
-          <div style={{ height: "100%", width: `${Math.round(progress * 100)}%`, background: progress >= 1 ? "#1D9E75" : m.color, borderRadius: 2 }} />
+          <div style={{ height: "100%", width: `${Math.round(progress * 100)}%`, background: progress >= 1 ? "#12A594" : m.color, borderRadius: 2 }} />
         </div>
       </div>
 

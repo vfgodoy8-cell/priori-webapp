@@ -22,7 +22,7 @@ export function DashboardHeaderRight({ orgName, userEmail, teams, orgId, role }:
       <TeamPanelTrigger teams={teams} orgId={orgId} role={role} />
       <Link
         href="/settings/members"
-        className="text-sm px-3 py-1.5 rounded-lg bg-white text-brand-gray hover:text-brand-black transition"
+        className="text-sm px-3 py-1.5 rounded-lg bg-white text-brand-gray hover:text-brand-navy transition"
         style={{ border: "1.5px solid #E5E5E5", borderRadius: 8 }}
       >
         👥 Miembros

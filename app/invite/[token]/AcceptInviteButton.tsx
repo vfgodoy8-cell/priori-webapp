@@ -38,7 +38,7 @@ export function AcceptInviteButton({ token, invitationEmail, userEmail }: Props)
   if (!emailMatch) {
     return (
       <div className="flex flex-col gap-3">
-        <div className="px-4 py-3 rounded-lg bg-orange-50 border border-orange-200 text-xs text-brand-orange">
+        <div className="px-4 py-3 rounded-lg bg-blue-50 border border-blue-200 text-xs text-brand-blue">
           Esta invitación es para <strong>{invitationEmail}</strong>, pero iniciaste sesión con{" "}
           <strong>{userEmail}</strong>. Cerrá sesión e iniciá con el email correcto.
         </div>
@@ -57,7 +57,7 @@ export function AcceptInviteButton({ token, invitationEmail, userEmail }: Props)
       <button
         onClick={handleAccept}
         disabled={loading}
-        className="w-full py-3 text-sm font-bold rounded-lg bg-brand-orange hover:bg-orange-600 disabled:opacity-60 text-white transition"
+        className="w-full py-3 text-sm font-bold rounded-lg bg-brand-blue hover:bg-blue-800 disabled:opacity-60 text-white transition"
       >
         {loading ? "Aceptando…" : "Aceptar invitación"}
       </button>

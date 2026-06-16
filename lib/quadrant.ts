@@ -26,25 +26,25 @@ export const QUADRANT_META: Record<
   p1: {
     label: "Quick Win",
     priority: "P1",
-    color: "#1D9E75",
-    bg: "#F0FBF7",
+    color: "#12A594",
+    bg: "#F0FAFA",
   },
   p2: {
     label: "Gran Proyecto",
     priority: "P2",
-    color: "#1E6FC5",
-    bg: "#EFF6FF",
+    color: "#4F46E5",
+    bg: "#EEF2FF",
   },
   p3: {
     label: "Iniciativa Menor",
     priority: "P3",
-    color: "#6B6B6B",
-    bg: "#F5F5F5",
+    color: "#5C6B7A",
+    bg: "#F4F5F6",
   },
   p0: {
     label: "Descartada",
     priority: "P0",
-    color: "#E8621A",
-    bg: "#FFF4EE",
+    color: "#D97706",
+    bg: "#FFFBEB",
   },
 };

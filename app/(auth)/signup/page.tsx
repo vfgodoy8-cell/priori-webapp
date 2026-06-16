@@ -59,32 +59,32 @@ export default function SignupPage() {
       <div className="w-full max-w-sm">
         <div className="flex flex-col items-center mb-8 gap-3">
           <div className="flex flex-col gap-1.5">
-            <div className="h-2.5 w-16 rounded-full bg-brand-orange" />
-            <div className="h-2.5 w-10 rounded-full bg-brand-orange opacity-65" />
-            <div className="h-2.5 w-6 rounded-full bg-brand-orange opacity-30" />
+            <div className="h-2.5 w-16 rounded-full bg-brand-blue" />
+            <div className="h-2.5 w-10 rounded-full bg-brand-blue opacity-65" />
+            <div className="h-2.5 w-6 rounded-full bg-brand-blue opacity-30" />
           </div>
-          <span className="text-2xl font-bold text-brand-black tracking-tight">
+          <span className="text-2xl font-bold text-brand-navy tracking-tight">
             priori
           </span>
         </div>
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-center">
           <div className="w-12 h-12 rounded-full bg-green-50 flex items-center justify-center mx-auto mb-4">
-            <svg className="w-6 h-6 text-brand-green" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="w-6 h-6 text-brand-teal" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
           </div>
-          <h2 className="text-lg font-semibold text-brand-black mb-2">
+          <h2 className="text-lg font-semibold text-brand-navy mb-2">
             Revisá tu email
           </h2>
           <p className="text-sm text-brand-gray">
             Te enviamos un enlace de confirmación a{" "}
-            <span className="font-medium text-brand-black">{email}</span>.
+            <span className="font-medium text-brand-navy">{email}</span>.
             Hacé clic en el enlace para activar tu cuenta.
           </p>
         </div>
         <p className="text-center text-sm text-brand-gray mt-6">
           ¿Ya tenés cuenta?{" "}
-          <Link href="/login" className="text-brand-orange font-medium hover:underline">
+          <Link href="/login" className="text-brand-blue font-medium hover:underline">
             Ingresá
           </Link>
         </p>
@@ -97,24 +97,24 @@ export default function SignupPage() {
       {/* Logo */}
       <div className="flex flex-col items-center mb-8 gap-3">
         <div className="flex flex-col gap-1.5">
-          <div className="h-2.5 w-16 rounded-full bg-brand-orange" />
-          <div className="h-2.5 w-10 rounded-full bg-brand-orange opacity-65" />
-          <div className="h-2.5 w-6 rounded-full bg-brand-orange opacity-30" />
+          <div className="h-2.5 w-16 rounded-full bg-brand-blue" />
+          <div className="h-2.5 w-10 rounded-full bg-brand-blue opacity-65" />
+          <div className="h-2.5 w-6 rounded-full bg-brand-blue opacity-30" />
         </div>
-        <span className="text-2xl font-bold text-brand-black tracking-tight">
+        <span className="text-2xl font-bold text-brand-navy tracking-tight">
           priori
         </span>
       </div>
 
       {/* Card */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
-        <h1 className="text-xl font-semibold text-brand-black mb-6">
+        <h1 className="text-xl font-semibold text-brand-navy mb-6">
           Creá tu cuenta
         </h1>
 
         <form onSubmit={handleSignup} className="flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-brand-black" htmlFor="email">
+            <label className="text-sm font-medium text-brand-navy" htmlFor="email">
               Email
             </label>
             <input
@@ -125,12 +125,12 @@ export default function SignupPage() {
               required
               autoComplete="email"
               placeholder="tu@empresa.com"
-              className="w-full rounded-lg border border-gray-200 px-3.5 py-2.5 text-sm text-brand-black placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-orange focus:border-transparent transition"
+              className="w-full rounded-lg border border-gray-200 px-3.5 py-2.5 text-sm text-brand-navy placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-transparent transition"
             />
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-brand-black" htmlFor="password">
+            <label className="text-sm font-medium text-brand-navy" htmlFor="password">
               Contraseña
             </label>
             <input
@@ -142,7 +142,7 @@ export default function SignupPage() {
               autoComplete="new-password"
               placeholder="Mínimo 6 caracteres"
               minLength={6}
-              className="w-full rounded-lg border border-gray-200 px-3.5 py-2.5 text-sm text-brand-black placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-orange focus:border-transparent transition"
+              className="w-full rounded-lg border border-gray-200 px-3.5 py-2.5 text-sm text-brand-navy placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-transparent transition"
             />
           </div>
 
@@ -155,7 +155,7 @@ export default function SignupPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-brand-orange hover:bg-orange-600 disabled:opacity-60 text-white font-semibold rounded-lg py-2.5 text-sm transition"
+            className="w-full bg-brand-blue hover:bg-blue-800 disabled:opacity-60 text-white font-semibold rounded-lg py-2.5 text-sm transition"
           >
             {loading ? "Creando cuenta…" : "Crear cuenta"}
           </button>
@@ -172,7 +172,7 @@ export default function SignupPage() {
         <button
           onClick={handleGoogle}
           disabled={googleLoading}
-          className="w-full flex items-center justify-center gap-2.5 border border-gray-200 hover:border-gray-300 hover:bg-gray-50 disabled:opacity-60 rounded-lg py-2.5 text-sm font-medium text-brand-black transition"
+          className="w-full flex items-center justify-center gap-2.5 border border-gray-200 hover:border-gray-300 hover:bg-gray-50 disabled:opacity-60 rounded-lg py-2.5 text-sm font-medium text-brand-navy transition"
         >
           <GoogleIcon />
           {googleLoading ? "Redirigiendo…" : "Continuar con Google"}
@@ -181,7 +181,7 @@ export default function SignupPage() {
 
       <p className="text-center text-sm text-brand-gray mt-6">
         ¿Ya tenés cuenta?{" "}
-        <Link href="/login" className="text-brand-orange font-medium hover:underline">
+        <Link href="/login" className="text-brand-blue font-medium hover:underline">
           Ingresá
         </Link>
       </p>

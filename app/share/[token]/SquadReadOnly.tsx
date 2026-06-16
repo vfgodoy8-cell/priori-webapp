@@ -83,7 +83,7 @@ export function SquadReadOnly({ projects }: Props) {
   const dynamicZoneR = Math.min(250, Math.max(100, 100 + cursoCount * 40));
   const sqLim = config.devN * config.devP;
   const capPct = sqLim > 0 ? Math.min(100, (cursoCount / sqLim) * 100) : 0;
-  const capColor = capPct >= 100 ? "#E24B4A" : capPct >= 95 ? "#E8621A" : capPct >= 90 ? "#EF9F27" : "#1D9E75";
+  const capColor = capPct >= 100 ? "#DC2626" : capPct >= 95 ? "#F59E0B" : capPct >= 90 ? "#FBBF24" : "#12A594";
 
   function handleEnter(id: string) {
     const project = projects.find(p => p.id === id);

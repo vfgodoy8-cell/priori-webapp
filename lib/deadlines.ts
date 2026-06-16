@@ -14,9 +14,9 @@ export type DeadlineAlert = {
 };
 
 export const SEVERITY_COLOR: Record<DeadlineSeverity, string> = {
-  red:    "#E24B4A",
-  orange: "#E8621A",
-  yellow: "#EF9F27",
+  red:    "#DC2626",
+  orange: "#F59E0B",
+  yellow: "#FBBF24",
 };
 
 export const SEVERITY_LABEL: Record<DeadlineSeverity, string> = {

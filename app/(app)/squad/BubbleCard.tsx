@@ -18,29 +18,29 @@ function getUrgency(productionDate: string | null): UrgencyStatus {
 }
 
 const URGENCY_COLOR: Record<UrgencyStatus, string> = {
-  green: "#1D9E75",
-  orange: "#E8621A",
-  red: "#E24B4A",
+  green: "#12A594",
+  orange: "#F59E0B",
+  red: "#DC2626",
 };
 
 const RING_COLOR: Record<Quadrant, string> = {
-  p1: "#E8621A",
-  p2: "#1E6FC5",
+  p1: "#12A594",
+  p2: "#4F46E5",
   p3: "#B4B2A9",
   p0: "#888888",
 };
 
 const BUBBLE_BG: Record<Quadrant, string> = {
-  p1: "#FFF4EE",
-  p2: "#EAF1FB",
-  p3: "#F5F5F5",
-  p0: "#F5F5F5",
+  p1: "#F0FAFA",
+  p2: "#EEF2FF",
+  p3: "#F4F5F6",
+  p0: "#F4F5F6",
 };
 
 const BUBBLE_LABEL_COLOR: Record<Quadrant, string> = {
-  p1: "#E8621A",
-  p2: "#1E6FC5",
-  p3: "#6B6B6B",
+  p1: "#12A594",
+  p2: "#4F46E5",
+  p3: "#5C6B7A",
   p0: "#888888",
 };
 
@@ -168,7 +168,7 @@ export function BubbleCard({ project, onEdit, style, onMouseDown, onMouseEnter, 
             cy={cy}
             r={r}
             fill="none"
-            stroke={isComplete ? "#1D9E75" : ringColor}
+            stroke={isComplete ? "#12A594" : ringColor}
             strokeWidth={strokeWidth}
             strokeLinecap="round"
             strokeDasharray={`${circumference} ${circumference}`}
@@ -202,7 +202,7 @@ export function BubbleCard({ project, onEdit, style, onMouseDown, onMouseEnter, 
           dominantBaseline="middle"
           fontSize={nameFontSize}
           fontWeight="700"
-          fill="#111111"
+          fill="#0D2240"
           fontFamily="var(--font-geist-sans), system-ui, sans-serif"
         >
           {nameText}
@@ -215,7 +215,7 @@ export function BubbleCard({ project, onEdit, style, onMouseDown, onMouseEnter, 
           textAnchor="middle"
           dominantBaseline="middle"
           fontSize={spFontSize}
-          fill={isComplete ? "#1D9E75" : "#6B6B6B"}
+          fill={isComplete ? "#12A594" : "#5C6B7A"}
           fontWeight={isComplete ? "700" : undefined}
           fontFamily="var(--font-geist-sans), system-ui, sans-serif"
         >
@@ -241,7 +241,7 @@ export function BubbleCard({ project, onEdit, style, onMouseDown, onMouseEnter, 
 
         {/* Blue cross-link dot at 6 o'clock — indicates this project is linked to a Cross initiative */}
         {crossLinked && (
-          <circle cx={cx} cy={cy + r} r={dotR} fill="#1E6FC5" />
+          <circle cx={cx} cy={cy + r} r={dotR} fill="#4F46E5" />
         )}
 
         {/* ⑂ icon (top-right) for parents that have slices */}

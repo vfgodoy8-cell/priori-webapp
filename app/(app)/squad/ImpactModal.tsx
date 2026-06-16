@@ -45,7 +45,7 @@ function buildWarnings(current: Project, incoming: Project, allProjects: Project
 }
 
 const ICON: Record<string, string> = { ok: "✅", caution: "⚠️", danger: "🔴" };
-const TEXT_COLOR: Record<string, string> = { ok: "#6B6B6B", caution: "#8a6000", danger: "#8a1f1f" };
+const TEXT_COLOR: Record<string, string> = { ok: "#5C6B7A", caution: "#8a6000", danger: "#8a1f1f" };
 
 type Props = {
   incoming: Project;
@@ -67,7 +67,7 @@ export function ImpactModal({ incoming, cursoProjects, allProjects, sqLim, devN,
       onClick={(e) => e.target === e.currentTarget && onCancel()}
     >
       <div className="bg-white rounded-2xl border border-gray-100 p-6 max-w-[460px] w-full my-auto shadow-xl">
-        <div className="text-base font-bold text-brand-black mb-1">Análisis de impacto</div>
+        <div className="text-base font-bold text-brand-navy mb-1">Análisis de impacto</div>
         <div className="text-xs text-brand-gray mb-4 leading-relaxed">
           Los {devN} developers ya tienen <strong>{sqLim} proyecto{sqLim !== 1 ? "s" : ""}</strong> en paralelo.
           Para agregar &ldquo;<strong>{incoming.name}</strong>&rdquo;, revisá el impacto de pausar cada uno:
@@ -79,7 +79,7 @@ export function ImpactModal({ incoming, cursoProjects, allProjects, sqLim, devN,
             {mInc.priority}
           </div>
           <div>
-            <div className="text-sm font-bold text-brand-black">{incoming.name}</div>
+            <div className="text-sm font-bold text-brand-navy">{incoming.name}</div>
             <div className="text-xs text-brand-gray mt-0.5">
               {incoming.stakeholder} · {mInc.label} · {incoming.effort_sprints} sprints
               {incoming.production_date ? ` · Producción: ${incoming.production_date}` : ""}
@@ -101,12 +101,12 @@ export function ImpactModal({ incoming, cursoProjects, allProjects, sqLim, devN,
             return (
               <div
                 key={cur.id}
-                className="border border-gray-100 rounded-xl overflow-hidden cursor-pointer hover:border-brand-orange transition"
+                className="border border-gray-100 rounded-xl overflow-hidden cursor-pointer hover:border-brand-blue transition"
                 onClick={() => onSwap(cur.id)}
               >
                 <div className="px-4 py-3 flex items-center justify-between" style={{ background: "#F4F4F4" }}>
                   <div>
-                    <div className="text-sm font-bold text-brand-black">{cur.name}</div>
+                    <div className="text-sm font-bold text-brand-navy">{cur.name}</div>
                     <div className="text-xs text-brand-gray mt-0.5">
                       {cur.stakeholder} · {cur.sprints_completed ?? 0}/{cur.effort_sprints} sprints
                       {cur.production_date ? ` · Producción: ${cur.production_date}` : ""}
@@ -139,7 +139,7 @@ export function ImpactModal({ incoming, cursoProjects, allProjects, sqLim, devN,
         <div className="mt-4">
           <button
             onClick={onCancel}
-            className="text-xs text-brand-gray hover:text-brand-black px-4 py-2 border border-gray-200 rounded-lg"
+            className="text-xs text-brand-gray hover:text-brand-navy px-4 py-2 border border-gray-200 rounded-lg"
           >
             Cancelar
           </button>

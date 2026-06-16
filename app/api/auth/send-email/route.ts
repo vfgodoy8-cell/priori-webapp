@@ -146,20 +146,20 @@ function buildHtml({
   <div style="max-width:480px;margin:0 auto;background:#fff;border-radius:16px;border:1px solid #E5E7EB;padding:40px 36px">
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:32px">
       <div>
-        <div style="height:6px;width:32px;border-radius:99px;background:#E8621A;margin-bottom:4px"></div>
-        <div style="height:6px;width:20px;border-radius:99px;background:#E8621A;opacity:.65;margin-bottom:4px"></div>
-        <div style="height:6px;width:12px;border-radius:99px;background:#E8621A;opacity:.30"></div>
+        <div style="height:6px;width:32px;border-radius:99px;background:#1E56C4;margin-bottom:4px"></div>
+        <div style="height:6px;width:20px;border-radius:99px;background:#1E56C4;opacity:.65;margin-bottom:4px"></div>
+        <div style="height:6px;width:12px;border-radius:99px;background:#1E56C4;opacity:.30"></div>
       </div>
-      <span style="font-weight:700;font-size:20px;color:#111111">priori</span>
+      <span style="font-weight:700;font-size:20px;color:#0D2240">priori</span>
     </div>
-    <h1 style="font-size:20px;font-weight:700;color:#111111;margin:0 0 8px">${title}</h1>
-    <p style="font-size:14px;color:#6B6B6B;margin:0 0 24px">${body}</p>
+    <h1 style="font-size:20px;font-weight:700;color:#0D2240;margin:0 0 8px">${title}</h1>
+    <p style="font-size:14px;color:#5C6B7A;margin:0 0 24px">${body}</p>
     <a href="${url}"
-       style="display:inline-block;background:#E8621A;color:#fff;font-weight:700;font-size:14px;text-decoration:none;padding:12px 28px;border-radius:10px;margin-bottom:24px">
+       style="display:inline-block;background:#1E56C4;color:#fff;font-weight:700;font-size:14px;text-decoration:none;padding:12px 28px;border-radius:10px;margin-bottom:24px">
       ${btnLabel}
     </a>
     <p style="font-size:12px;color:#9CA3AF;margin:0 0 4px">Si el boton no funciona, copia este enlace en tu navegador:</p>
-    <p style="font-size:11px;color:#E8621A;word-break:break-all;margin:0 0 24px">${url}</p>
+    <p style="font-size:11px;color:#1E56C4;word-break:break-all;margin:0 0 24px">${url}</p>
     <hr style="border:none;border-top:1px solid #F3F4F6;margin:24px 0">
     <p style="font-size:11px;color:#9CA3AF;margin:0">${footer}</p>
   </div>

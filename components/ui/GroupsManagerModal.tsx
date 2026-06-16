@@ -49,14 +49,14 @@ const UNIT_LABELS: Record<string, string> = {
 };
 
 const LEVEL_COLORS: Record<number, string> = {
-  1: "bg-orange-100 text-orange-700",
+  1: "bg-blue-100 text-blue-700",
   2: "bg-blue-100 text-blue-700",
   3: "bg-green-100 text-green-700",
   4: "bg-gray-100 text-gray-600",
 };
 
 const inp =
-  "w-full rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs text-brand-black placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-orange focus:border-transparent bg-white";
+  "w-full rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs text-brand-navy placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-transparent bg-white";
 
 // ─── Tree helpers ─────────────────────────────────────────────────────────────
 
@@ -206,7 +206,7 @@ function TreeNode({
     <div>
       <div
         className={`group flex items-center gap-1.5 py-1.5 px-2 rounded-lg cursor-pointer transition ${
-          selectedId === group.id ? "bg-orange-50 border border-orange-200" : "hover:bg-gray-50"
+          selectedId === group.id ? "bg-blue-50 border border-blue-200" : "hover:bg-gray-50"
         }`}
         style={{ marginLeft: depth * 20 }}
         onClick={() => onSelect(group.id)}
@@ -222,12 +222,12 @@ function TreeNode({
             onChange={(e) => setNameVal(e.target.value)}
             onBlur={saveName}
             onKeyDown={(e) => { if (e.key === "Enter") saveName(); if (e.key === "Escape") setEditingName(false); }}
-            className="flex-1 text-xs border border-brand-orange rounded px-1.5 py-0.5 outline-none"
+            className="flex-1 text-xs border border-brand-blue rounded px-1.5 py-0.5 outline-none"
             onClick={(e) => e.stopPropagation()}
           />
         ) : (
           <span
-            className="flex-1 text-xs font-semibold text-brand-black truncate"
+            className="flex-1 text-xs font-semibold text-brand-navy truncate"
             onDoubleClick={canEdit ? () => { setEditingName(true); setNameVal(group.name); } : undefined}
             title={canEdit ? "Doble click para renombrar" : undefined}
           >
@@ -244,7 +244,7 @@ function TreeNode({
             onChange={(e) => setPersonasVal(Math.max(0, parseInt(e.target.value) || 0))}
             onBlur={savePersonas}
             onKeyDown={(e) => { if (e.key === "Enter") savePersonas(); if (e.key === "Escape") { setEditingPersonas(false); setPersonasVal(group.personas); } }}
-            className="w-12 text-xs border border-brand-orange rounded px-1 py-0.5 outline-none text-center"
+            className="w-12 text-xs border border-brand-blue rounded px-1 py-0.5 outline-none text-center"
             onClick={(e) => e.stopPropagation()}
           />
         ) : (
@@ -267,18 +267,18 @@ function TreeNode({
         )}
 
         {canEdit && (
-          <div className="flex items-center gap-0.5 ml-1 opacity-0 group-hover:opacity-100 [.bg-orange-50_&]:opacity-100" onClick={(e) => e.stopPropagation()}>
+          <div className="flex items-center gap-0.5 ml-1 opacity-0 group-hover:opacity-100 [.bg-blue-50_&]:opacity-100" onClick={(e) => e.stopPropagation()}>
             {group.level < 4 && (
               <button
                 title="Agregar subgrupo"
                 onClick={() => setShowAddChild((s) => !s)}
-                className="p-0.5 text-gray-400 hover:text-brand-orange text-xs leading-none"
+                className="p-0.5 text-gray-400 hover:text-brand-blue text-xs leading-none"
               >+</button>
             )}
             <button
               title="Mover de padre"
               onClick={() => setShowMove((s) => !s)}
-              className="p-0.5 text-gray-400 hover:text-brand-blue text-[10px] leading-none"
+              className="p-0.5 text-gray-400 hover:text-brand-indigo text-[10px] leading-none"
             >⇅</button>
             <button
               title="Eliminar"
@@ -305,9 +305,9 @@ function TreeNode({
             onChange={(e) => setChildName(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter") handleAddChild(); if (e.key === "Escape") setShowAddChild(false); }}
             placeholder={`Nuevo ${levelLabels[(group.level + 1)] ?? "subgrupo"}…`}
-            className="flex-1 text-xs border border-brand-orange rounded px-2 py-1 outline-none focus:ring-1 focus:ring-brand-orange"
+            className="flex-1 text-xs border border-brand-blue rounded px-2 py-1 outline-none focus:ring-1 focus:ring-brand-blue"
           />
-          <button onClick={handleAddChild} disabled={saving || !childName.trim()} className="px-2 py-1 text-xs bg-brand-orange text-white rounded disabled:opacity-50">
+          <button onClick={handleAddChild} disabled={saving || !childName.trim()} className="px-2 py-1 text-xs bg-brand-blue text-white rounded disabled:opacity-50">
             {saving ? "…" : "✓"}
           </button>
           <button onClick={() => setShowAddChild(false)} className="px-2 py-1 text-xs text-gray-500 border rounded">✕</button>
@@ -320,7 +320,7 @@ function TreeNode({
           <div className="flex flex-col gap-0.5 max-h-32 overflow-y-auto">
             <button
               onClick={() => handleMove(null)}
-              className="text-left text-xs px-2 py-1 rounded hover:bg-orange-50 hover:text-brand-orange"
+              className="text-left text-xs px-2 py-1 rounded hover:bg-blue-50 hover:text-brand-blue"
             >
               — Raíz (sin padre)
             </button>
@@ -328,7 +328,7 @@ function TreeNode({
               <button
                 key={p.id}
                 onClick={() => handleMove(p.id)}
-                className="text-left text-xs px-2 py-1 rounded hover:bg-orange-50 hover:text-brand-orange"
+                className="text-left text-xs px-2 py-1 rounded hover:bg-blue-50 hover:text-brand-blue"
               >
                 {" ".repeat((p.level - 1) * 2)}{p.name}
               </button>
@@ -485,7 +485,7 @@ function CapacidadTab({
           <button
             onClick={handleSave}
             disabled={saving}
-            className="w-full py-2 text-xs font-bold rounded-lg bg-brand-orange hover:bg-orange-600 disabled:opacity-60 text-white transition"
+            className="w-full py-2 text-xs font-bold rounded-lg bg-brand-blue hover:bg-blue-800 disabled:opacity-60 text-white transition"
           >
             {saving ? "Guardando…" : "Guardar"}
           </button>
@@ -494,7 +494,7 @@ function CapacidadTab({
 
       <div className="bg-gray-50 rounded-lg p-3 border border-gray-100">
         <p className="text-[10px] font-bold text-brand-gray uppercase tracking-wider mb-2">Vista previa — mes actual</p>
-        <div className="flex flex-col gap-1 text-xs text-brand-black">
+        <div className="flex flex-col gap-1 text-xs text-brand-navy">
           <span>
             Personas efectivas: <strong>{effPeople.toFixed(1)}</strong> / {personasVal}
             {personasVal > 0 && (
@@ -598,14 +598,14 @@ function AjustesTab({
             <div
               key={adj.id}
               className={`flex items-start gap-2 p-2.5 rounded-lg border text-xs ${
-                isActive(adj) ? "border-brand-orange bg-orange-50" : "border-gray-100 bg-gray-50"
+                isActive(adj) ? "border-brand-blue bg-blue-50" : "border-gray-100 bg-gray-50"
               }`}
             >
               <div className="flex-1">
                 {isActive(adj) && (
-                  <span className="text-[9px] font-bold text-brand-orange uppercase mb-0.5 block">Vigente hoy</span>
+                  <span className="text-[9px] font-bold text-brand-blue uppercase mb-0.5 block">Vigente hoy</span>
                 )}
-                <div className="font-medium text-brand-black">
+                <div className="font-medium text-brand-navy">
                   {adj.kind === "pct" ? `${adj.value}% disponible` : `${adj.value > 0 ? "+" : ""}${adj.value} personas`}
                 </div>
                 <div className="text-brand-gray text-[10px]">
@@ -615,7 +615,7 @@ function AjustesTab({
               </div>
               {canEdit && (
                 <div className="flex gap-1">
-                  <button onClick={() => startEdit(adj)} className="text-gray-400 hover:text-brand-orange">✏</button>
+                  <button onClick={() => startEdit(adj)} className="text-gray-400 hover:text-brand-blue">✏</button>
                   <button onClick={() => handleDelete(adj.id)} className="text-gray-400 hover:text-red-500">✕</button>
                 </div>
               )}
@@ -683,14 +683,14 @@ function AjustesTab({
 
           <div className="flex gap-2">
             {editingId && (
-              <button onClick={cancelEdit} className="px-3 py-2 text-xs text-brand-gray border border-gray-200 rounded-lg hover:text-brand-black transition">
+              <button onClick={cancelEdit} className="px-3 py-2 text-xs text-brand-gray border border-gray-200 rounded-lg hover:text-brand-navy transition">
                 Cancelar
               </button>
             )}
             <button
               onClick={handleSave}
               disabled={saving}
-              className="flex-1 py-2 text-xs font-bold rounded-lg bg-brand-orange hover:bg-orange-600 disabled:opacity-60 text-white transition"
+              className="flex-1 py-2 text-xs font-bold rounded-lg bg-brand-blue hover:bg-blue-800 disabled:opacity-60 text-white transition"
             >
               {saving ? "Guardando…" : editingId ? "Guardar cambios" : "Agregar ajuste"}
             </button>
@@ -800,7 +800,7 @@ function ConfigTab({
           <button
             onClick={saveSettings}
             disabled={saving}
-            className="py-2 text-xs font-bold rounded-lg bg-brand-orange hover:bg-orange-600 disabled:opacity-60 text-white transition"
+            className="py-2 text-xs font-bold rounded-lg bg-brand-blue hover:bg-blue-800 disabled:opacity-60 text-white transition"
           >
             {saving ? "Guardando…" : saved ? "✓ Guardado" : "Guardar configuración"}
           </button>
@@ -821,19 +821,19 @@ function ConfigTab({
                   value={levelDraft}
                   onChange={(e) => setLevelDraft(e.target.value)}
                   onKeyDown={(e) => { if (e.key === "Enter") saveLevelLabel(level); if (e.key === "Escape") setEditingLevel(null); }}
-                  className="flex-1 text-xs border border-brand-orange rounded px-2 py-1 outline-none focus:ring-1 focus:ring-brand-orange"
+                  className="flex-1 text-xs border border-brand-blue rounded px-2 py-1 outline-none focus:ring-1 focus:ring-brand-blue"
                 />
-                <button onClick={() => saveLevelLabel(level)} className="text-xs text-brand-orange font-bold">✓</button>
+                <button onClick={() => saveLevelLabel(level)} className="text-xs text-brand-blue font-bold">✓</button>
                 <button onClick={() => setEditingLevel(null)} className="text-xs text-gray-400">✕</button>
               </>
             ) : (
               <>
-                <span className="flex-1 text-xs text-brand-black">{levelLabels[level]}</span>
+                <span className="flex-1 text-xs text-brand-navy">{levelLabels[level]}</span>
                 {canEdit && (
                   <>
                     <button
                       onClick={() => { setEditingLevel(level); setLevelDraft(levelLabels[level]); }}
-                      className="text-[10px] text-gray-400 hover:text-brand-orange"
+                      className="text-[10px] text-gray-400 hover:text-brand-blue"
                     >
                       ✏
                     </button>
@@ -945,12 +945,12 @@ export function GroupsManagerModal({ groups: initialGroups, orgId, role, open, o
           {/* Header */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
             <div>
-              <h2 className="text-base font-bold text-brand-black">Gestión de Grupos</h2>
+              <h2 className="text-base font-bold text-brand-navy">Gestión de Grupos</h2>
               <p className="text-xs text-brand-gray mt-0.5">
                 Estructura jerárquica, capacidad y ajustes por período
               </p>
             </div>
-            <button onClick={onClose} className="text-brand-gray hover:text-brand-black text-2xl leading-none w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 transition">
+            <button onClick={onClose} className="text-brand-gray hover:text-brand-navy text-2xl leading-none w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 transition">
               ×
             </button>
           </div>
@@ -963,8 +963,8 @@ export function GroupsManagerModal({ groups: initialGroups, orgId, role, open, o
                 onClick={() => setActiveTab(t.id)}
                 className={`px-4 py-2 text-xs font-semibold rounded-t-lg transition border-b-2 ${
                   activeTab === t.id
-                    ? "text-brand-orange border-brand-orange bg-orange-50"
-                    : "text-brand-gray border-transparent hover:text-brand-black"
+                    ? "text-brand-blue border-brand-blue bg-blue-50"
+                    : "text-brand-gray border-transparent hover:text-brand-navy"
                 }`}
               >
                 {t.label}
@@ -983,7 +983,7 @@ export function GroupsManagerModal({ groups: initialGroups, orgId, role, open, o
                     key={g.id}
                     onClick={() => setSelectedId(g.id)}
                     className={`text-left px-2 py-1.5 rounded-lg text-xs transition ${
-                      selectedId === g.id ? "bg-orange-50 text-brand-orange font-semibold" : "text-brand-black hover:bg-gray-50"
+                      selectedId === g.id ? "bg-blue-50 text-brand-blue font-semibold" : "text-brand-navy hover:bg-gray-50"
                     }`}
                     style={{ paddingLeft: depth * 12 + 8 }}
                   >
@@ -1032,12 +1032,12 @@ export function GroupsManagerModal({ groups: initialGroups, orgId, role, open, o
                         onChange={(e) => setCreateName(e.target.value)}
                         onKeyDown={(e) => { if (e.key === "Enter") handleCreateRoot(); }}
                         placeholder={`Nuevo ${levelLabels[1] ?? "grupo"}…`}
-                        className="flex-1 text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 outline-none focus:border-brand-orange focus:ring-1 focus:ring-brand-orange"
+                        className="flex-1 text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue"
                       />
                       <button
                         onClick={handleCreateRoot}
                         disabled={creatingSaving || !createName.trim()}
-                        className="px-3 py-1.5 text-xs font-bold bg-brand-orange hover:bg-orange-600 text-white rounded-lg disabled:opacity-50 transition"
+                        className="px-3 py-1.5 text-xs font-bold bg-brand-blue hover:bg-blue-800 text-white rounded-lg disabled:opacity-50 transition"
                       >
                         {creatingSaving ? "…" : `+ ${levelLabels[1] ?? "Grupo"}`}
                       </button>

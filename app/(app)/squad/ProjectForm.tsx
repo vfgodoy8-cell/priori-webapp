@@ -16,7 +16,7 @@ function SubmitButton() {
     <button
       type="submit"
       disabled={pending}
-      className="bg-brand-orange hover:bg-orange-600 disabled:opacity-60 text-white font-semibold rounded-lg px-5 py-2.5 text-sm transition"
+      className="bg-brand-blue hover:bg-blue-800 disabled:opacity-60 text-white font-semibold rounded-lg px-5 py-2.5 text-sm transition"
     >
       {pending ? "Guardando…" : "Guardar"}
     </button>
@@ -41,12 +41,12 @@ export function ProjectForm({ project, onClose }: Props) {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-          <h2 className="font-semibold text-brand-black">
+          <h2 className="font-semibold text-brand-navy">
             {isEditing ? "Editar proyecto" : "Nuevo proyecto"}
           </h2>
           <button
             onClick={onClose}
-            className="text-brand-gray hover:text-brand-black transition text-xl leading-none"
+            className="text-brand-gray hover:text-brand-navy transition text-xl leading-none"
           >
             ×
           </button>
@@ -188,7 +188,7 @@ export function ProjectForm({ project, onClose }: Props) {
             <button
               type="button"
               onClick={onClose}
-              className="text-sm text-brand-gray hover:text-brand-black transition px-4 py-2.5"
+              className="text-sm text-brand-gray hover:text-brand-navy transition px-4 py-2.5"
             >
               Cancelar
             </button>
@@ -211,7 +211,7 @@ function Field({
 }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <label htmlFor={htmlFor} className="text-sm font-medium text-brand-black">
+      <label htmlFor={htmlFor} className="text-sm font-medium text-brand-navy">
         {label}
       </label>
       {children}
@@ -220,4 +220,4 @@ function Field({
 }
 
 const inputClass =
-  "w-full rounded-lg border border-gray-200 px-3.5 py-2.5 text-sm text-brand-black placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-orange focus:border-transparent transition bg-white";
+  "w-full rounded-lg border border-gray-200 px-3.5 py-2.5 text-sm text-brand-navy placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-transparent transition bg-white";

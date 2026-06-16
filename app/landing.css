@@ -1,10 +1,10 @@
 :root{
-  --orange:#E8621A;
-  --orange-soft:#FBEEE6;
+  --orange:#1E56C4;
+  --orange-soft:#EDF2FC;
   --ink:#111111;
-  --gray:#6B6B6B;
-  --green:#1D9E75;
-  --blue:#1E6FC5;
+  --gray:#5C6B7A;
+  --green:#12A594;
+  --blue:#4F46E5;
   --line:rgba(17,17,17,.10);
   --bg:#FBFAF8;
   --card:#FFFFFF;
@@ -36,7 +36,7 @@ header{position:sticky;top:0;z-index:50;background:rgba(251,250,248,.82);backdro
 
 /* ---- hero ---- */
 .hero{padding:96px 0 72px;position:relative;overflow:hidden}
-.hero::before{content:"";position:absolute;top:-180px;right:-160px;width:560px;height:560px;border-radius:50%;background:radial-gradient(circle,rgba(232,98,26,.10),transparent 68%);z-index:0}
+.hero::before{content:"";position:absolute;top:-180px;right:-160px;width:560px;height:560px;border-radius:50%;background:radial-gradient(circle,rgba(30,86,196,.10),transparent 68%);z-index:0}
 .hero .wrap{position:relative;z-index:1}
 .eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--orange);background:var(--orange-soft);padding:7px 14px;border-radius:30px;margin-bottom:26px}
 h1{font-family:var(--display);font-weight:500;font-size:clamp(38px,6vw,68px);line-height:1.03;letter-spacing:-.025em;max-width:14ch}
@@ -45,7 +45,7 @@ h1 em{font-style:italic;color:var(--orange)}
 .hero-cta{display:flex;gap:14px;flex-wrap:wrap}
 .btn{padding:15px 28px;border-radius:11px;font-weight:500;font-size:16px;transition:.2s;cursor:pointer;border:none;display:inline-flex;align-items:center;gap:9px}
 .btn-primary{background:var(--orange);color:#fff}
-.btn-primary:hover{background:#cf550f;transform:translateY(-1px)}
+.btn-primary:hover{background:#1548A6;transform:translateY(-1px)}
 .btn-ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
 .btn-ghost:hover{border-color:var(--ink)}
 
@@ -62,7 +62,7 @@ section{padding:84px 0}
 
 /* ---- problem ---- */
 .problems{background:var(--ink);color:#fff}
-.problems .sec-tag{color:#FBA877}
+.problems .sec-tag{color:#93BFEF}
 .problems .sec-title{color:#fff}
 .prob-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:26px;margin-top:54px}
 .prob{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.10);border-radius:16px;padding:30px}
@@ -75,7 +75,7 @@ section{padding:84px 0}
 .feat-head{max-width:760px;margin-bottom:58px}
 .feat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:22px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:34px;transition:.25s;position:relative;overflow:hidden}
-.card:hover{transform:translateY(-3px);box-shadow:0 18px 40px -22px rgba(17,17,17,.22);border-color:rgba(232,98,26,.35)}
+.card:hover{transform:translateY(-3px);box-shadow:0 18px 40px -22px rgba(17,17,17,.22);border-color:rgba(30,86,196,.35)}
 .card .ic{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;font-weight:600;font-family:var(--display);font-size:19px;margin-bottom:20px;color:#fff}
 .card h3{font-family:var(--display);font-weight:500;font-size:23px;letter-spacing:-.01em;margin-bottom:10px;display:flex;align-items:center;gap:10px}
 .card p{color:var(--gray);font-size:15.5px}
@@ -87,7 +87,7 @@ section{padding:84px 0}
 @media(max-width:880px){.feat-grid{grid-template-columns:1fr}}
 
 /* ---- spotlight (roadmap) ---- */
-.spot{background:linear-gradient(160deg,#fff,#FBF3EC)}
+.spot{background:linear-gradient(160deg,#fff,#EEF4FC)}
 .spot-inner{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center}
 .spot-mock{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:0 24px 60px -34px rgba(17,17,17,.3)}
 .gantt-row{display:flex;align-items:center;gap:12px;margin-bottom:11px}

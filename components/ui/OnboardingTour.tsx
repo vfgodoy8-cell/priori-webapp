@@ -26,7 +26,7 @@ const STEPS: Step[] = [
     body: (
       <div className="flex flex-col gap-3">
         <p className="text-sm text-brand-gray leading-relaxed">
-          La herramienta de <span className="font-semibold text-brand-navy">transparencia estratégica</span> para equipos de software.
+          La herramienta de <span className="font-semibold text-brand-navy">transparencia estratégica</span> para equipos ágiles.
         </p>
         <div className="flex flex-col gap-2">
           {[

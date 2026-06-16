@@ -50,7 +50,7 @@ export default function LandingPage() {
           <span className="eyebrow">Transparencia estratégica</span>
           <h1>La claridad de <em>priorizar</em> bien.</h1>
           <p className="lead">
-            Priori es la plataforma donde los equipos de software deciden en qué trabajar,
+            Priori es la plataforma donde los equipos ágiles deciden en qué trabajar,
             lo planifican por equipos y quarters, y lo sostienen cuando la realidad se mueve.
             Visual, objetivo y compartible.
           </p>
@@ -257,7 +257,7 @@ export default function LandingPage() {
             </div>
             priori<span style={{ color: "var(--orange)" }}>™</span>
           </div>
-          <div>Priorización visual para equipos de software · Argentina · 2026</div>
+          <div>Priorización visual para equipos ágiles · Argentina · 2026</div>
           <div className="tm">
             Contacto: <a href="mailto:[TU_EMAIL]" style={{ color: "var(--orange)" }}>[TU_EMAIL]</a>
           </div>

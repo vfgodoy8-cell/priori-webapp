@@ -36,7 +36,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     "Modo Roadmap";
   const title = `${orgName} — ${modeLabel} · Priori™`;
   const description =
-    "Transparencia estratégica para equipos de software. Matriz de Impacto vs Esfuerzo, planificación por Quarters.";
+    "Transparencia estratégica para equipos ágiles. Matriz de Impacto vs Esfuerzo, planificación por Quarters.";
 
   return {
     title,

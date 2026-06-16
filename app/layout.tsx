@@ -11,11 +11,11 @@ export const metadata: Metadata = {
     ],
   },
   description:
-    "Transparencia estratégica para equipos de software. Matriz de Impacto vs Esfuerzo, planificación por Quarters.",
+    "Transparencia estratégica para equipos ágiles. Matriz de Impacto vs Esfuerzo, planificación por Quarters.",
   openGraph: {
     title: "Priori™ — Transparencia Estratégica",
     description:
-      "Transparencia estratégica para equipos de software. Matriz de Impacto vs Esfuerzo, planificación por Quarters.",
+      "Transparencia estratégica para equipos ágiles. Matriz de Impacto vs Esfuerzo, planificación por Quarters.",
     type: "website",
   },
 };

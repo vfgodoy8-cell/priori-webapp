@@ -1,4 +1,4 @@
-﻿import { redirect } from "next/navigation";
+import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -198,25 +198,25 @@ export default async function DashboardPage() {
             label="Proyectos activos"
             value={projects.length}
             sub={`${enCurso} en curso · ${enBacklog} en backlog`}
-            color=”#1E56C4”
+            color="#1E56C4"
           />
           <StatCard
-            label=”En curso ahora”
+            label="En curso ahora"
             value={enCurso}
-            sub={projects.length > 0 ? `${Math.round((enCurso / projects.length) * 100)}% del total activo` : “â€””}
-            color=”#12A594”
+            sub={projects.length > 0 ? `${Math.round((enCurso / projects.length) * 100)}% del total activo` : "â€”"}
+            color="#12A594"
           />
           <StatCard
-            label=”Iniciativas del programa”
+            label="Iniciativas del programa"
             value={initiatives.length}
             sub={`${onTimeline} en timeline · ${inBacklog} sin asignar`}
-            color=”#4F46E5”
+            color="#4F46E5"
           />
           <StatCard
-            label=”Equipos configurados”
+            label="Equipos configurados"
             value={teams.length}
-            sub={teams.length > 0 ? teams.map((t) => t.name.split(“ “)[0]).slice(0, 3).join(“, “) : “Sin equipos aún”}
-            color=”#5C6B7A”
+            sub={teams.length > 0 ? teams.map((t) => t.name.split(" ")[0]).slice(0, 3).join(", ") : "Sin equipos aún"}
+            color="#5C6B7A"
           />
         </div>
 
@@ -341,7 +341,7 @@ export default async function DashboardPage() {
                       <div className="text-xs font-bold text-brand-gray text-center">{Q_LABELS[q]}</div>
                       <div
                         className="rounded-lg border border-gray-100 p-2 flex flex-col items-center gap-1 min-h-[52px]"
-                        style={{ background: inQ.length > 0 ? "#FFF9F6" : "#FAFAFA" }}
+                        style={{ background: inQ.length > 0 ? "#EDF2FC" : "#FAFAFA" }}
                       >
                         {inQ.length === 0 ? (
                           <span className="text-[10px] text-gray-300 mt-1">vacío</span>

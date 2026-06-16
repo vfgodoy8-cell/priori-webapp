@@ -64,7 +64,7 @@ export default async function DashboardPage() {
   const initiatives = (initiativesData ?? []) as Pick<Initiative, "id" | "q_start" | "duration_quarters" | "team_ids" | "team_allocations" | "status">[];
   const teams = (teamsData ?? []) as Team[];
 
-  // â”€â”€ Squad stats â”€â”€
+  // —— Squad stats ——
   const enCurso = projects.filter((p) => p.squad_status === "curso").length;
   const enBacklog = projects.filter((p) => p.squad_status === "backlog").length;
 
@@ -74,7 +74,7 @@ export default async function DashboardPage() {
   }
   const quadrantMax = Math.max(...Object.values(quadrantCounts), 1);
 
-  // â”€â”€ Cross stats â”€â”€
+  // —— Cross stats ——
   // ── Roadmap stats ──
   type RmProduct = { id: string; channel_id: string | null };
   type RmChannel = { id: string; name: string };
@@ -203,7 +203,7 @@ export default async function DashboardPage() {
           <StatCard
             label="En curso ahora"
             value={enCurso}
-            sub={projects.length > 0 ? `${Math.round((enCurso / projects.length) * 100)}% del total activo` : "â€”"}
+            sub={projects.length > 0 ? `${Math.round((enCurso / projects.length) * 100)}% del total activo` : "—"}
             color="#12A594"
           />
           <StatCard
@@ -223,7 +223,7 @@ export default async function DashboardPage() {
         {/* Main panels */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
-          {/* Squad â€” cuadrantes */}
+          {/* Squad — cuadrantes */}
           <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
             <div className="px-5 py-3.5 bg-gray-50 border-b border-gray-100 flex items-center justify-between">
               <span className="text-sm font-bold text-brand-navy">Distribución Squad</span>
@@ -259,7 +259,7 @@ export default async function DashboardPage() {
             </div>
           </div>
 
-          {/* Cross â€” capacidad */}
+          {/* Cross — capacidad */}
           <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
             <div className="px-5 py-3.5 bg-gray-50 border-b border-gray-100 flex items-center justify-between">
               <span className="text-sm font-bold text-brand-navy">Capacidad del Programa</span>

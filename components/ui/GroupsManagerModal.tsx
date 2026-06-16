@@ -330,7 +330,7 @@ function TreeNode({
                 onClick={() => handleMove(p.id)}
                 className="text-left text-xs px-2 py-1 rounded hover:bg-blue-50 hover:text-brand-blue"
               >
-                {" ".repeat((p.level - 1) * 2)}{p.name}
+                {" ".repeat((p.level - 1) * 2)}{p.name}
               </button>
             ))}
           </div>

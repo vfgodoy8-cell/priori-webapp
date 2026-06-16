@@ -686,9 +686,9 @@ Lógica: sin user en ruta protegida → `/login`. Con user en ruta auth → `/da
 | **Nombre** | Priori™ |
 | **Tagline en metadata** | Transparencia estratégica para equipos ágiles |
 | **Eslogan en header** | Transparencia Estratégica |
-| **Color principal** | Naranja `#E8621A` |
-| **Paleta completa** | Negro `#111111` · Gris `#6B6B6B` · Verde `#1D9E75` · Azul `#1E6FC5` |
-| **Logo** | 3 barras horizontales en degradé de opacidad naranja (100% / 65% / 30%) |
+| **Color principal** | Azul `#1E56C4` |
+| **Paleta completa** | Navy `#0D2240` · Gris `#5C6B7A` · Teal `#12A594` · Indigo `#4F46E5` · Amber `#D97706` |
+| **Logo** | 3 barras horizontales en degradé de opacidad azul `#1E56C4` (100% / 65% / 30%) |
 | **Wordmark** | "priori" en minúscula, bold |
 | **Dominio objetivo** | priori.ar (registrado y delegado a Vercel) |
 

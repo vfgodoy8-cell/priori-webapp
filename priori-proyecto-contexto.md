@@ -7,11 +7,11 @@
 
 ## Qué es Priori
 
-Priori™ es una herramienta web de transparencia estratégica para equipos de software.
+Priori™ es una herramienta web de transparencia estratégica para equipos ágiles.
 Permite clasificar proyectos usando la Matriz de Impacto vs Esfuerzo (Modo Squad), planificar
 la capacidad de equipos por Quarters (Modo Cross) y visualizar roadmaps de producto (Modo Roadmap).
 
-**Tagline / metadata del sitio:** "Transparencia estratégica para equipos de software.
+**Tagline / metadata del sitio:** "Transparencia estratégica para equipos ágiles.
 Matriz de Impacto vs Esfuerzo, planificación por Quarters."
 
 **Eslogan en el header:** "Transparencia Estratégica"
@@ -684,7 +684,7 @@ Lógica: sin user en ruta protegida → `/login`. Con user en ruta auth → `/da
 | | |
 |---|---|
 | **Nombre** | Priori™ |
-| **Tagline en metadata** | Transparencia estratégica para equipos de software |
+| **Tagline en metadata** | Transparencia estratégica para equipos ágiles |
 | **Eslogan en header** | Transparencia Estratégica |
 | **Color principal** | Naranja `#E8621A` |
 | **Paleta completa** | Negro `#111111` · Gris `#6B6B6B` · Verde `#1D9E75` · Azul `#1E6FC5` |

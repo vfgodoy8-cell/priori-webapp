@@ -1,11 +1,12 @@
-import { Fraunces, Spline_Sans } from "next/font/google";
+import { Playfair_Display, Spline_Sans } from "next/font/google";
 import Link from "next/link";
 import "./landing.css";
 import LandingReveal from "./LandingReveal";
 
-const fraunces = Fraunces({
+const playfair = Playfair_Display({
   subsets: ["latin"],
-  weight: ["400", "500", "600"],
+  weight: ["500", "700", "800"],
+  style: ["normal", "italic"],
   variable: "--display",
   display: "swap",
 });
@@ -19,7 +20,7 @@ const splineSans = Spline_Sans({
 
 export default function LandingPage() {
   return (
-    <div className={`${fraunces.variable} ${splineSans.variable}`}>
+    <div className={[playfair.variable, splineSans.variable].join(" ")}>
       <LandingReveal />
 
       <header>
@@ -35,7 +36,6 @@ export default function LandingPage() {
           <nav className="nav-links">
             <a href="#problema">El problema</a>
             <a href="#funciones">Funcionalidades</a>
-            <a href="#roadmap">Modo Roadmap</a>
             <a href="#equipos">Para quién</a>
           </nav>
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
@@ -48,7 +48,11 @@ export default function LandingPage() {
       <section className="hero">
         <div className="wrap">
           <span className="eyebrow">Transparencia estratégica</span>
-          <h1>La claridad de <em>priorizar</em> bien.</h1>
+          <h1 className="hero-title">
+            La claridad de{" "}
+            <span className="accent">priorizar</span>{" "}
+            bien.
+          </h1>
           <p className="lead">
             Priori es la plataforma donde los equipos ágiles deciden en qué trabajar,
             lo planifican por equipos y quarters, y lo sostienen cuando la realidad se mueve.
@@ -57,11 +61,10 @@ export default function LandingPage() {
           <div className="hero-cta">
             <a href="#demo" className="btn btn-primary">Solicitar una demostración →</a>
             <Link href="/login" className="btn btn-ghost">Ingresar a Priori</Link>
-            <a href="#funciones" className="btn btn-ghost">Ver funcionalidades</a>
           </div>
           <div className="stats">
             <div className="stat reveal">
-              <div className="n">4</div>
+              <div className="n">3</div>
               <div className="l">modos de trabajo conectados</div>
             </div>
             <div className="stat reveal">
@@ -80,6 +83,58 @@ export default function LandingPage() {
         </div>
       </section>
 
+      <section className="product-shot">
+        <div className="wrap">
+          <div className="product-shot-inner">
+            <div className="browser-frame reveal">
+              <div className="browser-bar">
+                <div className="browser-dot"></div>
+                <div className="browser-dot"></div>
+                <div className="browser-dot"></div>
+                <div className="browser-url">priori.ar/roadmap</div>
+              </div>
+              <div className="browser-content">
+                <div className="gantt-head">
+                  <span>Oct</span><span>Nov</span><span>Dic</span><span>Ene</span>
+                </div>
+                <div className="gantt-row">
+                  <div className="team">PDV</div>
+                  <div className="gantt-track">
+                    <div className="gantt-bar" style={{ left: "4%", width: "18%", background: "var(--orange)" }}>PDV</div>
+                  </div>
+                </div>
+                <div className="gantt-row">
+                  <div className="team">Core</div>
+                  <div className="gantt-track">
+                    <div className="gantt-bar" style={{ left: "24%", width: "30%", background: "#4F46E5" }}>Core API</div>
+                  </div>
+                </div>
+                <div className="gantt-row">
+                  <div className="team">UX</div>
+                  <div className="gantt-track">
+                    <div className="gantt-bar" style={{ left: "24%", width: "22%", background: "var(--green)" }}>UX Venta</div>
+                  </div>
+                </div>
+                <div className="gantt-row">
+                  <div className="team">BE / FE</div>
+                  <div className="gantt-track">
+                    <div className="gantt-bar" style={{ left: "4%", width: "64%", background: "var(--ink)" }}>Backend &amp; Frontend</div>
+                  </div>
+                </div>
+                <div className="gantt-row">
+                  <div className="team">QA</div>
+                  <div className="gantt-track">
+                    <div className="gantt-bar" style={{ left: "56%", width: "24%", background: "var(--orange)" }}>QA</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="annot annot-1">Auto-reflow por dependencias</div>
+            <div className="annot annot-2">Capacidad en tiempo real</div>
+          </div>
+        </div>
+      </section>
+
       <section className="problems" id="problema">
         <div className="wrap">
           <div className="sec-tag">El problema</div>
@@ -88,7 +143,7 @@ export default function LandingPage() {
             <div className="prob reveal">
               <div className="mark">01</div>
               <h3>Decisiones poco transparentes</h3>
-              <p>El &quot;por qué&quot; de cada prioridad vive en la cabeza de pocos. Los stakeholders no ven el criterio y la confianza se erosiona.</p>
+              <p>El «por qué» de cada prioridad vive en la cabeza de pocos. Los stakeholders no ven el criterio y la confianza se erosiona.</p>
             </div>
             <div className="prob reveal">
               <div className="mark">02</div>
@@ -111,126 +166,103 @@ export default function LandingPage() {
             <h2 className="sec-title">Todo el ciclo de priorización, en un solo lugar.</h2>
             <p className="sec-sub">Desde la decisión de qué hacer hasta el seguimiento de lo que se está haciendo, conectado de punta a punta.</p>
           </div>
-          <div className="feat-grid">
-            <div className="card reveal">
-              <div className="ic c-orange">S</div>
-              <h3>Modo Squad</h3>
-              <p>Clasificá proyectos en una matriz de Impacto vs Esfuerzo con drag &amp; drop. Cuadrantes automáticos (Quick Win, Gran Proyecto, Iniciativa Menor, Descartada), indicadores de urgencia por fecha de salida y semáforo de capacidad del equipo.</p>
-            </div>
-            <div className="card reveal">
-              <div className="ic c-blue">C</div>
-              <h3>Modo Cross</h3>
-              <p>Planificación anual por quarters. Ubicá iniciativas multi-equipo en una línea de tiempo Q1–Q4, gestioná la capacidad por equipo y navegá al detalle de cada squad con un clic.</p>
-            </div>
-            <div className="card reveal">
-              <div className="ic c-green">AI</div>
-              <h3>Priori AI</h3>
-              <p>Un asistente que conoce el contexto de tu programa. Analizá escenarios por chat y cargá proyectos con una entrevista guiada de pocos pasos. Compatible con Anthropic, OpenAI, Azure, Google y Groq.</p>
-            </div>
-            <div className="card reveal">
-              <div className="ic c-ink">↔</div>
-              <h3>Colaboración &amp; trazabilidad</h3>
-              <p>Roles (Líder, Analista, Stakeholder), comentarios por proyecto, historial de actividad, invitaciones por email, vistas públicas de solo lectura y exportación a PDF.</p>
-            </div>
-            <div className="card reveal">
-              <div className="ic c-orange">R</div>
-              <h3>Modo Roadmap <span className="badge-new">Nuevo</span></h3>
-              <p>El reemplazo del tablero de MIRO. Un Gantt por producto donde cada equipo estima su tramo, las barras se encadenan por dependencias y se reacomodan solas. Con detección de sobrecarga de capacidad cruzando todos los productos.</p>
-            </div>
-            <div className="card reveal">
-              <div className="ic c-blue">!</div>
-              <h3>Agenda de Desvíos <span className="badge-new">Nuevo</span></h3>
-              <p>Registrá por qué un proyecto se demora: fecha del desvío, razón del bloqueo y dependencias involucradas. Una vista consolidada muestra todo lo que está trabado hoy, listo para integrarse con tu gestor de tickets.</p>
-            </div>
-          </div>
-        </div>
-      </section>
 
-      <section className="spot" id="roadmap">
-        <div className="wrap spot-inner">
-          <div className="reveal">
-            <div className="sec-tag">Destacado · Modo Roadmap</div>
-            <h2 className="sec-title">Un Gantt que se mantiene solo.</h2>
-            <p className="sec-sub">Definís duración y dependencias; Priori calcula las posiciones. Si una etapa se corre, todo lo que depende de ella se ajusta automáticamente.</p>
-            <ul>
-              <li>
-                <span className="tick">→</span>
-                <div><b>Auto-reflow por dependencias.</b> Movés un tramo y la cadena se reordena sin tocar nada más.</div>
-              </li>
-              <li>
-                <span className="tick">→</span>
-                <div><b>Switch manual.</b> ¿Necesitás libertad total? Lo desenganchás y arrastrás como en un tablero clásico.</div>
-              </li>
-              <li>
-                <span className="tick">→</span>
-                <div><b>Lectura mes · semana · sprint.</b> Calcula en sprints, se lee en meses. Sin hacer cuentas.</div>
-              </li>
-              <li>
-                <span className="tick">→</span>
-                <div><b>Capacidad cross-producto.</b> Te avisa cuando un equipo está pedido por varios productos a la vez.</div>
-              </li>
-            </ul>
+          <div className="frow">
+            <div className="ftext reveal">
+              <div className="sec-tag">Modo Squad</div>
+              <h3>La matriz que ordena el caos.</h3>
+              <p>Clasificá proyectos en Impacto vs Esfuerzo con drag &amp; drop. Cuadrantes automáticos, indicadores de urgencia y semáforo de capacidad del equipo.</p>
+              <ul>
+                <li>Cuadrantes P0–P3 con umbrales configurables</li>
+                <li>Canvas visual + vista lista en un clic</li>
+                <li>Semáforo de carga por equipo</li>
+                <li>Drill-down directo a planificación cross</li>
+              </ul>
+            </div>
+            <div className="fframe reveal">
+              <div className="fframe-placeholder">
+                <div className="fframe-icon">S</div>
+                <span>Captura Modo Squad</span>
+              </div>
+            </div>
           </div>
-          <div className="spot-mock reveal">
-            <div className="gantt-head">
-              <span>Oct</span><span>Nov</span><span>Dic</span><span>Ene</span>
-            </div>
-            <div className="gantt-row">
-              <div className="team">PDV</div>
-              <div className="gantt-track">
-                <div className="gantt-bar" style={{ left: "4%", width: "18%", background: "var(--orange)" }}>PDV</div>
+
+          <div className="frow reverse">
+            <div className="fframe reveal">
+              <div className="fframe-placeholder">
+                <div className="fframe-icon">C</div>
+                <span>Captura Modo Cross</span>
               </div>
             </div>
-            <div className="gantt-row">
-              <div className="team">Core</div>
-              <div className="gantt-track">
-                <div className="gantt-bar" style={{ left: "24%", width: "30%", background: "var(--blue)" }}>Core</div>
+            <div className="ftext reveal">
+              <div className="sec-tag">Modo Cross</div>
+              <h3>Planificación anual, sin hojas de cálculo.</h3>
+              <p>Ubicá iniciativas multi-equipo en una línea de tiempo Q1–Q4. Gestioná la capacidad por equipo y navegá al detalle de cada squad con un clic.</p>
+              <ul>
+                <li>Timeline Q1–Q4 con CSS span automático</li>
+                <li>Tabla de capacidad con semáforo</li>
+                <li>Asignación de equipos y porcentajes</li>
+                <li>Exportación a PDF</li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="frow">
+            <div className="ftext reveal">
+              <div className="sec-tag">Modo Roadmap</div>
+              <h3>Un Gantt que se mantiene solo.</h3>
+              <p>Definís duración y dependencias; Priori calcula las posiciones. Si una etapa se corre, todo lo que depende de ella se ajusta automáticamente.</p>
+              <ul>
+                <li>Auto-reflow por dependencias (Kahn + greedy)</li>
+                <li>Switch a modo manual cuando necesitás libertad</li>
+                <li>Filtro de grupos, líneas base, desvíos</li>
+                <li>Vista pública compartible por link</li>
+              </ul>
+            </div>
+            <div className="fframe reveal">
+              <div className="fframe-placeholder">
+                <div className="fframe-icon">R</div>
+                <span>Captura Modo Roadmap</span>
               </div>
             </div>
-            <div className="gantt-row">
-              <div className="team">UX</div>
-              <div className="gantt-track">
-                <div className="gantt-bar" style={{ left: "24%", width: "22%", background: "var(--green)" }}>UX Venta</div>
-              </div>
+          </div>
+
+          <div className="ai-strip reveal">
+            <div>
+              <div className="sec-tag">Priori AI</div>
+              <h3>El asistente que conoce tu programa.</h3>
+              <p>Analizá escenarios por chat y cargá proyectos con una entrevista guiada de pocos pasos. Compatible con Anthropic, OpenAI, Azure, Google y Groq.</p>
             </div>
-            <div className="gantt-row">
-              <div className="team">BE / FE</div>
-              <div className="gantt-track">
-                <div className="gantt-bar" style={{ left: "4%", width: "64%", background: "var(--ink)" }}>Backend &amp; Frontend</div>
-              </div>
-            </div>
-            <div className="gantt-row">
-              <div className="team">Pruebas</div>
-              <div className="gantt-track">
-                <div className="gantt-bar" style={{ left: "56%", width: "24%", background: "var(--orange)" }}>QA</div>
-              </div>
-            </div>
+            <a href="#demo" className="btn btn-primary">Ver cómo funciona →</a>
           </div>
         </div>
       </section>
 
       <section id="equipos">
         <div className="wrap">
-          <div className="sec-tag">Para quién</div>
-          <h2 className="sec-title">Una sola fuente de verdad para todo el programa.</h2>
-          <div className="aud-grid">
-            <div className="aud reveal">
-              <div className="role">
-                <span style={{ background: "var(--orange)" }}></span>Líderes
+          <div className="field">
+            <div className="sec-tag">Para quién</div>
+            <h2 className="sec-title">Una sola fuente de verdad para todo el programa.</h2>
+            <p className="sec-sub">Priori conecta a las personas que deciden con las que ejecutan, sin fricciones.</p>
+            <div className="aud-grid">
+              <div className="aud reveal">
+                <div className="role">
+                  <span style={{ background: "#F4C026" }}></span>Líderes
+                </div>
+                <p>Ven el programa completo, los bloqueos activos y la capacidad real de cada equipo. Deciden con criterio visible, no con intuición.</p>
               </div>
-              <p>Ven el programa completo, los bloqueos activos y la capacidad real de cada equipo. Deciden con criterio visible, no con intuición.</p>
-            </div>
-            <div className="aud reveal">
-              <div className="role">
-                <span style={{ background: "var(--blue)" }}></span>Analistas / PMs
+              <div className="aud reveal">
+                <div className="role">
+                  <span style={{ background: "rgba(255,255,255,.6)" }}></span>Analistas / PMs
+                </div>
+                <p>Arman la priorización, planifican quarters, registran desvíos y mantienen el roadmap vivo sin pelear con un tablero pesado.</p>
               </div>
-              <p>Arman la priorización, planifican quarters, registran desvíos y mantienen el roadmap vivo sin pelear con un tablero pesado.</p>
-            </div>
-            <div className="aud reveal">
-              <div className="role">
-                <span style={{ background: "var(--green)" }}></span>Stakeholders
+              <div className="aud reveal">
+                <div className="role">
+                  <span style={{ background: "var(--green)" }}></span>Stakeholders
+                </div>
+                <p>Entienden el porqué de cada prioridad y aportan ideas: con «Tengo una idea», la IA los entrevista y refina su propuesta en minutos.</p>
               </div>
-              <p>Entienden el porqué de cada prioridad y aportan ideas: con &quot;Tengo una idea&quot;, la IA los entrevista y refina su propuesta en minutos.</p>
             </div>
           </div>
         </div>
@@ -240,26 +272,51 @@ export default function LandingPage() {
         <div className="wrap">
           <h2>¿Tu equipo se reconoce en estos desafíos?</h2>
           <p>Si gestionás proyectos de software con múltiples stakeholders y querés que la priorización sea transparente, objetiva y compartible, te mostramos cómo funciona.</p>
-          <div className="hero-cta" style={{ justifyContent: "center" }}>
-            <a href="mailto:[TU_EMAIL]?subject=Quiero conocer Priori" className="btn btn-primary">Solicitar una demostración →</a>
-            <a href="[TU_LINKEDIN]" className="btn btn-ghost">Hablar con el equipo</a>
+          <div className="hero-cta">
+            <a
+              href="mailto:vf.godoy8@gmail.com?subject=Quiero conocer Priori"
+              className="btn btn-primary"
+            >
+              Solicitar una demostración →
+            </a>
+            <Link href="/login" className="btn btn-ghost">Ingresar a Priori</Link>
           </div>
         </div>
       </section>
 
       <footer>
-        <div className="wrap foot">
-          <div className="brand" style={{ fontSize: "18px" }}>
-            <div className="bars">
-              <span></span>
-              <span></span>
-              <span></span>
+        <div className="wrap">
+          <div className="foot-inner">
+            <div className="foot-brand">
+              <div className="brand">
+                <div className="bars">
+                  <span></span><span></span><span></span>
+                </div>
+                priori<span style={{ color: "#93BFEF" }}>™</span>
+              </div>
+              <p>Transparencia estratégica para equipos ágiles. Argentina, 2026.</p>
             </div>
-            priori<span style={{ color: "#93BFEF" }}>™</span>
+            <div className="foot-col">
+              <h4>Producto</h4>
+              <a href="#funciones">Funcionalidades</a>
+              <a href="#problema">El problema</a>
+              <a href="#equipos">Para quién</a>
+            </div>
+            <div className="foot-col">
+              <h4>Modos</h4>
+              <a href="#funciones">Modo Squad</a>
+              <a href="#funciones">Modo Cross</a>
+              <a href="#funciones">Modo Roadmap</a>
+            </div>
+            <div className="foot-col">
+              <h4>Contacto</h4>
+              <a href="mailto:vf.godoy8@gmail.com">vf.godoy8@gmail.com</a>
+              <a href="#demo">Solicitar demo</a>
+            </div>
           </div>
-          <div>Priorización visual para equipos ágiles · Argentina · 2026</div>
-          <div className="tm">
-            Contacto: <a href="mailto:[TU_EMAIL]" style={{ color: "#93BFEF" }}>[TU_EMAIL]</a>
+          <div className="foot-bottom">
+            <span>priori™ · Argentina · 2026</span>
+            <Link href="/login">Ingresar</Link>
           </div>
         </div>
       </footer>

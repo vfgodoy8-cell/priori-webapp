@@ -56,11 +56,12 @@ Matriz de Impacto vs Esfuerzo, planificación por Quarters."
 
 ```ts
 brand: {
-  orange: "#E8621A",   // color principal
-  black:  "#111111",
-  gray:   "#6B6B6B",
-  green:  "#1D9E75",
-  blue:   "#1E6FC5",
+  blue:   "#1E56C4",  // color principal
+  navy:   "#0D2240",  // textos fuertes / header
+  gray:   "#5C6B7A",  // texto secundario
+  teal:   "#12A594",  // P1 Quick Win
+  indigo: "#4F46E5",  // P2 Gran Proyecto + admin
+  amber:  "#D97706",  // P0 Descartada
 }
 ```
 

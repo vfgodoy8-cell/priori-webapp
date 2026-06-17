@@ -66,7 +66,8 @@ export default function OnboardingPage() {
             <h1 className="text-xl font-semibold text-brand-navy">
               Creá tu organización
             </h1>
-            <p className="text-sm text-brand-gray mt-1">
+            <div className="w-8 h-[3px] rounded-full bg-brand-gold mt-2 mb-2" />
+            <p className="text-sm text-brand-gray">
               Es el espacio de trabajo de tu equipo dentro de Priori™.
             </p>
           </div>

@@ -19,6 +19,8 @@ const config: Config = {
           teal:   "#12A594",  // P1 Quick Win
           indigo: "#4F46E5",  // P2 Gran Proyecto + admin
           amber:  "#D97706",  // P0 Descartada
+          accent: "#2D6DF6",  // hover CTA
+          gold:   "#F4C026",  // acento terciario
         },
       },
     },

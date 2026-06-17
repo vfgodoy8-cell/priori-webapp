@@ -60,16 +60,17 @@ export default function LoginPage() {
           <div className="h-2.5 w-10 rounded-full bg-brand-blue opacity-65" />
           <div className="h-2.5 w-6 rounded-full bg-brand-blue opacity-30" />
         </div>
-        <span className="text-2xl font-bold text-brand-navy tracking-tight">
+        <span className="text-2xl font-bold text-white tracking-tight">
           priori
         </span>
       </div>
 
       {/* Card */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
-        <h1 className="text-xl font-semibold text-brand-navy mb-6">
+        <h1 className="text-xl font-semibold text-brand-navy">
           Ingresá a tu cuenta
         </h1>
+        <div className="w-8 h-[3px] rounded-full bg-brand-gold mt-1 mb-6" />
 
         <form onSubmit={handleLogin} className="flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
@@ -137,9 +138,9 @@ export default function LoginPage() {
         </button>
       </div>
 
-      <p className="text-center text-sm text-brand-gray mt-6">
+      <p className="text-center text-sm text-white/60 mt-6">
         ¿No tenés cuenta?{" "}
-        <Link href="/signup" className="text-brand-blue font-medium hover:underline">
+        <Link href="/signup" className="text-[#93BFEF] font-medium hover:text-white">
           Registrate
         </Link>
       </p>

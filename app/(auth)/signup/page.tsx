@@ -63,7 +63,7 @@ export default function SignupPage() {
             <div className="h-2.5 w-10 rounded-full bg-brand-blue opacity-65" />
             <div className="h-2.5 w-6 rounded-full bg-brand-blue opacity-30" />
           </div>
-          <span className="text-2xl font-bold text-brand-navy tracking-tight">
+          <span className="text-2xl font-bold text-white tracking-tight">
             priori
           </span>
         </div>
@@ -73,18 +73,19 @@ export default function SignupPage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
           </div>
-          <h2 className="text-lg font-semibold text-brand-navy mb-2">
+          <h2 className="text-lg font-semibold text-brand-navy mb-1">
             Revisá tu email
           </h2>
+          <div className="w-8 h-[3px] rounded-full bg-brand-gold mt-1 mb-3 mx-auto" />
           <p className="text-sm text-brand-gray">
             Te enviamos un enlace de confirmación a{" "}
             <span className="font-medium text-brand-navy">{email}</span>.
             Hacé clic en el enlace para activar tu cuenta.
           </p>
         </div>
-        <p className="text-center text-sm text-brand-gray mt-6">
+        <p className="text-center text-sm text-white/60 mt-6">
           ¿Ya tenés cuenta?{" "}
-          <Link href="/login" className="text-brand-blue font-medium hover:underline">
+          <Link href="/login" className="text-[#93BFEF] font-medium hover:text-white">
             Ingresá
           </Link>
         </p>
@@ -108,9 +109,10 @@ export default function SignupPage() {
 
       {/* Card */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
-        <h1 className="text-xl font-semibold text-brand-navy mb-6">
+        <h1 className="text-xl font-semibold text-brand-navy">
           Creá tu cuenta
         </h1>
+        <div className="w-8 h-[3px] rounded-full bg-brand-gold mt-1 mb-6" />
 
         <form onSubmit={handleSignup} className="flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
@@ -179,9 +181,9 @@ export default function SignupPage() {
         </button>
       </div>
 
-      <p className="text-center text-sm text-brand-gray mt-6">
+      <p className="text-center text-sm text-white/60 mt-6">
         ¿Ya tenés cuenta?{" "}
-        <Link href="/login" className="text-brand-blue font-medium hover:underline">
+        <Link href="/login" className="text-[#93BFEF] font-medium hover:text-white">
           Ingresá
         </Link>
       </p>

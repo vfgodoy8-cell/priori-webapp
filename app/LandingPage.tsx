@@ -255,11 +255,11 @@ export default function LandingPage() {
               <span></span>
               <span></span>
             </div>
-            priori<span style={{ color: "var(--orange)" }}>™</span>
+            priori<span style={{ color: "#93BFEF" }}>™</span>
           </div>
           <div>Priorización visual para equipos ágiles · Argentina · 2026</div>
           <div className="tm">
-            Contacto: <a href="mailto:[TU_EMAIL]" style={{ color: "var(--orange)" }}>[TU_EMAIL]</a>
+            Contacto: <a href="mailto:[TU_EMAIL]" style={{ color: "#93BFEF" }}>[TU_EMAIL]</a>
           </div>
         </div>
       </footer>

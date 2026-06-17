@@ -310,7 +310,7 @@ export default async function DashboardPage() {
                         <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
                           <div
                             className="h-full rounded-full transition-all duration-500"
-                            style={{ width: `${Math.max(4, pct)}%`, background: "#9333EA" }}
+                            style={{ width: `${Math.max(4, pct)}%`, background: "#4F46E5" }}
                           />
                         </div>
                         <span className="text-xs font-bold text-brand-navy w-5 text-right flex-shrink-0">{count}</span>

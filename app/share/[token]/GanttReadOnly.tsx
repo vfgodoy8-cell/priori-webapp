@@ -11,7 +11,7 @@ const PALETTE = [
   { bg: "#EEF2FF", border: "#C7D2FE", text: "#4F46E5" },
   { bg: "#F0FAFA", border: "#A3DDD8", text: "#12A594" },
   { bg: "#FFFBEB", border: "#FDE68A", text: "#D97706" },
-  { bg: "#F5EBF9", border: "#E5BFFB", text: "#9333EA" },
+  { bg: "#EDF6FF", border: "#93BFEF", text: "#1E56C4" },
   { bg: "#FEF9C3", border: "#FDE68A", text: "#CA8A04" },
   { bg: "#FCE7F3", border: "#F9A8D4", text: "#DB2777" },
 ];

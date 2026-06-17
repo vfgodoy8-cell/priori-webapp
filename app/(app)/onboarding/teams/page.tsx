@@ -103,7 +103,8 @@ export default function OnboardingTeamsPage() {
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
           <div className="mb-6">
             <h1 className="text-xl font-semibold text-brand-navy">Configurá tu equipo</h1>
-            <p className="text-sm text-brand-gray mt-1">Podés agregar más equipos después.</p>
+            <div className="w-8 h-[3px] rounded-full bg-brand-gold mt-1 mb-2" />
+            <p className="text-sm text-brand-gray">Podés agregar más equipos después.</p>
           </div>
 
           <div className="flex flex-col gap-5">

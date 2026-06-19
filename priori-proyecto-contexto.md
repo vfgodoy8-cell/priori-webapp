@@ -1,6 +1,6 @@
 # Priori™ — Contexto del proyecto
 
-> Generado el 2026-06-02, actualizado el 2026-06-06 (sesión 5 — bug jerarquía grupos + UX GroupsManagerModal) desde el código fuente real. Todo dato aquí viene del repositorio,
+> Generado el 2026-06-02, actualizado el 2026-06-19 (sesión 6 — rebrand navy/gold + landing redesign Phase 2) desde el código fuente real. Todo dato aquí viene del repositorio,
 > no de documentación externa ni archivos de contexto anteriores.
 
 ---
@@ -62,6 +62,8 @@ brand: {
   teal:   "#12A594",  // P1 Quick Win
   indigo: "#4F46E5",  // P2 Gran Proyecto + admin
   amber:  "#D97706",  // P0 Descartada
+  accent: "#2D6DF6",  // hover CTA / acento secundario
+  gold:   "#F4C026",  // acento terciario (barras onboarding, underline landing)
 }
 ```
 
@@ -72,7 +74,7 @@ brand: {
 ```
 priori-webapp/
 app/
-  (auth)/               # Rutas públicas de auth (layout centrado, bg-gray-50)
+  (auth)/               # Rutas públicas de auth (layout centrado, bg-brand-navy)
     login/              # Login email + password + OAuth Google (supabase.auth.signInWithOAuth)
     signup/             # Registro
   (app)/                # Rutas protegidas (layout verifica auth, redirige a /login si no hay user)
@@ -121,7 +123,19 @@ app/
                         # roadmap-utils.ts — buildQuarterBands compartido
   icon.tsx              # Favicon dinámico PNG 32x32 (next/og, edge runtime)
   layout.tsx            # Root layout — metadata, Geist font, lang="es"
-  page.tsx              # Raíz: redirige a /dashboard
+  page.tsx              # Raíz: muestra LandingPage para anónimos; middleware redirige a /dashboard si hay sesión
+  LandingPage.tsx       # Landing comercial — Playfair Display + Spline Sans
+                        # Secciones: Nav sticky · Hero (h1.hero-title + span.accent gold underline) ·
+                        #   Product Hero Shot (browser frame + gantt illustration) ·
+                        #   El Problema (navy bg) · Funcionalidades (3 frow alternados + AI strip) ·
+                        #   Para quién (.field azul) · CTA final · Footer 4 columnas
+  LandingReveal.tsx     # Client component: IntersectionObserver, agrega clase .in a .reveal al hacer scroll
+  landing.css           # Estilos de la landing. CSS vars: --blue, --navy, --gold, --accent, --bg-soft, --pill-bg
+                        # h1.hero-title .accent::after → subrayado gold via pseudo-elemento
+                        # .frow / .frow.reverse → layout alternado texto+frame (CSS Grid)
+                        # .field → sección "Para quién" con fondo azul brand-blue
+                        # .ai-strip → banda navy con CTA gold para Priori AI
+                        # NO usar font Fraunces en la landing — la fuente display es Playfair Display
 components/
   ai/
     AIChatPanel.tsx         # Panel lateral izquierdo, streaming manual, sugerencias iniciales
@@ -640,6 +654,14 @@ Lógica: sin user en ruta protegida → `/login`. Con user en ruta auth → `/da
 - **Personas asignadas por segmento (sesión 4):**
   - `roadmap_segments.assigned_people` (int default 1)
   - SegmentPanel con stepper + warning si > group.personas + breadcrumb de jerarquía
+- **Rebrand navy/gold + landing redesign (sesión 6):**
+  - `tailwind.config.ts`: agregados `brand.accent` (#2D6DF6) y `brand.gold` (#F4C026)
+  - `app/(auth)/layout.tsx`: fondo `bg-gray-50` → `bg-brand-navy`; wordmark en blanco; texto outer `text-white/60`
+  - Login, signup, onboarding, onboarding/teams: barra dorada (`bg-brand-gold`) debajo de cada h1
+  - Dashboard: color de barra de cuadrante `#9333EA` → `#4F46E5`
+  - RoadmapView + GanttReadOnly: PALETTE slot 3 `#9333EA` → `#1E56C4`
+  - `app/LandingPage.tsx`: reescritura completa — Fraunces → Playfair Display, estructura de 7 secciones (Hero · Product Shot · Problema · Funcionalidades frow · Para quién · CTA · Footer columnas)
+  - `app/landing.css`: reescritura completa con nuevo sistema de variables y layouts
 
 ---
 
@@ -688,7 +710,7 @@ Lógica: sin user en ruta protegida → `/login`. Con user en ruta auth → `/da
 | **Tagline en metadata** | Transparencia estratégica para equipos ágiles |
 | **Eslogan en header** | Transparencia Estratégica |
 | **Color principal** | Azul `#1E56C4` |
-| **Paleta completa** | Navy `#0D2240` · Gris `#5C6B7A` · Teal `#12A594` · Indigo `#4F46E5` · Amber `#D97706` |
+| **Paleta completa** | Navy `#0D2240` · Gris `#5C6B7A` · Teal `#12A594` · Indigo `#4F46E5` · Amber `#D97706` · Accent `#2D6DF6` · Gold `#F4C026` |
 | **Logo** | 3 barras horizontales en degradé de opacidad azul `#1E56C4` (100% / 65% / 30%) |
 | **Wordmark** | "priori" en minúscula, bold |
 | **Dominio objetivo** | priori.ar (registrado y delegado a Vercel) |
@@ -736,3 +758,6 @@ Lógica: sin user en ruta protegida → `/login`. Con user en ruta auth → `/da
 - `TeamPanelTrigger` ya NO abre `TeamPanel` — abre `GroupsManagerModal`. `TeamPanel.tsx` puede quedar sin uso activo.
 - `flattenGroupTree` en `GroupsManagerModal` es DFS pre-order — usar esta función (nunca sort plano por `level`) cuando se necesite la lista de grupos en orden jerárquico visual.
 - En `CapacidadTab`, el estado local `personasVal` es la fuente de verdad para la preview y el guardado. `useEffect` resetea `personasVal` cuando cambia `group.id`. La vista previa (`effPeople`, `capResult`) usa `{ ...group, personas: personasVal }` — refleja el valor editado en tiempo real antes de guardar.
+- **Landing page:** fuente display es `Playfair_Display` (no Fraunces — eliminada). El subrayado gold de "priorizar" es un `::after` posicionado absoluto en `h1.hero-title .accent` — no usar `text-decoration`. El archivo `landing.css` es independiente (no Tailwind); sus vars (`--navy`, `--gold`, etc.) son propias del scope de la landing.
+- `app/(auth)/layout.tsx` usa `bg-brand-navy` como fondo — el wordmark y textos externos deben ser blancos. Las barras del logo en los formularios de auth/onboarding son `bg-brand-gold` (3px de alto).
+- Las capturas de pantalla de los modos (`public/landing/squad.png`, `cross.png`, `roadmap.png`) aún no existen; los `fframe` muestran placeholders. Cuando se agreguen, reemplazar el div `.fframe-placeholder` por `<img src="/landing/squad.png" alt="..." />` en `LandingPage.tsx`.
